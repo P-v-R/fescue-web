@@ -12,4 +12,6 @@ export function isResendConfigured(): boolean {
   return !!process.env.RESEND_API_KEY
 }
 
-export const FROM_ADDRESS = 'Fescue Golf Club <invites@fescuegolf.com>'
+// Use verified domain address in production.
+// Resend sandbox address works for testing before domain is verified.
+export const FROM_ADDRESS = process.env.RESEND_FROM_ADDRESS ?? 'onboarding@resend.dev'
