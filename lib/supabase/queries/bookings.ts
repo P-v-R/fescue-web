@@ -1,4 +1,4 @@
-import { startOfDay, endOfDay, addDays } from 'date-fns'
+import { startOfDay, endOfDay, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { createClient } from '../server'
 import { createAdminClient } from '../admin'
 import type { Booking, NewBooking } from '../types'
@@ -51,6 +51,80 @@ export async function cancelBookingAdmin(id: string): Promise<void> {
     .eq('id', id)
 
   if (error) throw new Error(`cancelBookingAdmin: ${error.message}`)
+}
+
+// Admin only — count of non-cancelled bookings this calendar week.
+export async function getBookingsThisWeek(): Promise<number> {
+  const supabase = createAdminClient()
+  const now = new Date()
+
+  const { count, error } = await supabase
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .gte('start_time', startOfWeek(now, { weekStartsOn: 1 }).toISOString())
+    .lte('start_time', endOfWeek(now, { weekStartsOn: 1 }).toISOString())
+    .is('cancelled_at', null)
+
+  if (error) throw new Error(`getBookingsThisWeek: ${error.message}`)
+  return count ?? 0
+}
+
+// Admin only — full booking history for a specific member.
+export async function getAdminMemberBookings(memberId: string): Promise<AdminBooking[]> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*, members(full_name, email), bays(name)')
+    .eq('member_id', memberId)
+    .order('start_time', { ascending: false })
+
+  if (error) throw new Error(`getAdminMemberBookings: ${error.message}`)
+  return (data ?? []) as AdminBooking[]
+}
+
+// Admin only — create a booking on behalf of any member (bypasses RLS).
+export async function createBookingAdmin(data: NewBooking): Promise<Booking> {
+  const supabase = createAdminClient()
+
+  const startIso = data.start_time
+  const durationMs = data.duration_minutes * 60 * 1000
+  const endIso = new Date(new Date(startIso).getTime() + durationMs).toISOString()
+
+  const { data: conflicts, error: checkError } = await supabase
+    .from('bookings')
+    .select('id')
+    .eq('bay_id', data.bay_id)
+    .is('cancelled_at', null)
+    .lt('start_time', endIso)
+    .gt('end_time', startIso)
+
+  if (checkError) throw new Error(`createBookingAdmin overlap check: ${checkError.message}`)
+  if (conflicts && conflicts.length > 0) {
+    throw new Error('That bay is already booked for the selected time. Please choose another slot.')
+  }
+
+  const { data: booking, error } = await supabase
+    .from('bookings')
+    .insert({
+      member_id: data.member_id,
+      bay_id: data.bay_id,
+      start_time: data.start_time,
+      end_time: endIso,
+      duration_minutes: data.duration_minutes,
+      guests: data.guests ?? [],
+    })
+    .select()
+    .single()
+
+  if (error) {
+    if (error.code === '23P01') {
+      throw new Error('That bay is already booked for the selected time. Please choose another slot.')
+    }
+    throw new Error(`createBookingAdmin: ${error.message}`)
+  }
+
+  return booking as Booking
 }
 
 // All bookings for a given date (across all bays), for the availability grid.

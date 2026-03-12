@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createInvite, deleteInvite, getPendingInvites } from '@/lib/supabase/queries/invites'
 import { deactivateMember } from '@/lib/supabase/queries/members'
-import { cancelBookingAdmin, getAdminBookingsForDate, type AdminBooking } from '@/lib/supabase/queries/bookings'
+import { cancelBookingAdmin, getAdminBookingsForDate, createBookingAdmin, type AdminBooking } from '@/lib/supabase/queries/bookings'
 import { updateMembershipRequestStatus } from '@/lib/supabase/queries/membership-requests'
 import { createBlackoutPeriod, deleteBlackoutPeriod } from '@/lib/supabase/queries/blackout-periods'
 import { createResendClient, isResendConfigured, FROM_ADDRESS } from '@/lib/resend/client'
@@ -218,6 +218,42 @@ export async function deleteBlackoutAction(
     return { success: 'Blackout period removed.' }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to remove blackout.' }
+  }
+}
+
+// ─── Book on behalf of member ─────────────────────────────────────────────────
+
+export async function createBookingForMemberAction(
+  formData: FormData,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const memberId = formData.get('member_id') as string | null
+    const bayId = formData.get('bay_id') as string | null
+    const startTime = formData.get('start_time') as string | null
+    const durationRaw = formData.get('duration_minutes')
+    const duration = durationRaw ? parseInt(durationRaw as string, 10) : null
+
+    if (!memberId || !bayId || !startTime || !duration) {
+      return { error: 'All fields are required.' }
+    }
+    if (![60, 90, 120].includes(duration)) {
+      return { error: 'Invalid duration.' }
+    }
+
+    await createBookingAdmin({
+      member_id: memberId,
+      bay_id: bayId,
+      start_time: startTime,
+      duration_minutes: duration as 60 | 90 | 120,
+      guests: [],
+    })
+
+    revalidatePath('/admin')
+    revalidatePath(`/admin/members/${memberId}`)
+    return { success: 'Booking created.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to create booking.' }
   }
 }
 
