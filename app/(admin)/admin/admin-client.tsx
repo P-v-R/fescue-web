@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import { format, startOfDay } from 'date-fns'
 import type { Member, Invite, MembershipRequest } from '@/lib/supabase/types'
 import type { AdminBooking, GuestLead } from '@/lib/supabase/queries/bookings'
@@ -208,7 +209,12 @@ function InvitesTab({
 
       {/* Active members */}
       <section>
-        <SectionHeader label="Members" title={`Active Members (${activeMembers.length})`} />
+        <div className="mb-5">
+          <p className="font-mono text-label uppercase tracking-[0.28em] text-gold mb-1">Members</p>
+          <Link href="/admin/members" className="font-serif text-xl font-light text-navy hover:text-gold transition-colors">
+            Active Members ({activeMembers.length}) →
+          </Link>
+        </div>
         {activeMembers.length === 0 ? (
           <EmptyState text="No active members yet." />
         ) : (
