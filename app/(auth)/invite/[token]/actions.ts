@@ -19,6 +19,8 @@ export async function acceptInviteAction(
     await acceptInvite(token, {
       full_name: parsed.data.full_name,
       password: parsed.data.password,
+      phone: parsed.data.phone,
+      discord: parsed.data.discord,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'

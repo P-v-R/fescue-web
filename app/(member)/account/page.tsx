@@ -1,6 +1,7 @@
 import { format, isBefore } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { CancelBookingButton } from './cancel-button'
+import { ContactInfoSection } from './profile-form'
 import type { BookingWithBay } from '@/lib/supabase/types'
 
 export const metadata = {
@@ -15,7 +16,7 @@ export default async function AccountPage() {
 
   const { data: member } = await supabase
     .from('members')
-    .select('full_name, email, created_at')
+    .select('full_name, email, phone, discord, created_at')
     .eq('id', user!.id)
     .single()
 
@@ -71,6 +72,8 @@ export default async function AccountPage() {
           </div>
         </div>
       </section>
+
+      <ContactInfoSection phone={member?.phone ?? null} discord={member?.discord ?? null} />
 
       {/* Upcoming bookings */}
       <section className="mb-10 pb-10 border-b border-cream-mid">

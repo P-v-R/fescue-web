@@ -1,0 +1,96 @@
+name: Open or update release PR
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current version
+        id: version
+        run: |
+          TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          echo "current=${TAG:-v0.0.0}" >> $GITHUB_OUTPUT
+
+      - name: Get commits since last release
+        id: commits
+        run: |
+          LOG=$(git log ${{ steps.version.outputs.current }}..HEAD --pretty=format:"- %s (%h)" 2>/dev/null | grep -v "chore: release" || echo "- Initial release")
+          echo "log<<EOF" >> $GITHUB_OUTPUT
+          echo "$LOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Determine expected bump
+          if echo "$LOG" | grep -qiE '(BREAKING|major:)'; then
+            echo "bump=major" >> $GITHUB_OUTPUT
+          elif echo "$LOG" | grep -qiE '^- feat:|minor:'; then
+            echo "bump=minor" >> $GITHUB_OUTPUT
+          else
+            echo "bump=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Open or update release PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:staging`,
+              base: 'main',
+              state: 'open',
+            });
+
+            const currentVersion = '${{ steps.version.outputs.current }}';
+            const bump = '${{ steps.commits.outputs.bump }}';
+            const title = `🚀 Release: staging → main (${bump} bump from ${currentVersion})`;
+
+            const body = [
+              '## Release PR',
+              '',
+              'Auto-updated on every push to `staging`.',
+              'Review, then merge to deploy to production and cut a release.',
+              '',
+              `| | |`,
+              `|---|---|`,
+              `| **Current version** | \`${currentVersion}\` |`,
+              `| **Expected bump** | \`${bump}\` |`,
+              `| **Triggered by** | ${context.actor} |`,
+              `| **Latest commit** | \`${context.sha.slice(0, 7)}\` — ${context.payload.head_commit?.message?.split('\n')[0] ?? ''} |`,
+              '',
+              '## Changes since last release',
+              '',
+              '${{ steps.commits.outputs.log }}',
+            ].join('\n');
+
+            if (prs.length === 0) {
+              const { data: pr } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                head: 'staging',
+                base: 'main',
+              });
+              console.log(`Created PR #${pr.number}: ${pr.html_url}`);
+            } else {
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prs[0].number,
+                title,
+                body,
+              });
+              console.log(`Updated PR #${prs[0].number}: ${prs[0].html_url}`);
+            }

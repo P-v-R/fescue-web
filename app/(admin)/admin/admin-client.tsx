@@ -9,6 +9,7 @@ import type { Bay } from '@/lib/supabase/types'
 import {
   sendInviteAction,
   resendInviteAction,
+  rescindInviteAction,
   deactivateMemberAction,
   cancelBookingAdminAction,
   getBookingsForDateAction,
@@ -116,6 +117,7 @@ function InvitesTab({
 }) {
   const { message, isPending, run } = useActionState()
   const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteName, setInviteName] = useState('')
 
   const activeMembers = members.filter((m) => m.is_active && !m.is_admin)
   const adminMembers = members.filter((m) => m.is_admin)
@@ -124,9 +126,10 @@ function InvitesTab({
     e.preventDefault()
     const fd = new FormData()
     fd.set('email', inviteEmail)
+    fd.set('name', inviteName)
     run(async () => {
       const result = await sendInviteAction(fd)
-      if (!result.error) setInviteEmail('')
+      if (!result.error) { setInviteEmail(''); setInviteName('') }
       return result
     })
   }
@@ -150,20 +153,26 @@ function InvitesTab({
         <SectionHeader
           label="Invite"
           title="Invite a New Member"
-          description="Enter an email address to send a membership invitation."
+          description="Enter their first name and email to send a personalised invitation."
         />
-        <form onSubmit={handleSendInvite} className="flex gap-3 max-w-md">
-          <div className="flex-1">
-            <input
-              type="email"
-              name="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="member@example.com"
-              required
-              className="w-full border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-sand focus:outline-none focus:border-navy"
-            />
-          </div>
+        <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row gap-3 max-w-xl">
+          <input
+            type="text"
+            name="name"
+            value={inviteName}
+            onChange={(e) => setInviteName(e.target.value)}
+            placeholder="First name"
+            className="w-full sm:w-36 border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-sand focus:outline-none focus:border-navy"
+          />
+          <input
+            type="email"
+            name="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="member@example.com"
+            required
+            className="flex-1 border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-sand focus:outline-none focus:border-navy"
+          />
           <button
             type="submit"
             disabled={isPending || !inviteEmail}
@@ -179,14 +188,18 @@ function InvitesTab({
         <section>
           <SectionHeader label="Pending" title="Pending Invitations" />
           <Table
-            headers={['Email', 'Sent', 'Expires', '']}
+            headers={['Name', 'Email', 'Sent', 'Expires', '']}
             rows={pendingInvites.map((inv) => ({
               id: inv.id,
               cells: [
+                inv.name ?? '—',
                 inv.email,
                 format(new Date(inv.sent_at), 'MMM d, yyyy'),
                 format(new Date(inv.expires_at), 'MMM d, yyyy'),
-                <ResendButton key={inv.id} inviteId={inv.id} run={run} isPending={isPending} />,
+                <div key={inv.id} className="flex gap-4">
+                  <ResendButton inviteId={inv.id} run={run} isPending={isPending} />
+                  <RescindButton inviteId={inv.id} email={inv.email} run={run} isPending={isPending} />
+                </div>,
               ],
             }))}
           />
@@ -251,6 +264,31 @@ function ResendButton({
       className="font-mono text-label uppercase tracking-[0.15em] text-gold hover:text-navy transition-colors disabled:opacity-40"
     >
       Resend
+    </button>
+  )
+}
+
+function RescindButton({
+  inviteId,
+  email,
+  run,
+  isPending,
+}: {
+  inviteId: string
+  email: string
+  run: ReturnType<typeof useActionState>['run']
+  isPending: boolean
+}) {
+  return (
+    <button
+      disabled={isPending}
+      onClick={() => {
+        if (!confirm(`Rescind invitation for ${email}? They will no longer be able to use this invite link.`)) return
+        run(() => rescindInviteAction(inviteId))
+      }}
+      className="font-mono text-label uppercase tracking-[0.15em] text-red-400 hover:text-red-700 transition-colors disabled:opacity-40"
+    >
+      Rescind
     </button>
   )
 }
@@ -526,14 +564,9 @@ function ReservationRow({
           <p className="font-serif text-sm text-navy font-light truncate">
             {booking.members?.full_name ?? 'Unknown member'}
           </p>
-          {booking.guest_name && (
+          {booking.guests?.length > 0 && (
             <p className="font-mono text-label text-navy/55 truncate">
-              + {booking.guest_name}
-            </p>
-          )}
-          {booking.guest_email && (
-            <p className="font-mono text-label text-navy/55/60 truncate">
-              {booking.guest_email}
+              + {booking.guests.map((g) => g.name).join(', ')}
             </p>
           )}
         </div>

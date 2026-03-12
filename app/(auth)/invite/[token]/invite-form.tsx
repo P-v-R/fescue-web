@@ -52,6 +52,28 @@ export function InviteForm({ token, inviteEmail }: Props) {
       />
 
       <Input
+        label="Phone"
+        type="tel"
+        autoComplete="tel"
+        placeholder="(555) 000-0000"
+        error={errors.phone?.message}
+        {...register('phone')}
+      />
+
+      <div className="flex flex-col gap-2">
+        <Input
+          label="Discord Username"
+          type="text"
+          placeholder="yourname or yourname#1234"
+          error={errors.discord?.message}
+          {...register('discord')}
+        />
+        <p className="font-mono text-label text-navy/40 tracking-[0.1em]">
+          Discord is our primary means of club communication.
+        </p>
+      </div>
+
+      <Input
         label="Password"
         type="password"
         autoComplete="new-password"

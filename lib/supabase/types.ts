@@ -3,6 +3,8 @@ export type Member = {
   email: string
   full_name: string
   avatar_url: string | null
+  phone: string | null
+  discord: string | null
   is_active: boolean
   is_admin: boolean
   created_at: string
@@ -11,6 +13,7 @@ export type Member = {
 export type Invite = {
   id: string
   email: string
+  name: string | null
   token: string
   invited_by: string | null
   sent_at: string

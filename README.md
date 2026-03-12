@@ -104,6 +104,66 @@ The Sanity Studio is embedded at `/studio`. Run the dev server with `pnpm dev` a
 
 ## Deployment
 
-Deploy to [Vercel](https://vercel.com) — connect the repo and add all environment variables from `.env.example`.
+Deployed on [Railway](https://railway.app) with two environments:
+
+| Environment | Branch | URL |
+|---|---|---|
+| Staging | `staging` | `fescue-web-staging.up.railway.app` |
+| Production | `main` | `fescuegolf.com` |
+
+Both environments require all variables from `.env.example`, plus `TZ=America/Los_Angeles`.
 
 Supabase and Sanity projects are managed separately via their respective dashboards.
+
+---
+
+## Development & Release Flow
+
+### Day-to-day
+
+Work directly on `staging` for most changes:
+
+```bash
+git checkout staging
+# make changes
+git commit -m "feat: add member profile photo"
+git push
+# → Railway deploys staging automatically
+# → Release PR on GitHub auto-opens/updates
+```
+
+### Feature branches
+
+Use a branch only for multi-session work or changes you might abandon:
+
+```bash
+git checkout -b feat/my-feature
+# work freely, commit message prefixes don't matter mid-branch
+git checkout staging
+git merge feat/my-feature
+git push
+```
+
+### Releasing to production
+
+When staging is tested and ready, merge the open release PR on GitHub.
+This triggers `release.yml` which:
+1. Bumps `package.json` version
+2. Creates a git tag
+3. Publishes a GitHub Release with changelog
+4. Railway deploys production
+
+### Commit message prefixes
+
+The prefix on the **last commit before merging to staging** determines the version bump:
+
+| Prefix | Bump | Example |
+|---|---|---|
+| `feat:` | minor | `feat: add guest booking` |
+| `fix:` | patch | `fix: correct timezone bug` |
+| `chore:` | patch | `chore: update deps` |
+| `BREAKING:` | major | `BREAKING: new auth flow` |
+
+### Branch protection
+
+`main` is protected — direct pushes are blocked. All production changes must go through a PR from `staging`.

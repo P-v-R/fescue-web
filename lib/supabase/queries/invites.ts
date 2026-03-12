@@ -15,18 +15,43 @@ export async function getPendingInvites(): Promise<Invite[]> {
   return (data ?? []) as Invite[]
 }
 
-// Create an invite record. Uses admin client because invites table is admin-only.
-export async function createInvite(email: string, invitedBy: string): Promise<Invite> {
+// Create an invite record. Rejects if a pending invite already exists for this email.
+export async function createInvite(email: string, invitedBy: string, name?: string): Promise<Invite> {
   const supabase = createAdminClient()
+
+  // Duplicate check — block if a pending (unaccepted) invite exists
+  const { data: existing } = await supabase
+    .from('invites')
+    .select('id')
+    .eq('email', email)
+    .is('accepted_at', null)
+    .limit(1)
+    .single()
+
+  if (existing) {
+    throw new Error(`A pending invitation already exists for ${email}. Rescind it first to re-invite.`)
+  }
 
   const { data, error } = await supabase
     .from('invites')
-    .insert({ email, invited_by: invitedBy })
+    .insert({ email, name: name ?? null, invited_by: invitedBy })
     .select()
     .single()
 
   if (error) throw new Error(`createInvite: ${error.message}`)
   return data as Invite
+}
+
+// Delete (rescind) a pending invite.
+export async function deleteInvite(id: string): Promise<void> {
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('invites')
+    .delete()
+    .eq('id', id)
+
+  if (error) throw new Error(`deleteInvite: ${error.message}`)
 }
 
 // Look up an invite by token. Uses admin client so it works before a session exists.
@@ -52,7 +77,7 @@ export async function getInviteByToken(token: string): Promise<Invite | null> {
 // Email comes from the invite record — the form only collects full_name + password.
 export async function acceptInvite(
   token: string,
-  memberData: Pick<NewMember, 'full_name' | 'password'>,
+  memberData: Pick<NewMember, 'full_name' | 'password'> & { phone?: string; discord?: string },
 ): Promise<Member> {
   const supabase = createAdminClient()
 
@@ -80,6 +105,8 @@ export async function acceptInvite(
       id: authUser.id,
       email: invite.email,
       full_name: memberData.full_name,
+      phone: memberData.phone?.trim() || null,
+      discord: memberData.discord?.trim() || null,
     })
     .select()
     .single()
