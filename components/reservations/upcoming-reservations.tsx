@@ -127,9 +127,9 @@ export function UpcomingReservations({
                   <p className='font-mono text-label text-navy/45 mt-0.5'>
                     {format(start, 'h:mm a')} · {booking.duration_minutes}m
                   </p>
-                  {booking.guest_name && (
+                  {booking.guests?.length > 0 && (
                     <p className='font-mono text-label text-sand/60 mt-0.5 truncate'>
-                      + {booking.guest_name}
+                      + {booking.guests.map((g) => g.name).join(', ')}
                     </p>
                   )}
                 </div>
