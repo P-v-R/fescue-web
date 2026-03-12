@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+:root {
+  --navy: #0a2b5e;
+  --navy-dark: #061a3a;
+  --navy-mid: #1a3f72;
+  --cream: #f5f0e8;
+  --cream-light: #fdfaf4;
+  --cream-mid: #ede6d8;
+  --sage: #6b7a52;
+  --sage-light: #8b9e68;
+  --sand: #c8b89a;
+  --sand-light: #e0d4bc;
+  --gold: #b8963c;
+  --gold-light: #d4af60;
+  --white: #ffffff;
+  --border: rgba(10, 43, 94, 0.1);
+  --border-warm: rgba(184, 150, 60, 0.25);
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-navy-dark: var(--navy-dark);
+  --color-navy-mid: var(--navy-mid);
+  --color-cream: var(--cream);
+  --color-cream-light: var(--cream-light);
+  --color-cream-mid: var(--cream-mid);
+  --color-sage: var(--sage);
+  --color-sage-light: var(--sage-light);
+  --color-sand: var(--sand);
+  --color-sand-light: var(--sand-light);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-serif-sc: 'Playfair Display', Georgia, serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Libre Baskerville', Georgia, serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+
+  /* Brand type scale */
+  --text-label: 0.6875rem; /* 11px — eyebrow / mono labels */
+  --text-heading: 1.625rem; /* 26px — modal & card headings */
+  --text-title: 1.75rem; /* 28px — auth card title */
+  --text-display: 2.125rem; /* 34px — page headings */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/*
+ * Scalloped corner frame — radial gradient technique (cross-browser).
+ * Apply .frame-scalloped to an absolutely-positioned borderless div.
+ * Override --sc to change the border color.
+ */
+.frame-scalloped {
+  --sr: 18px; /* scoop radius */
+  --sb: 1px; /* border thickness */
+  --sc: rgba(184, 150, 60, 0.15); /* border color — default: gold/15 */
+  border: none !important;
+  background:
+    /* four scooped corners */
+    radial-gradient(
+        circle at 0 0,
+        transparent calc(var(--sr) - var(--sb)),
+        var(--sc) calc(var(--sr) - var(--sb)) var(--sr),
+        transparent var(--sr)
+      )
+      0 0 / var(--sr) var(--sr) no-repeat,
+    radial-gradient(
+        circle at 100% 0,
+        transparent calc(var(--sr) - var(--sb)),
+        var(--sc) calc(var(--sr) - var(--sb)) var(--sr),
+        transparent var(--sr)
+      )
+      100% 0 / var(--sr) var(--sr) no-repeat,
+    radial-gradient(
+        circle at 0 100%,
+        transparent calc(var(--sr) - var(--sb)),
+        var(--sc) calc(var(--sr) - var(--sb)) var(--sr),
+        transparent var(--sr)
+      )
+      0 100% / var(--sr) var(--sr) no-repeat,
+    radial-gradient(
+        circle at 100% 100%,
+        transparent calc(var(--sr) - var(--sb)),
+        var(--sc) calc(var(--sr) - var(--sb)) var(--sr),
+        transparent var(--sr)
+      )
+      100% 100% / var(--sr) var(--sr) no-repeat,
+    /* four straight edges */ linear-gradient(var(--sc), var(--sc)) 50% 0 /
+      calc(100% - 2 * var(--sr)) var(--sb) no-repeat,
+    linear-gradient(var(--sc), var(--sc)) 50% 100% / calc(100% - 2 * var(--sr))
+      var(--sb) no-repeat,
+    linear-gradient(var(--sc), var(--sc)) 0 50% / var(--sb)
+      calc(100% - 2 * var(--sr)) no-repeat,
+    linear-gradient(var(--sc), var(--sc)) 100% 50% / var(--sb)
+      calc(100% - 2 * var(--sr)) no-repeat;
+}
+.frame-scalloped-cream {
+  --sc: rgba(237, 230, 216, 0.8);
+}
+
+body {
+  background-color: var(--cream-light);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  color: var(--navy-dark);
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+/* ─── FullCalendar brand overrides ───────────────────────────────────── */
+.fc {
+  --fc-border-color: var(--cream-mid);
+  --fc-event-bg-color: var(--navy);
+  --fc-event-border-color: var(--navy);
+  --fc-event-text-color: var(--cream);
+  --fc-today-bg-color: rgba(184, 150, 60, 0.06);
+  --fc-button-bg-color: var(--navy);
+  --fc-button-active-bg-color: var(--navy-mid);
+  --fc-button-border-color: var(--navy);
+  --fc-button-hover-bg-color: var(--navy-mid);
+  --fc-button-hover-border-color: var(--navy-mid);
+  --fc-button-active-border-color: var(--navy-mid);
+  --fc-button-text-color: var(--cream);
+}
+
+.fc .fc-toolbar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--navy);
+}
+
+.fc .fc-col-header-cell-cushion {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--sage);
+  text-decoration: none;
+}
+
+.fc .fc-daygrid-day-number {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--navy-dark);
+  text-decoration: none;
+}
+
+.fc .fc-button {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  border-radius: 0;
+}
+
+.fc .fc-event {
+  border-radius: 0;
+  border: none;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.fc .fc-event-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Hide the time dot entirely */
+.fc .fc-daygrid-event-dot {
+  display: none;
+}
+
+.fc .fc-event-time {
+  display: none;
+}
+
+.fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+  color: var(--gold);
+  font-weight: 500;
+}
