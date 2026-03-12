@@ -1,0 +1,60 @@
+name: Open or update release PR
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open or update release PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:staging`,
+              base: 'main',
+              state: 'open',
+            });
+
+            const title = '🚀 Release: staging → main';
+            const body = [
+              '## Release PR',
+              '',
+              'This PR is auto-updated on every push to `staging`.',
+              'Review the changes below, then merge to deploy to production.',
+              '',
+              `**Triggered by:** ${context.actor}`,
+              `**Commit:** ${context.sha.slice(0, 7)} — ${context.payload.head_commit?.message?.split('\n')[0] ?? ''}`,
+              `**Time:** ${new Date().toUTCString()}`,
+            ].join('\n');
+
+            if (prs.length === 0) {
+              const { data: pr } = await github.rest.pulls.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                head: 'staging',
+                base: 'main',
+              });
+              console.log(`Created PR #${pr.number}: ${pr.html_url}`);
+            } else {
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prs[0].number,
+                body,
+              });
+              console.log(`Updated PR #${prs[0].number}: ${prs[0].html_url}`);
+            }
