@@ -83,22 +83,51 @@ export function DashboardStats({ activeMembers, bookingsThisWeek, todaysBookings
               {/* Bay rows */}
               {bays.map((bay) => {
                 const bayBookings = todaysBookings.filter((b) => b.bay_id === bay.id)
+                const seenBookings = new Set<string>()
                 return (
                   <div key={bay.id} className="grid items-center mb-1" style={{ gridTemplateColumns: `80px repeat(${SLOT_COUNT}, 1fr)` }}>
                     <p className="font-mono text-label text-navy/60 pr-2 truncate">{bay.name}</p>
                     {slots.map((slot, i) => {
                       const booking = bayBookings.find((b) => isBookingInSlot(b, slot.h, slot.m))
                       const isNow = i === nowSlotIndex
+                      if (!booking) {
+                        return (
+                          <div
+                            key={i}
+                            className={[
+                              'h-6 border-r border-cream-mid/50 bg-cream-mid/30',
+                              isNow ? 'ring-1 ring-inset ring-gold/60' : '',
+                            ].join(' ')}
+                          />
+                        )
+                      }
+                      const isFirstSlot = !seenBookings.has(booking.id)
+                      seenBookings.add(booking.id)
+                      const start = new Date(booking.start_time)
+                      const end = new Date(start.getTime() + booking.duration_minutes * 60000)
+                      const guestCount = booking.guests?.length ?? 0
+
                       return (
-                        <div
-                          key={i}
-                          title={booking ? `${booking.members?.full_name} · ${format(new Date(booking.start_time), 'h:mm a')}` : undefined}
-                          className={[
-                            'h-6 border-r border-cream-mid/50',
-                            booking ? 'bg-navy/80' : 'bg-cream-mid/30',
-                            isNow ? 'ring-1 ring-inset ring-gold/60' : '',
-                          ].join(' ')}
-                        />
+                        <div key={i} className="relative group h-6">
+                          <div
+                            className={[
+                              'h-full border-r border-navy/20 bg-navy/80 cursor-default',
+                              isNow ? 'ring-1 ring-inset ring-gold/60' : '',
+                            ].join(' ')}
+                          />
+                          {isFirstSlot && (
+                            <div className="absolute bottom-full left-0 mb-1.5 z-50 hidden group-hover:block pointer-events-none">
+                              <div className="bg-navy text-cream px-3 py-2 whitespace-nowrap shadow-lg">
+                                <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-gold mb-0.5">{bay.name}</p>
+                                <p className="font-serif text-sm font-light">{booking.members?.full_name ?? 'Unknown'}</p>
+                                <p className="font-mono text-[10px] text-cream/60">
+                                  {format(start, 'h:mm')}–{format(end, 'h:mm a')}
+                                  {guestCount > 0 && ` · ${guestCount} guest${guestCount > 1 ? 's' : ''}`}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )
                     })}
                   </div>
