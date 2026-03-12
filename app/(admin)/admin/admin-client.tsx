@@ -526,14 +526,9 @@ function ReservationRow({
           <p className="font-serif text-sm text-navy font-light truncate">
             {booking.members?.full_name ?? 'Unknown member'}
           </p>
-          {booking.guest_name && (
+          {booking.guests?.length > 0 && (
             <p className="font-mono text-label text-navy/55 truncate">
-              + {booking.guest_name}
-            </p>
-          )}
-          {booking.guest_email && (
-            <p className="font-mono text-label text-navy/55/60 truncate">
-              {booking.guest_email}
+              + {booking.guests.map((g) => g.name).join(', ')}
             </p>
           )}
         </div>
