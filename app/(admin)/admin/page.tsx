@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAllMembers } from '@/lib/supabase/queries/members'
@@ -45,12 +46,20 @@ export default async function AdminPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <p className="font-mono text-label uppercase tracking-[0.28em] text-gold mb-1">
-          Admin Panel
-        </p>
-        <h1 className="font-serif text-2xl sm:text-display font-light text-navy">Club Management</h1>
-        <div className="w-12 h-px bg-gold mt-4" />
+      <div className="mb-8 flex items-start justify-between gap-6">
+        <div>
+          <p className="font-mono text-label uppercase tracking-[0.28em] text-gold mb-1">
+            Admin Panel
+          </p>
+          <h1 className="font-serif text-2xl sm:text-display font-light text-navy">Club Management</h1>
+          <div className="w-12 h-px bg-gold mt-4" />
+        </div>
+        <Link
+          href="/studio"
+          className="flex-shrink-0 inline-flex items-center gap-2 mt-1 px-4 py-2.5 bg-navy text-cream font-mono text-label uppercase tracking-[0.18em] hover:bg-navy-dark transition-colors"
+        >
+          Content Studio ↗
+        </Link>
       </div>
 
       <AdminClient
