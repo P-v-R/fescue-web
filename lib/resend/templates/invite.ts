@@ -1,10 +1,12 @@
 type InviteEmailData = {
   inviteUrl: string
   recipientEmail: string
+  recipientName?: string | null
   expiresAt: string // formatted date string
 }
 
-export function inviteEmailHtml({ inviteUrl, expiresAt }: InviteEmailData): string {
+export function inviteEmailHtml({ inviteUrl, recipientName, expiresAt }: InviteEmailData): string {
+  const greeting = recipientName ? `${recipientName},` : 'there,'
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,6 +43,9 @@ export function inviteEmailHtml({ inviteUrl, expiresAt }: InviteEmailData): stri
 
               <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:0.28em;color:#B8963C;text-transform:uppercase;">
                 Member Invitation
+              </p>
+              <p style="margin:0 0 12px;font-family:Georgia,serif;font-size:16px;font-weight:300;color:#0A2B5E;">
+                Hey ${greeting}
               </p>
               <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:28px;font-weight:300;color:#0A2B5E;line-height:1.3;">
                 You're invited to<br />join the club.
@@ -97,8 +102,11 @@ export function inviteEmailHtml({ inviteUrl, expiresAt }: InviteEmailData): stri
 </html>`
 }
 
-export function inviteEmailText({ inviteUrl, expiresAt }: InviteEmailData): string {
-  return `You're invited to join Fescue Golf Club.
+export function inviteEmailText({ inviteUrl, recipientName, expiresAt }: InviteEmailData): string {
+  const greeting = recipientName ? `Hey ${recipientName},` : `Hey there,`
+  return `${greeting}
+
+You're invited to join Fescue Golf Club.
 
 Complete your registration here:
 ${inviteUrl}

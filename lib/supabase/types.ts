@@ -13,6 +13,7 @@ export type Member = {
 export type Invite = {
   id: string
   email: string
+  name: string | null
   token: string
   invited_by: string | null
   sent_at: string

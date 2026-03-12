@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { format, addDays } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createInvite, getPendingInvites } from '@/lib/supabase/queries/invites'
+import { createInvite, deleteInvite, getPendingInvites } from '@/lib/supabase/queries/invites'
 import { deactivateMember } from '@/lib/supabase/queries/members'
 import { cancelBookingAdmin, getAdminBookingsForDate, type AdminBooking } from '@/lib/supabase/queries/bookings'
 import { updateMembershipRequestStatus } from '@/lib/supabase/queries/membership-requests'
@@ -31,11 +31,10 @@ async function requireAdmin(): Promise<string> {
   return user.id
 }
 
-async function sendInviteEmail(email: string, token: string): Promise<void> {
+async function sendInviteEmail(email: string, token: string, name?: string | null): Promise<void> {
   if (!isResendConfigured()) {
-    // Log for local dev so the link is still usable
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    console.log(`[DEV] Invite link: ${appUrl}/invite/${token}`)
+    console.log(`[DEV] Invite link for ${name ?? email}: ${appUrl}/invite/${token}`)
     return
   }
 
@@ -48,8 +47,8 @@ async function sendInviteEmail(email: string, token: string): Promise<void> {
     from: FROM_ADDRESS,
     to: email,
     subject: 'Your Fescue Golf Club Invitation',
-    html: inviteEmailHtml({ inviteUrl, recipientEmail: email, expiresAt }),
-    text: inviteEmailText({ inviteUrl, recipientEmail: email, expiresAt }),
+    html: inviteEmailHtml({ inviteUrl, recipientEmail: email, recipientName: name, expiresAt }),
+    text: inviteEmailText({ inviteUrl, recipientEmail: email, recipientName: name, expiresAt }),
   })
 }
 
@@ -61,18 +60,32 @@ export async function sendInviteAction(
   try {
     const adminId = await requireAdmin()
     const email = (formData.get('email') as string | null)?.trim()
+    const name = (formData.get('name') as string | null)?.trim() || undefined
 
     if (!email || !email.includes('@')) {
       return { error: 'Please enter a valid email address.' }
     }
 
-    const invite = await createInvite(email, adminId)
-    await sendInviteEmail(email, invite.token)
+    const invite = await createInvite(email, adminId, name)
+    await sendInviteEmail(email, invite.token, name)
 
     revalidatePath('/admin')
-    return { success: `Invitation sent to ${email}.` }
+    return { success: `Invitation sent to ${name ? `${name} (${email})` : email}.` }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to send invite.' }
+  }
+}
+
+export async function rescindInviteAction(
+  inviteId: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await deleteInvite(inviteId)
+    revalidatePath('/admin')
+    return { success: 'Invitation rescinded.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to rescind invite.' }
   }
 }
 
@@ -92,7 +105,7 @@ export async function resendInviteAction(
     if (error || !invite) return { error: 'Invite not found.' }
     if (invite.accepted_at) return { error: 'This invite has already been accepted.' }
 
-    await sendInviteEmail(invite.email, invite.token)
+    await sendInviteEmail(invite.email, invite.token, invite.name)
     return { success: `Invitation resent to ${invite.email}.` }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to resend invite.' }
