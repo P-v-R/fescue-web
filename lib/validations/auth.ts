@@ -16,6 +16,8 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
 export const acceptInviteSchema = z
   .object({
     full_name: z.string().min(2, 'Please enter your full name'),
+    phone: z.string().optional(),
+    discord: z.string().optional(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirm_password: z.string(),
   })
