@@ -26,21 +26,34 @@ export default function HomePage() {
                 alt='Fescue Golf Club'
                 width={280}
                 height={280}
-                className='object-contain mb-10 drop-shadow-[0_4px_32px_rgba(184,158,86,0.22)]'
+                className='hero-fade object-contain mb-10 drop-shadow-[0_4px_32px_rgba(184,158,86,0.22)]'
+                style={{ animationDelay: '0ms' }}
                 priority
               />
-              <h1 className='font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'>
+              <h1
+                className='hero-fade font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'
+                style={{ animationDelay: '200ms' }}
+              >
                 The membership golf club.
                 <br />
                 <em>reinvented</em>
               </h1>
-              <div className='w-12 h-px bg-gold mx-auto mb-8' />
-              <div className='max-w-sm mx-auto mb-2 space-y-2.5'>
+              <div
+                className='hero-fade w-12 h-px bg-gold mx-auto mb-8'
+                style={{ animationDelay: '380ms' }}
+              />
+              <div
+                className='hero-fade max-w-sm mx-auto mb-2 space-y-2.5'
+                style={{ animationDelay: '500ms' }}
+              >
                 <div className='h-3.5 bg-cream/10 rounded w-full' />
                 <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
                 <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
               </div>
-              <div className='flex flex-col sm:flex-row gap-4 justify-center'>
+              <div
+                className='hero-fade flex flex-col sm:flex-row gap-4 justify-center'
+                style={{ animationDelay: '640ms' }}
+              >
                 <Link
                   href='/contact'
                   className='bg-gold text-navy-dark font-mono text-label uppercase tracking-[0.25em] px-8 py-3 mb-6 hover:opacity-90 transition-opacity'
