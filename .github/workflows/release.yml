@@ -1,61 +1,20 @@
-name: Create release on merge to main
+name: Release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'
 
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: read
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get latest tag
-        id: latest_tag
-        run: |
-          TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
-          echo "tag=${TAG:-v0.0.0}" >> $GITHUB_OUTPUT
-
-      - name: Determine bump type
-        id: bump
-        run: |
-          COMMITS=$(git log ${{ steps.latest_tag.outputs.tag }}..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s")
-          echo "commits<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMITS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          if echo "$COMMITS" | grep -qiE '(BREAKING|major:)'; then
-            echo "type=major" >> $GITHUB_OUTPUT
-          elif echo "$COMMITS" | grep -qiE '^feat:|minor:'; then
-            echo "type=minor" >> $GITHUB_OUTPUT
-          else
-            echo "type=patch" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Compute next version
-        id: version
-        run: |
-          CURRENT=${{ steps.latest_tag.outputs.tag }}
-          CURRENT=${CURRENT#v}
-          MAJOR=$(echo $CURRENT | cut -d. -f1)
-          MINOR=$(echo $CURRENT | cut -d. -f2)
-          PATCH=$(echo $CURRENT | cut -d. -f3)
-
-          case "${{ steps.bump.outputs.type }}" in
-            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
-            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
-            patch) PATCH=$((PATCH+1)) ;;
-          esac
-
-          echo "version=v${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
 
       - name: Run database migrations
         uses: supabase/setup-cli@v1
@@ -66,30 +25,15 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       - run: supabase db push --password ${{ secrets.SUPABASE_DB_PASSWORD }}
 
-      - name: Update package.json version
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          VERSION=${VERSION#v}
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json'));
-            pkg.version = '${VERSION}';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-
-      - name: Commit and tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json
-          git commit -m "chore: release ${{ steps.version.outputs.version }}" || echo "Nothing to commit"
-          git tag ${{ steps.version.outputs.version }}
-          git push origin main --follow-tags
-
       - name: Build changelog
         id: changelog
         run: |
-          COMMITS=$(git log ${{ steps.latest_tag.outputs.tag }}..HEAD --pretty=format:"- %s (%h)" 2>/dev/null | grep -v "chore: release" || echo "- Initial release")
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)")
+          else
+            COMMITS=$(git log --pretty=format:"- %s (%h)")
+          fi
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$COMMITS" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -101,15 +45,12 @@ jobs:
             await github.rest.releases.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              tag_name: '${{ steps.version.outputs.version }}',
-              name: '${{ steps.version.outputs.version }}',
+              tag_name: '${{ github.ref_name }}',
+              name: '${{ github.ref_name }}',
               body: [
                 '## What changed',
                 '',
                 `${{ steps.changelog.outputs.changelog }}`,
-                '',
-                '---',
-                `Bump type: \`${{ steps.bump.outputs.type }}\``,
               ].join('\n'),
               draft: false,
               prerelease: false,
