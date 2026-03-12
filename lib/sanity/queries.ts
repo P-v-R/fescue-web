@@ -9,12 +9,13 @@ export async function getBulletinPosts(): Promise<BulletinPost[]> {
 
   try {
     return await sanityClient.fetch(
-      `*[_type == "bulletinPost"] | order(pinned desc, publishedAt desc) {
+      `*[_type == "bulletinPost" && archived != true] | order(pinned desc, publishedAt desc) {
         _id,
         _type,
         title,
         body,
         pinned,
+        archived,
         publishedAt
       }`,
       {},

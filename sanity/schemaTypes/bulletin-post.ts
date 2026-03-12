@@ -29,6 +29,13 @@ export const bulletinPost = defineType({
       title: 'Publish Date',
       type: 'datetime',
     }),
+    defineField({
+      name: 'archived',
+      title: 'Archived',
+      type: 'boolean',
+      initialValue: false,
+      description: 'Archived posts are hidden from members but not deleted.',
+    }),
   ],
   orderings: [
     {
@@ -44,11 +51,12 @@ export const bulletinPost = defineType({
     select: {
       title: 'title',
       pinned: 'pinned',
+      archived: 'archived',
       publishedAt: 'publishedAt',
     },
-    prepare({ title, pinned, publishedAt }) {
+    prepare({ title, pinned, archived, publishedAt }) {
       return {
-        title: pinned ? `📌 ${title}` : title,
+        title: archived ? `[Archived] ${title}` : pinned ? `📌 ${title}` : title,
         subtitle: publishedAt
           ? new Date(publishedAt).toLocaleDateString('en-US', { dateStyle: 'medium' })
           : 'No date set',

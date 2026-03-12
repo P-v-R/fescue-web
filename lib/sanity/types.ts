@@ -28,6 +28,7 @@ export type BulletinPost = {
   title: string
   body: PortableTextBlock[] | null
   pinned: boolean
+  archived: boolean
   publishedAt: string | null
 }
 
