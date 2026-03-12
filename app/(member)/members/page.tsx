@@ -36,7 +36,7 @@ export default async function MembersPage() {
         {members.map((member) => (
           <div
             key={member.id}
-            className="bg-white border border-cream-mid px-5 py-3 grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_160px_200px] items-center gap-x-6 gap-y-1"
+            className="bg-white border border-cream-mid px-5 py-3 grid grid-cols-1 sm:grid-cols-[1fr_160px_200px] items-start gap-x-6 gap-y-3 sm:gap-y-0"
           >
             <p className="font-serif text-xl font-light text-navy">
               {member.full_name}
