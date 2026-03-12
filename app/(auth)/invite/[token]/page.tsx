@@ -40,9 +40,11 @@ export default async function InvitePage({ params }: Props) {
   }
 
   // ─── Valid invite ─────────────────────────────────────────────────────────
+  const title = invite.name ? `Welcome, ${invite.name}.` : 'Welcome to Fescue.'
+
   return (
     <AuthCard
-      title="Welcome to Fescue"
+      title={title}
       subtitle="You've been invited. Set up your account below."
     >
       <InviteForm token={token} inviteEmail={invite.email} />
