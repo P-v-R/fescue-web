@@ -66,25 +66,12 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       - run: supabase db push --password ${{ secrets.SUPABASE_DB_PASSWORD }}
 
-      - name: Update package.json version
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          VERSION=${VERSION#v}
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json'));
-            pkg.version = '${VERSION}';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-
-      - name: Commit and tag
+      - name: Tag release
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json
-          git commit -m "chore: release ${{ steps.version.outputs.version }}" || echo "Nothing to commit"
           git tag ${{ steps.version.outputs.version }}
-          git push origin main --follow-tags
+          git push origin ${{ steps.version.outputs.version }}
 
       - name: Build changelog
         id: changelog
