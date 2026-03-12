@@ -1,3 +1,4 @@
+import { createClient } from '../server'
 import { createAdminClient } from '../admin'
 import type { Member } from '../types'
 
@@ -12,6 +13,22 @@ export async function getAllMembers(): Promise<Member[]> {
 
   if (error) throw new Error(`getAllMembers: ${error.message}`)
   return (data ?? []) as Member[]
+}
+
+// Active members directory — readable by any authenticated member.
+export type DirectoryMember = Pick<Member, 'id' | 'full_name' | 'phone' | 'discord'>
+
+export async function getActiveMembers(): Promise<DirectoryMember[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('members')
+    .select('id, full_name, phone, discord')
+    .eq('is_active', true)
+    .order('full_name', { ascending: true })
+
+  if (error) throw new Error(`getActiveMembers: ${error.message}`)
+  return (data ?? []) as DirectoryMember[]
 }
 
 // Admin only — deactivate a member and sign them out.
