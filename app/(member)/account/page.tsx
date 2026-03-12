@@ -1,7 +1,7 @@
 import { format, isBefore } from 'date-fns'
 import { createClient } from '@/lib/supabase/server'
 import { CancelBookingButton } from './cancel-button'
-import { ProfileForm } from './profile-form'
+import { ContactInfoSection } from './profile-form'
 import type { BookingWithBay } from '@/lib/supabase/types'
 
 export const metadata = {
@@ -73,16 +73,7 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      {/* Contact info */}
-      <section className="mb-10 pb-10 border-b border-cream-mid">
-        <p className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-5">
-          Contact Info
-        </p>
-        <p className="font-sans text-xs font-light text-navy/40 mb-4">
-          Visible to other members in the directory.
-        </p>
-        <ProfileForm phone={member?.phone ?? null} discord={member?.discord ?? null} />
-      </section>
+      <ContactInfoSection phone={member?.phone ?? null} discord={member?.discord ?? null} />
 
       {/* Upcoming bookings */}
       <section className="mb-10 pb-10 border-b border-cream-mid">
