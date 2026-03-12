@@ -36,42 +36,32 @@ export default async function MembersPage() {
         {members.map((member) => (
           <div
             key={member.id}
-            className="bg-white border border-cream-mid px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8"
+            className="bg-white border border-cream-mid px-5 py-3 grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_160px_200px] items-center gap-x-6 gap-y-1"
           >
-            <p className="font-serif text-xl font-light text-navy min-w-[180px]">
+            <p className="font-serif text-xl font-light text-navy">
               {member.full_name}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 flex-1">
+            <div>
+              <p className="font-mono text-label uppercase tracking-[0.18em] text-sand mb-0.5">Phone</p>
               {member.phone ? (
-                <div>
-                  <p className="font-mono text-label uppercase tracking-[0.18em] text-sand mb-0.5">
-                    Phone
-                  </p>
-                  <a
-                    href={`tel:${member.phone}`}
-                    className="font-mono text-label text-navy/70 hover:text-gold transition-colors"
-                  >
-                    {member.phone}
-                  </a>
-                </div>
-              ) : null}
+                <a
+                  href={`tel:${member.phone}`}
+                  className="font-mono text-label text-navy/70 hover:text-gold transition-colors"
+                >
+                  {member.phone}
+                </a>
+              ) : (
+                <p className="font-mono text-label text-navy/25">—</p>
+              )}
+            </div>
 
+            <div>
+              <p className="font-mono text-label uppercase tracking-[0.18em] text-sand mb-0.5">Discord</p>
               {member.discord ? (
-                <div>
-                  <p className="font-mono text-label uppercase tracking-[0.18em] text-sand mb-0.5">
-                    Discord
-                  </p>
-                  <p className="font-mono text-label text-navy/70">
-                    {member.discord}
-                  </p>
-                </div>
-              ) : null}
-
-              {!member.phone && !member.discord && (
-                <p className="font-mono text-label text-navy/25 italic">
-                  No contact info added
-                </p>
+                <p className="font-mono text-label text-navy/70">{member.discord}</p>
+              ) : (
+                <p className="font-mono text-label text-navy/25">—</p>
               )}
             </div>
           </div>
