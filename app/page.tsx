@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { PublicNav } from '@/components/ui/public-nav';
 import { ParallaxDecor } from '@/components/ui/parallax-decor';
+import { HeroReveal } from '@/components/ui/hero-reveal';
 import { CartProvider } from '@/components/shop/cart-provider';
 import { CartDrawer } from '@/components/shop/cart-drawer';
 
@@ -20,48 +21,50 @@ export default function HomePage() {
           <section className='relative flex flex-col items-center justify-center text-center px-6 py-28 sm:py-44 overflow-hidden bg-navy-dark'>
             <div className='absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_40%,rgba(184,158,86,0.08),transparent)] pointer-events-none' />
 
-            <div className='relative z-10 max-w-2xl mx-auto flex flex-col items-center'>
-              <Image
-                src='/logo-badge.png'
-                alt='Fescue Golf Club'
-                width={280}
-                height={280}
-                className='hero-fade object-contain mb-10 drop-shadow-[0_4px_32px_rgba(184,158,86,0.22)]'
-                style={{ animationDelay: '0ms' }}
-                priority
-              />
-              <h1
-                className='hero-fade font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'
-                style={{ animationDelay: '200ms' }}
-              >
-                The membership golf club.
-                <br />
-                <em>reinvented</em>
-              </h1>
-              <div
-                className='hero-fade w-12 h-px bg-gold mx-auto mb-8'
-                style={{ animationDelay: '380ms' }}
-              />
-              <div
-                className='hero-fade max-w-sm mx-auto mb-2 space-y-2.5'
-                style={{ animationDelay: '500ms' }}
-              >
-                <div className='h-3.5 bg-cream/10 rounded w-full' />
-                <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
-                <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
-              </div>
-              <div
-                className='hero-fade flex flex-col sm:flex-row gap-4 justify-center'
-                style={{ animationDelay: '640ms' }}
-              >
-                <Link
-                  href='/contact'
-                  className='bg-gold text-navy-dark font-mono text-label uppercase tracking-[0.25em] px-8 py-3 mb-6 hover:opacity-90 transition-opacity'
+            <HeroReveal>
+              <div className='relative z-10 max-w-2xl mx-auto flex flex-col items-center'>
+                <Image
+                  src='/logo-badge.png'
+                  alt='Fescue Golf Club'
+                  width={280}
+                  height={280}
+                  className='hero-item object-contain mb-10 drop-shadow-[0_4px_32px_rgba(184,158,86,0.22)]'
+                  style={{ transitionDelay: '0ms' }}
+                  priority
+                />
+                <h1
+                  className='hero-item font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'
+                  style={{ transitionDelay: '200ms' }}
                 >
-                  Request a Tour
-                </Link>
+                  The membership golf club.
+                  <br />
+                  <em>reinvented</em>
+                </h1>
+                <div
+                  className='hero-item w-12 h-px bg-gold mx-auto mb-8'
+                  style={{ transitionDelay: '380ms' }}
+                />
+                <div
+                  className='hero-item max-w-sm mx-auto mb-2 space-y-2.5'
+                  style={{ transitionDelay: '500ms' }}
+                >
+                  <div className='h-3.5 bg-cream/10 rounded w-full' />
+                  <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
+                  <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
+                </div>
+                <div
+                  className='hero-item flex flex-col sm:flex-row gap-4 justify-center'
+                  style={{ transitionDelay: '640ms' }}
+                >
+                  <Link
+                    href='/contact'
+                    className='bg-gold text-navy-dark font-mono text-label uppercase tracking-[0.25em] px-8 py-3 mb-6 hover:opacity-90 transition-opacity'
+                  >
+                    Request a Tour
+                  </Link>
+                </div>
               </div>
-            </div>
+            </HeroReveal>
           </section>
 
           {/* ── Feature strip (cream) ─────────────────────────────────────── */}
