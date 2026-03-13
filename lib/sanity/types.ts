@@ -42,3 +42,9 @@ export type SocialEvent = {
   image: SanityImageAsset | null
   rsvpUrl: string | null
 }
+
+export type ClubChampion = {
+  year: number
+  name: string
+  tagline: string | null
+}

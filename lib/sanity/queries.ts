@@ -1,6 +1,6 @@
 import { startOfMonth, endOfMonth } from 'date-fns'
 import { sanityClient, isSanityConfigured } from './client'
-import type { BulletinPost, SocialEvent } from './types'
+import type { BulletinPost, SocialEvent, ClubChampion } from './types'
 
 // ─── Bulletin Posts ───────────────────────────────────────────────────────────
 
@@ -71,6 +71,22 @@ export async function getAllUpcomingEvents(): Promise<SocialEvent[]> {
       }`,
       { now: new Date().toISOString() },
       { next: { revalidate: 60 } },
+    )
+  } catch {
+    return []
+  }
+}
+
+// ─── Club Champions ───────────────────────────────────────────────────────────
+
+export async function getAllChampions(): Promise<ClubChampion[]> {
+  if (!isSanityConfigured()) return []
+
+  try {
+    return await sanityClient.fetch(
+      `*[_type == "clubChampion"] | order(year desc) { year, name, tagline }`,
+      {},
+      { next: { revalidate: 300 } },
     )
   } catch {
     return []

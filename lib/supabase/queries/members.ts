@@ -31,6 +31,20 @@ export async function getActiveMembers(): Promise<DirectoryMember[]> {
   return (data ?? []) as DirectoryMember[]
 }
 
+// Admin only — single member by ID with all fields.
+export async function getMemberById(id: string): Promise<Member | null> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) return null
+  return data as Member
+}
+
 // Admin only — deactivate a member and sign them out.
 export async function deactivateMember(memberId: string): Promise<void> {
   const supabase = createAdminClient()

@@ -6,11 +6,12 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createInvite, deleteInvite, getPendingInvites } from '@/lib/supabase/queries/invites'
 import { deactivateMember } from '@/lib/supabase/queries/members'
-import { cancelBookingAdmin, getAdminBookingsForDate, type AdminBooking } from '@/lib/supabase/queries/bookings'
+import { cancelBookingAdmin, getAdminBookingsForDate, createBookingAdmin, type AdminBooking } from '@/lib/supabase/queries/bookings'
 import { updateMembershipRequestStatus } from '@/lib/supabase/queries/membership-requests'
 import { createBlackoutPeriod, deleteBlackoutPeriod } from '@/lib/supabase/queries/blackout-periods'
 import { createResendClient, isResendConfigured, FROM_ADDRESS } from '@/lib/resend/client'
 import { inviteEmailHtml, inviteEmailText } from '@/lib/resend/templates/invite'
+import { introEmailHtml, introEmailText } from '@/lib/resend/templates/intro'
 
 // ─── Auth guard helper ────────────────────────────────────────────────────────
 
@@ -221,6 +222,42 @@ export async function deleteBlackoutAction(
   }
 }
 
+// ─── Book on behalf of member ─────────────────────────────────────────────────
+
+export async function createBookingForMemberAction(
+  formData: FormData,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const memberId = formData.get('member_id') as string | null
+    const bayId = formData.get('bay_id') as string | null
+    const startTime = formData.get('start_time') as string | null
+    const durationRaw = formData.get('duration_minutes')
+    const duration = durationRaw ? parseInt(durationRaw as string, 10) : null
+
+    if (!memberId || !bayId || !startTime || !duration) {
+      return { error: 'All fields are required.' }
+    }
+    if (![60, 90, 120].includes(duration)) {
+      return { error: 'Invalid duration.' }
+    }
+
+    await createBookingAdmin({
+      member_id: memberId,
+      bay_id: bayId,
+      start_time: startTime,
+      duration_minutes: duration as 60 | 90 | 120,
+      guests: [],
+    })
+
+    revalidatePath('/admin')
+    revalidatePath(`/admin/members/${memberId}`)
+    return { success: 'Booking created.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to create booking.' }
+  }
+}
+
 export async function declineRequestAction(
   requestId: string,
 ): Promise<{ error?: string; success?: string }> {
@@ -231,5 +268,65 @@ export async function declineRequestAction(
     return { success: 'Request declined.' }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to decline request.' }
+  }
+}
+
+export async function sendIntroEmailAction(
+  requestId: string,
+  email: string,
+  fullName: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+
+    const firstName = fullName.split(' ')[0] ?? fullName
+    const scheduleUrl = process.env.NEXT_PUBLIC_SCHEDULE_URL ?? 'https://calendly.com/fescuegolfclub'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    void appUrl
+
+    if (!isResendConfigured()) {
+      console.log(`[DEV] Intro email to ${email} (${firstName}) — schedule: ${scheduleUrl}`)
+    } else {
+      const resend = createResendClient()
+      await resend.emails.send({
+        from: FROM_ADDRESS,
+        to: email,
+        subject: 'Thanks for your interest in Fescue Golf Club',
+        html: introEmailHtml({ firstName, scheduleUrl }),
+        text: introEmailText({ firstName, scheduleUrl }),
+      })
+    }
+
+    await updateMembershipRequestStatus(requestId, 'contacted')
+    revalidatePath('/admin')
+    return { success: `Intro email sent to ${email}.` }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to send intro email.' }
+  }
+}
+
+export async function markContactedAction(
+  requestId: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await updateMembershipRequestStatus(requestId, 'contacted')
+    revalidatePath('/admin')
+    return { success: 'Marked as contacted.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to update request.' }
+  }
+}
+
+export async function markPendingAction(
+  requestId: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await updateMembershipRequestStatus(requestId, 'pending')
+    revalidatePath('/admin')
+    return { success: 'Moved back to pending.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to update request.' }
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { updateProfileAction } from './actions'
+import { formatPhone } from '@/lib/utils/phone'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
@@ -80,7 +81,7 @@ export function ContactInfoSection({ phone, discord }: Props) {
             label="Phone"
             type="tel"
             value={phoneVal}
-            onChange={(e) => setPhoneVal(e.target.value)}
+            onChange={(e) => setPhoneVal(formatPhone(e.target.value))}
             placeholder="(555) 000-0000"
           />
           <Input
