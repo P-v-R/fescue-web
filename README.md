@@ -8,24 +8,27 @@ A member management and reservation platform for Fescue, a private golf simulato
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15 (App Router, TypeScript) |
+| Framework | Next.js 16 (App Router, TypeScript) |
 | Styling | Tailwind CSS v4 |
 | Auth & DB | Supabase (Postgres + Row-Level Security) |
 | CMS | Sanity v3 |
 | Merch | Shopify Storefront API |
 | Email | Resend |
+| Testing | Vitest |
 | Package manager | pnpm |
 
 ---
 
 ## Features
 
-- **Member auth** — invite-only sign-up, magic link / password login
-- **Bay reservation system** — real-time availability grid, 1–2 hr bookings, guest support (up to 3 guests per booking / foursome)
+- **Member auth** — invite-only sign-up, password login, forgot-password flow
+- **Bay reservation system** — real-time availability grid, 1–2 hr bookings, guest support
 - **Member dashboard** — bulletin feed (Sanity), upcoming reservations, club events calendar
-- **Admin panel** — reservation management, blackout periods, member directory, guest leads
+- **Member directory** — 2-column card grid with club champion plaque (Sanity-backed)
+- **Admin panel** — stats dashboard, member search/profiles, book-on-behalf, membership request pipeline with intro email (Resend)
+- **Tour request flow** — `/contact` form feeds membership pipeline; admin can send intro email and track status
 - **Public site** — landing page, about, request-a-tour contact form
-- **Merch store** — Shopify-powered product pages and cart
+- **Merch store** — Shopify-powered product pages and cart (in progress)
 
 ---
 
@@ -33,7 +36,7 @@ A member management and reservation platform for Fescue, a private golf simulato
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+ (see `.nvmrc`)
 - pnpm
 - Supabase project
 - Sanity project
@@ -87,7 +90,8 @@ lib/
   supabase/       — client, admin client, queries, types
   sanity/         — client, queries
   shopify/        — storefront client
-  utils/          — time slots, blackout helpers
+  resend/         — email templates
+  utils/          — time slots, blackout helpers, phone formatter
   validations/    — Zod schemas
 sanity/           — Sanity studio schemas
 supabase/

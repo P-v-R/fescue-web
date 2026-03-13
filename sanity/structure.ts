@@ -24,4 +24,14 @@ export const structure: StructureResolver = (S) =>
             .title('Social Events')
             .defaultOrdering([{ field: 'date', direction: 'asc' }]),
         ),
+
+      S.divider(),
+
+      S.listItem()
+        .title('Club Champions')
+        .child(
+          S.documentTypeList('clubChampion')
+            .title('Club Champions')
+            .defaultOrdering([{ field: 'year', direction: 'desc' }]),
+        ),
     ])

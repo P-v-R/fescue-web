@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
-import Link from 'next/link';
 import { format, startOfDay } from 'date-fns';
 import type { Member, Invite, MembershipRequest } from '@/lib/supabase/types';
 import type { AdminBooking, GuestLead } from '@/lib/supabase/queries/bookings';
@@ -16,6 +15,9 @@ import {
   getBookingsForDateAction,
   inviteFromRequestAction,
   declineRequestAction,
+  sendIntroEmailAction,
+  markContactedAction,
+  markPendingAction,
   createBlackoutAction,
   deleteBlackoutAction,
 } from './actions';
@@ -72,13 +74,15 @@ export function AdminClient({
     {
       id: 'requests',
       label: 'Membership Requests',
-      badge: requests.filter((r) => r.status === 'pending').length || undefined,
+      badge:
+        requests.filter(
+          (r) => r.status === 'pending' || r.status === 'contacted',
+        ).length || undefined,
     },
     { id: 'reservations', label: 'Reservations' },
     {
       id: 'guests',
       label: 'Guest Leads',
-      badge: guestLeads.length || undefined,
     },
     { id: 'blackout', label: 'Blackout Dates' },
   ];
@@ -241,21 +245,6 @@ function InvitesTab({
         </section>
       )}
 
-      {/* Active members */}
-      <section>
-        <div className='mb-5'>
-          <p className='font-mono text-label uppercase tracking-[0.28em] text-gold mb-1'>
-            Members
-          </p>
-          <Link
-            href='/admin/members'
-            className='font-serif text-xl font-light text-navy hover:text-gold transition-colors'
-          >
-            Active Members: <em>{activeMembers.length}</em>
-          </Link>
-        </div>
-      </section>
-
       {/* Admins (informational) */}
       {adminMembers.length > 0 && (
         <section>
@@ -361,9 +350,15 @@ function DeactivateButton({
 
 function RequestsTab({ requests }: { requests: MembershipRequest[] }) {
   const { message, isPending, run } = useActionState();
+  const [showArchived, setShowArchived] = useState(false);
 
-  const pending = requests.filter((r) => r.status === 'pending');
-  const handled = requests.filter((r) => r.status !== 'pending');
+  const active = requests.filter(
+    (r) => r.status === 'pending' || r.status === 'contacted',
+  );
+  const invited = requests.filter((r) => r.status === 'invited');
+  const archived = requests.filter(
+    (r) => r.status === 'declined' || r.status === 'onboarded',
+  );
 
   return (
     <div className='space-y-10'>
@@ -380,17 +375,18 @@ function RequestsTab({ requests }: { requests: MembershipRequest[] }) {
         </div>
       )}
 
+      {/* Active pipeline */}
       <section>
         <SectionHeader
-          label='Requests'
-          title='Pending Requests'
-          description='People who requested a membership invite from the website.'
+          label='Pipeline'
+          title={`Active Requests (${active.length})`}
+          description="People who requested membership. Mark as contacted once you've reached out."
         />
-        {pending.length === 0 ? (
-          <EmptyState text='No pending membership requests.' />
+        {active.length === 0 ? (
+          <EmptyState text='No active membership requests.' />
         ) : (
           <div className='space-y-4'>
-            {pending.map((req) => (
+            {active.map((req) => (
               <RequestCard
                 key={req.id}
                 request={req}
@@ -402,21 +398,53 @@ function RequestsTab({ requests }: { requests: MembershipRequest[] }) {
         )}
       </section>
 
-      {handled.length > 0 && (
+      {/* Invited */}
+      {invited.length > 0 && (
         <section>
-          <SectionHeader label='History' title='Handled Requests' />
+          <SectionHeader
+            label='Invited'
+            title={`Invite Sent (${invited.length})`}
+          />
           <Table
-            headers={['Name', 'Email', 'Date', 'Status']}
-            rows={handled.map((r) => ({
+            headers={['Name', 'Email', 'Date']}
+            rows={invited.map((r) => ({
               id: r.id,
               cells: [
                 r.full_name,
                 r.email,
                 format(new Date(r.created_at), 'MMM d, yyyy'),
-                <StatusBadge key={r.id} status={r.status} />,
               ],
             }))}
           />
+        </section>
+      )}
+
+      {/* Archived (collapsed) */}
+      {archived.length > 0 && (
+        <section>
+          <button
+            onClick={() => setShowArchived((v) => !v)}
+            className='flex items-center gap-2 font-mono text-label uppercase tracking-[0.2em] text-navy/40 hover:text-navy transition-colors'
+          >
+            <span>{showArchived ? '▾' : '▸'}</span>
+            Archived ({archived.length})
+          </button>
+          {showArchived && (
+            <div className='mt-4'>
+              <Table
+                headers={['Name', 'Email', 'Date', 'Status']}
+                rows={archived.map((r) => ({
+                  id: r.id,
+                  cells: [
+                    r.full_name,
+                    r.email,
+                    format(new Date(r.created_at), 'MMM d, yyyy'),
+                    <StatusBadge key={r.id} status={r.status} />,
+                  ],
+                }))}
+              />
+            </div>
+          )}
         </section>
       )}
     </div>
@@ -436,14 +464,25 @@ function RequestCard({
     <div className='bg-white border border-cream-mid p-4 sm:p-5'>
       <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
         <div className='min-w-0'>
-          <p className='font-serif text-base text-navy font-light'>
-            {request.full_name}
-          </p>
-          <p className='font-mono text-label text-navy/55 mt-0.5'>
-            {request.email}
-          </p>
+          <div className='flex items-center gap-3 mb-0.5'>
+            <p className='font-serif text-base text-navy font-light'>
+              {request.full_name}
+            </p>
+            {request.status === 'contacted' && (
+              <span className='font-mono text-label uppercase tracking-[0.12em] text-gold/80'>
+                Contacted
+              </span>
+            )}
+          </div>
+          <p className='font-mono text-label text-navy/55'>{request.email}</p>
+          {request.phone && (
+            <p className='font-mono text-label text-navy/55'>{request.phone}</p>
+          )}
           <p className='font-mono text-label text-navy/40 mt-0.5'>
             {format(new Date(request.created_at), 'MMM d, yyyy')}
+            {request.referral_source && (
+              <span className='ml-2'>· via {request.referral_source}</span>
+            )}
           </p>
           {request.message && (
             <p className='font-serif text-sm text-navy/70 mt-3 font-light italic leading-relaxed'>
@@ -451,7 +490,33 @@ function RequestCard({
             </p>
           )}
         </div>
-        <div className='flex gap-3 sm:flex-shrink-0'>
+        <div className='flex gap-3 sm:flex-shrink-0 flex-wrap'>
+          {request.status === 'pending' ? (
+            <button
+              disabled={isPending}
+              onClick={() => {
+                if (!confirm(`Send intro email to ${request.email}?`)) return;
+                run(() =>
+                  sendIntroEmailAction(
+                    request.id,
+                    request.email,
+                    request.full_name,
+                  ),
+                );
+              }}
+              className='flex-1 sm:flex-none border border-cream-mid text-navy/60 font-mono text-label uppercase tracking-[0.15em] px-4 py-2.5 hover:border-navy hover:text-navy transition-colors disabled:opacity-50'
+            >
+              Send Intro
+            </button>
+          ) : (
+            <button
+              disabled={isPending}
+              onClick={() => run(() => markPendingAction(request.id))}
+              className='flex-1 sm:flex-none border border-cream-mid text-navy/60 font-mono text-label uppercase tracking-[0.15em] px-4 py-2.5 hover:border-alert hover:text-alert transition-colors disabled:opacity-50'
+            >
+              Remark as Pending
+            </button>
+          )}
           <button
             disabled={isPending}
             onClick={() => {
@@ -460,7 +525,7 @@ function RequestCard({
             }}
             className='flex-1 sm:flex-none bg-navy text-cream font-mono text-label uppercase tracking-[0.15em] px-4 py-2.5 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity disabled:opacity-50'
           >
-            Invite
+            Send Invite
           </button>
           <button
             disabled={isPending}
@@ -468,7 +533,7 @@ function RequestCard({
               if (!confirm(`Decline ${request.full_name}'s request?`)) return;
               run(() => declineRequestAction(request.id));
             }}
-            className='flex-1 sm:flex-none border border-cream-mid text-navy/50 font-mono text-label uppercase tracking-[0.15em] px-4 py-2.5 hover:border-navy hover:text-navy transition-colors disabled:opacity-50'
+            className='flex-1 sm:flex-none border border-cream-mid text-navy/50 font-mono text-label uppercase tracking-[0.15em] px-4 py-2.5 hover:border-alert hover:text-alert transition-colors disabled:opacity-50'
           >
             Decline
           </button>
@@ -480,9 +545,11 @@ function RequestCard({
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
+    pending: 'text-gold',
+    contacted: 'text-gold/70 italic',
     invited: 'text-sage',
     declined: 'text-navy/40 line-through',
-    pending: 'text-gold',
+    onboarded: 'text-sage/60 italic',
   };
   return (
     <span
@@ -669,7 +736,7 @@ function GuestLeadsTab({ leads }: { leads: GuestLead[] }) {
     <div>
       <SectionHeader
         label='Sales'
-        title={`Guest Leads (${leads.length})`}
+        title={`Guest Leads`}
         description='Guests registered by members at the time of booking. Potential membership prospects.'
       />
 

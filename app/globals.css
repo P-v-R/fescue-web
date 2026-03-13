@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@400;500&family=Pinyon+Script&display=swap');
 @import 'tailwindcss';
 
 :root {
@@ -17,6 +17,7 @@
   --white: #ffffff;
   --border: rgba(10, 43, 94, 0.1);
   --border-warm: rgba(184, 150, 60, 0.25);
+  --alert: #b84c3c;
 }
 
 @theme inline {
@@ -32,6 +33,7 @@
   --color-sand-light: var(--sand-light);
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
+  --color-alert: var(--alert);
 
   --font-serif: 'Playfair Display', Georgia, serif;
   --font-serif-sc: 'Playfair Display', Georgia, serif;

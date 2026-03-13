@@ -48,8 +48,10 @@ export type MembershipRequest = {
   id: string
   full_name: string
   email: string
+  phone: string | null
+  referral_source: string | null
   message: string | null
-  status: 'pending' | 'invited' | 'declined'
+  status: 'pending' | 'contacted' | 'invited' | 'declined' | 'onboarded'
   created_at: string
 }
 
