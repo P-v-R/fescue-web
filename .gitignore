@@ -30,6 +30,9 @@ fescue-build-guide.md
 fescue-style-guide*.html
 CLAUDE.md
 
+# local scripts (contain project IDs / credentials)
+/scripts/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

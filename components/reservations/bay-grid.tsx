@@ -8,7 +8,7 @@ import {
   timeToSlotIndex,
   formatSlot,
 } from '@/lib/utils/time-slots';
-import type { Bay, Booking } from '@/lib/supabase/types';
+import type { Bay, BookingWithMember } from '@/lib/supabase/types';
 import { findBlackout, type BlackoutPeriod } from '@/lib/utils/blackout';
 
 type SelectedSlot = {
@@ -20,13 +20,13 @@ type SelectedSlot = {
 type CellState =
   | { type: 'available' }
   | { type: 'past' }
-  | { type: 'booked-mine'; booking: Booking; span: number }
-  | { type: 'booked-other'; booking: Booking; span: number }
+  | { type: 'booked-mine'; booking: BookingWithMember; span: number }
+  | { type: 'booked-other'; booking: BookingWithMember; span: number }
   | { type: 'continuation' };
 
 type Props = {
   bays: Bay[];
-  bookings: Booking[];
+  bookings: BookingWithMember[];
   date: Date;
   userId: string;
   onSlotClick: (slot: SelectedSlot) => void;
@@ -39,7 +39,7 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPer
 
   // Build a map from "slotIdx-bayIdx" to booking start, and a set of continuation keys
   const { bookingStarts, continuations } = useMemo(() => {
-    const bookingStarts = new Map<string, { booking: Booking; span: number }>();
+    const bookingStarts = new Map<string, { booking: BookingWithMember; span: number }>();
     const continuations = new Set<string>();
 
     for (const booking of bookings) {
@@ -61,9 +61,9 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPer
   }, [bookings, bays, slots]);
 
   return (
-    <div className='overflow-x-auto rounded-sm border border-cream-mid'>
+    <div className='overflow-x-auto rounded-sm border border-sand/40'>
       {/* Mobile scroll hint */}
-      <p className='sm:hidden px-3 py-1.5 bg-cream-mid/60 text-center font-mono text-label text-sand/70 uppercase tracking-[0.15em] border-b border-cream-mid'>
+      <p className='sm:hidden px-3 py-1.5 bg-cream-mid/60 text-center font-mono text-label text-sand/70 uppercase tracking-[0.15em] border-b border-sand/30'>
         ← Scroll to see all bays →
       </p>
       <div className='max-h-[70vh] sm:max-h-[75vh] overflow-y-auto'>
@@ -71,13 +71,13 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPer
           {/* Column headers */}
           <thead className='sticky top-0 z-10 bg-navy-dark'>
             <tr>
-              <th className='w-20 px-3 py-3 text-left font-mono text-label uppercase tracking-[0.22em] text-cream/50 border-r border-[rgba(255,255,255,0.06)]'>
+              <th className='w-20 px-3 py-3 text-left font-mono text-label uppercase tracking-[0.22em] text-cream/60 border-r border-[rgba(255,255,255,0.10)]'>
                 Time
               </th>
               {bays.map((bay) => (
                 <th
                   key={bay.id}
-                  className='px-3 py-3 text-center font-mono text-label uppercase tracking-[0.22em] text-cream border-r border-[rgba(255,255,255,0.06)] last:border-r-0'
+                  className='px-3 py-3 text-center font-mono text-label uppercase tracking-[0.22em] text-cream border-r border-[rgba(255,255,255,0.10)] last:border-r-0'
                 >
                   {bay.name}
                 </th>
@@ -93,15 +93,15 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPer
               return (
                 <tr
                   key={slotIdx}
-                  className={isHour ? 'border-t border-sand/25' : ''}
+                  className={isHour ? 'border-t border-sand/40' : ''}
                 >
                   {/* Time label */}
                   <td
                     className={[
-                      'px-3 py-0 border-r border-sand/20 text-right whitespace-nowrap',
+                      'px-3 py-0 border-r border-sand/35 text-right whitespace-nowrap',
                       'font-mono text-label tracking-[0.08em]',
                       isHour ? 'pt-2 pb-1' : 'py-1',
-                      isPastHour ? 'text-navy/25' : 'text-navy/55',
+                      isPastHour ? 'text-navy/35' : 'text-navy/65',
                     ].join(' ')}
                   >
                     {isHour ? formatSlot(slotTime) : ''}
@@ -121,27 +121,40 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPer
                       const { booking, span } = bookingData;
                       const isMine = booking.member_id === userId;
 
+                      const memberName = booking.members?.full_name ?? 'Member'
+                      const guestCount = booking.guests?.length ?? 0
+
                       return (
                         <td
                           key={bay.id}
                           rowSpan={span}
                           className={[
-                            'px-2 py-1 border-r border-sand/20 last:border-r-0 border-b border-b-sand/10',
+                            'px-2 py-1 border-r border-sand/35 last:border-r-0 border-b border-b-sand/20',
                             'align-top text-center',
-                            isMine ? 'bg-navy' : 'bg-sand/20',
+                            isMine ? 'bg-navy' : 'bg-navy/[0.22]',
                           ].join(' ')}
                         >
                           <div className='flex flex-col items-center gap-0.5 pt-1'>
                             <span
                               className={[
                                 'font-mono text-label uppercase tracking-[0.18em]',
-                                isMine ? 'text-cream/90' : 'text-navy/60',
+                                isMine ? 'text-cream/90' : 'text-navy/80',
                               ].join(' ')}
                             >
-                              {isMine ? 'My Booking' : 'Booked'}
+                              {isMine ? 'My Booking' : memberName}
                             </span>
-                            {isMine && (
-                              <span className='font-serif text-label text-cream/70 italic'>
+                            {guestCount > 0 && (
+                              <span
+                                className={[
+                                  'font-mono text-label tracking-[0.12em]',
+                                  isMine ? 'text-cream/60' : 'text-navy/55',
+                                ].join(' ')}
+                              >
+                                +{guestCount} {guestCount === 1 ? 'guest' : 'guests'}
+                              </span>
+                            )}
+                            {isMine && guestCount === 0 && (
+                              <span className='font-serif text-label text-cream/60 italic'>
                                 {booking.duration_minutes}m
                               </span>
                             )}
@@ -168,17 +181,17 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPer
                                 })
                         }
                         className={[
-                          'border-r border-sand/20 last:border-r-0 border-b border-b-sand/10',
+                          'border-r border-sand/35 last:border-r-0 border-b border-b-sand/20',
                           'h-7 transition-colors duration-150',
                           isPastHour
-                            ? 'bg-navy/[0.04] cursor-default'
+                            ? 'bg-navy/[0.08] cursor-default'
                             : isBlackedOut
-                              ? 'bg-gold/20 cursor-not-allowed'
-                              : 'bg-white cursor-pointer hover:bg-gold/[0.07] active:bg-gold/[0.14]',
+                              ? 'bg-gold/25 cursor-not-allowed'
+                              : 'bg-white cursor-pointer hover:bg-gold/[0.12] active:bg-gold/[0.20]',
                         ].join(' ')}
                       >
                         {isBlackedOut && isHour && (
-                          <span className='block px-1.5 pt-0.5 font-mono text-[9px] uppercase tracking-[0.15em] text-gold/70 truncate leading-tight'>
+                          <span className='block px-1.5 pt-0.5 font-mono text-[9px] uppercase tracking-[0.15em] text-gold/80 truncate leading-tight'>
                             {blackout.reason ?? 'Unavailable'}
                           </span>
                         )}
@@ -193,12 +206,12 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPer
       </div>
 
       {/* Legend */}
-      <div className='flex flex-wrap items-center gap-6 px-4 py-2.5 bg-cream border-t border-cream-mid'>
-        <LegendItem color='bg-white border border-sand/30' label='Available' />
+      <div className='flex flex-wrap items-center gap-6 px-4 py-2.5 bg-cream border-t border-sand/30'>
+        <LegendItem color='bg-white border border-sand/40' label='Available' />
         <LegendItem color='bg-navy' label='My booking' />
-        <LegendItem color='bg-sand/20 border border-sand/30' label='Booked' />
-        <LegendItem color='bg-navy/[0.04] border border-sand/20' label='Past' />
-        <LegendItem color='bg-gold/20 border border-gold/30' label='Blocked' />
+        <LegendItem color='bg-navy/[0.22] border border-navy/20' label='Booked' />
+        <LegendItem color='bg-navy/[0.08] border border-sand/35' label='Past' />
+        <LegendItem color='bg-gold/25 border border-gold/40' label='Blocked' />
       </div>
     </div>
   );

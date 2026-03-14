@@ -27,16 +27,17 @@ export default async function MemberProfilePage({ params }: Props) {
   const past = bookings.filter((b) => !b.cancelled_at && isBefore(new Date(b.start_time), now))
   const cancelled = bookings.filter((b) => b.cancelled_at)
 
-  // Flatten all guests across all bookings, deduplicated by email
+  // Flatten all guests across all bookings, deduplicated by email (or name if no email)
   const guestMap = new Map<string, { name: string; email: string; count: number }>()
   bookings.forEach((b) => {
     (b.guests ?? []).forEach((g) => {
-      const key = g.email.toLowerCase()
+      const key = (g.email ?? g.name ?? '').toLowerCase()
+      if (!key) return
       const existing = guestMap.get(key)
       if (existing) {
         existing.count++
       } else {
-        guestMap.set(key, { ...g, count: 1 })
+        guestMap.set(key, { ...g, email: g.email ?? '', count: 1 })
       }
     })
   })

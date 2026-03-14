@@ -17,19 +17,14 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: member } = await supabase
-    .from('members')
-    .select('full_name')
-    .eq('id', user!.id)
-    .single();
-
-  const [posts, upcomingEvents, upcomingBookings] = await Promise.all([
+  const [memberResult, posts, upcomingEvents, upcomingBookings] = await Promise.all([
+    supabase.from('members').select('full_name').eq('id', user!.id).single(),
     getBulletinPosts(),
     getAllUpcomingEvents(),
     getUpcomingMemberBookings(user!.id),
   ]);
 
-  const firstName = member?.full_name?.split(' ')[0] ?? 'Member';
+  const firstName = memberResult.data?.full_name?.split(' ')[0] ?? 'Member';
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';

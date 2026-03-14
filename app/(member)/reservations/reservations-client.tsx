@@ -5,7 +5,7 @@ import { format, addDays, startOfDay, endOfDay } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { BayGrid } from '@/components/reservations/bay-grid'
 import { BookingModal } from '@/components/reservations/booking-modal'
-import type { Bay, Booking } from '@/lib/supabase/types'
+import type { Bay, BookingWithMember } from '@/lib/supabase/types'
 import type { BlackoutPeriod } from '@/lib/utils/blackout'
 
 type SelectedSlot = {
@@ -16,32 +16,40 @@ type SelectedSlot = {
 
 type Props = {
   bays: Bay[]
-  initialBookings: Booking[]
+  initialBookings: BookingWithMember[]
   userId: string
   blackoutPeriods: BlackoutPeriod[]
 }
 
 export function ReservationsClient({ bays, initialBookings, userId, blackoutPeriods }: Props) {
   const [date, setDate] = useState<Date>(startOfDay(new Date()))
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings)
+  const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const isInitialMount = useRef(true)
+  const supabaseRef = useRef(createClient())
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
+    }
+  }, [])
 
   const fetchBookings = useCallback(async (d: Date) => {
     setIsLoading(true)
     try {
-      const supabase = createClient()
+      const supabase = supabaseRef.current
       const { data } = await supabase
         .from('bookings')
-        .select('*')
+        .select('*, members(full_name)')
         .gte('start_time', startOfDay(d).toISOString())
         .lte('start_time', endOfDay(d).toISOString())
         .is('cancelled_at', null)
         .order('start_time', { ascending: true })
 
-      setBookings((data as Booking[]) ?? [])
+      setBookings((data as BookingWithMember[]) ?? [])
     } finally {
       setIsLoading(false)
     }
@@ -51,7 +59,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
   // NOTE: Realtime must be enabled on the `bookings` table in Supabase dashboard
   // (Database → Replication → Tables → enable bookings)
   useEffect(() => {
-    const supabase = createClient()
+    const supabase = supabaseRef.current
     const channel = supabase
       .channel('bookings-grid')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
@@ -74,8 +82,9 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
   }, [date, fetchBookings])
 
   function showToast(message: string) {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
     setToast(message)
-    setTimeout(() => setToast(null), 4000)
+    toastTimeoutRef.current = setTimeout(() => setToast(null), 4000)
   }
 
   const today = startOfDay(new Date())
@@ -151,7 +160,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           onClose={() => setSelectedSlot(null)}
           onSuccess={(booking) => {
             setSelectedSlot(null)
-            setBookings((prev) => [...prev, booking])
+            setBookings((prev) => [...prev, { ...booking, members: null }])
             showToast(`Booked — ${selectedSlot.bayName} at ${format(new Date(booking.start_time), 'h:mm a')}`)
           }}
         />

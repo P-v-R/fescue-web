@@ -318,6 +318,35 @@ export async function markContactedAction(
   }
 }
 
+export async function sendGuestIntroEmailAction(
+  email: string,
+  fullName: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+
+    const firstName = fullName.split(' ')[0] ?? fullName
+    const scheduleUrl = process.env.NEXT_PUBLIC_SCHEDULE_URL ?? 'https://calendly.com/fescuegolfclub'
+
+    if (!isResendConfigured()) {
+      console.log(`[DEV] Guest intro email to ${email} (${firstName}) — schedule: ${scheduleUrl}`)
+    } else {
+      const resend = createResendClient()
+      await resend.emails.send({
+        from: FROM_ADDRESS,
+        to: email,
+        subject: 'Thanks for your interest in Fescue Golf Club',
+        html: introEmailHtml({ firstName, scheduleUrl }),
+        text: introEmailText({ firstName, scheduleUrl }),
+      })
+    }
+
+    return { success: `Intro email sent to ${email}.` }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to send intro email.' }
+  }
+}
+
 export async function markPendingAction(
   requestId: string,
 ): Promise<{ error?: string; success?: string }> {

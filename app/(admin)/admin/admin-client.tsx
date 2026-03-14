@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
+import { useState, useTransition, useEffect, useCallback, useRef, useMemo } from 'react';
+import Link from 'next/link';
 import { format, startOfDay } from 'date-fns';
 import type { Member, Invite, MembershipRequest } from '@/lib/supabase/types';
 import type { AdminBooking, GuestLead } from '@/lib/supabase/queries/bookings';
@@ -16,13 +17,14 @@ import {
   inviteFromRequestAction,
   declineRequestAction,
   sendIntroEmailAction,
+  sendGuestIntroEmailAction,
   markContactedAction,
   markPendingAction,
   createBlackoutAction,
   deleteBlackoutAction,
 } from './actions';
 
-type Tab = 'invites' | 'requests' | 'reservations' | 'guests' | 'blackout';
+type Tab = 'invites' | 'prospects' | 'reservations' | 'blackout';
 
 type Props = {
   members: Member[];
@@ -42,14 +44,24 @@ function useActionState() {
     isError: boolean;
   } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, []);
 
   function run(action: () => Promise<{ error?: string; success?: string }>) {
     startTransition(async () => {
-      const result = await action();
-      if (result.error) setMessage({ text: result.error, isError: true });
-      else if (result.success)
-        setMessage({ text: result.success, isError: false });
-      setTimeout(() => setMessage(null), 4000);
+      try {
+        const result = await action();
+        if (result.error) setMessage({ text: result.error, isError: true });
+        else if (result.success)
+          setMessage({ text: result.success, isError: false });
+      } catch {
+        setMessage({ text: 'Something went wrong. Please try again.', isError: true });
+      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => setMessage(null), 4000);
     });
   }
 
@@ -72,18 +84,14 @@ export function AdminClient({
   const tabs: { id: Tab; label: string; badge?: number }[] = [
     { id: 'invites', label: 'Members & Invites' },
     {
-      id: 'requests',
-      label: 'Membership Requests',
+      id: 'prospects',
+      label: 'Prospects',
       badge:
         requests.filter(
           (r) => r.status === 'pending' || r.status === 'contacted',
         ).length || undefined,
     },
     { id: 'reservations', label: 'Reservations' },
-    {
-      id: 'guests',
-      label: 'Guest Leads',
-    },
     { id: 'blackout', label: 'Blackout Dates' },
   ];
 
@@ -116,11 +124,12 @@ export function AdminClient({
       {activeTab === 'invites' && (
         <InvitesTab members={members} pendingInvites={pendingInvites} />
       )}
-      {activeTab === 'requests' && <RequestsTab requests={requests} />}
+      {activeTab === 'prospects' && (
+        <ProspectsTab requests={requests} leads={guestLeads} />
+      )}
       {activeTab === 'reservations' && (
         <ReservationsTab initialBookings={todaysBookings} />
       )}
-      {activeTab === 'guests' && <GuestLeadsTab leads={guestLeads} />}
       {activeTab === 'blackout' && (
         <BlackoutDatesTab blackoutPeriods={blackoutPeriods} bays={bays} />
       )}
@@ -245,6 +254,9 @@ function InvitesTab({
         </section>
       )}
 
+      {/* Member lookup */}
+      <MemberLookup members={members} />
+
       {/* Admins (informational) */}
       {adminMembers.length > 0 && (
         <section>
@@ -263,6 +275,60 @@ function InvitesTab({
         </section>
       )}
     </div>
+  );
+}
+
+function MemberLookup({ members }: { members: Member[] }) {
+  const [query, setQuery] = useState('');
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return members.filter(
+      (m) =>
+        m.full_name?.toLowerCase().includes(q) ||
+        m.email?.toLowerCase().includes(q),
+    ).slice(0, 8);
+  }, [query, members]);
+
+  return (
+    <section>
+      <SectionHeader
+        label='Lookup'
+        title='Member Search'
+        description='Search by name or email to open a member profile.'
+      />
+      <div className='max-w-md'>
+        <input
+          type='text'
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder='Name or email…'
+          className='w-full border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-sand focus:outline-none focus:border-navy'
+        />
+        {results.length > 0 && (
+          <div className='mt-2 border border-cream-mid divide-y divide-cream-mid'>
+            {results.map((m) => (
+              <Link
+                key={m.id}
+                href={`/admin/members/${m.id}`}
+                className='flex items-baseline justify-between px-4 py-2.5 hover:bg-cream transition-colors group'
+              >
+                <span className='font-serif text-sm font-light text-navy group-hover:text-navy-dark'>
+                  {m.full_name}
+                </span>
+                <span className='font-mono text-label text-navy/40 group-hover:text-navy/60 transition-colors'>
+                  {m.email}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+        {query.trim() && results.length === 0 && (
+          <p className='mt-3 font-mono text-label text-navy/30'>No members found.</p>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -346,7 +412,7 @@ function DeactivateButton({
   );
 }
 
-// ─── Tab 2: Membership Requests ───────────────────────────────────────────────
+// ─── Membership Requests (used inside ProspectsTab) ───────────────────────────
 
 function RequestsTab({ requests }: { requests: MembershipRequest[] }) {
   const { message, isPending, run } = useActionState();
@@ -577,9 +643,13 @@ function ReservationsTab({
 
   const fetchBookings = useCallback(async (d: string) => {
     setIsLoading(true);
-    const result = await getBookingsForDateAction(d);
-    setIsLoading(false);
-    if (result.bookings) setBookings(result.bookings);
+    try {
+      const result = await getBookingsForDateAction(d);
+      if (result.bookings) setBookings(result.bookings);
+      else if (result.error) setBookings([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -603,7 +673,6 @@ function ReservationsTab({
           <input
             type='date'
             value={dateStr}
-            max={todayStr}
             onChange={(e) => {
               if (e.target.value) setDateStr(e.target.value);
             }}
@@ -729,71 +798,111 @@ function ReservationRow({
   );
 }
 
-// ─── Tab 4: Guest Leads ───────────────────────────────────────────────────────
+// ─── Tab 4: Prospects (Membership Requests + Guest Leads) ────────────────────
 
-function GuestLeadsTab({ leads }: { leads: GuestLead[] }) {
+function ProspectsTab({
+  requests,
+  leads,
+}: {
+  requests: MembershipRequest[];
+  leads: GuestLead[];
+}) {
+  const { message, isPending, run } = useActionState();
+
   return (
-    <div>
-      <SectionHeader
-        label='Sales'
-        title={`Guest Leads`}
-        description='Guests registered by members at the time of booking. Potential membership prospects.'
-      />
+    <div className='flex flex-col gap-14'>
+      {/* Section 1: Membership Requests */}
+      <RequestsTab requests={requests} />
 
-      {leads.length === 0 ? (
-        <EmptyState text='No guest bookings recorded yet.' />
-      ) : (
-        <div className='overflow-x-auto'>
-          <table className='w-full text-left border-collapse'>
-            <thead>
-              <tr className='border-b border-cream-mid'>
-                {['Guest', 'Email', 'Brought by', 'Visit date', ''].map((h) => (
-                  <th
-                    key={h}
-                    className='pb-2 font-mono text-label uppercase tracking-[0.2em] text-navy/40 font-normal pr-6'
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {leads.map((lead, i) => (
-                <tr
-                  key={`${lead.booking_id}-${i}`}
-                  className='border-b border-cream-mid/60 last:border-0 group'
-                >
-                  <td className='py-3 pr-6 font-serif text-sm text-navy font-light whitespace-nowrap'>
-                    {lead.guest_name}
-                  </td>
-                  <td className='py-3 pr-6'>
-                    <a
-                      href={`mailto:${lead.guest_email}`}
-                      className='font-mono text-label text-gold hover:text-navy transition-colors underline underline-offset-2'
+      {/* Divider */}
+      <div className='flex items-center gap-4'>
+        <div className='flex-1 h-px bg-cream-mid' />
+        <span className='font-mono text-label uppercase tracking-[0.2em] text-navy/25'>
+          Guest Leads
+        </span>
+        <div className='flex-1 h-px bg-cream-mid' />
+      </div>
+
+      {/* Section 2: Guest Leads */}
+      <div>
+        <SectionHeader
+          label='Via Bookings'
+          title='Guest Leads'
+          description='Guests registered by members at the time of booking. Potential membership prospects.'
+        />
+
+        {message && (
+          <div
+            className={[
+              'mb-4 px-4 py-3 font-mono text-label uppercase tracking-[0.15em]',
+              message.isError
+                ? 'bg-red-50 text-red-700 border border-red-200'
+                : 'bg-sage/10 text-sage border border-sage/30',
+            ].join(' ')}
+          >
+            {message.text}
+          </div>
+        )}
+
+        {leads.length === 0 ? (
+          <EmptyState text='No guest bookings recorded yet.' />
+        ) : (
+          <div className='overflow-x-auto'>
+            <table className='w-full text-left border-collapse'>
+              <thead>
+                <tr className='border-b border-cream-mid'>
+                  {['Guest', 'Email', 'Brought by', 'Visit date', ''].map((h) => (
+                    <th
+                      key={h}
+                      className='pb-2 font-mono text-label uppercase tracking-[0.2em] text-navy/40 font-normal pr-6'
                     >
-                      {lead.guest_email}
-                    </a>
-                  </td>
-                  <td className='py-3 pr-6 font-mono text-label text-navy/55 whitespace-nowrap'>
-                    {lead.member?.full_name ?? '—'}
-                  </td>
-                  <td className='py-3 pr-6 font-mono text-label text-navy/55 whitespace-nowrap'>
-                    {format(new Date(lead.start_time), 'MMM d, yyyy')}
-                  </td>
-                  <td className='py-3'>
-                    <button
-                      onClick={() => {}}
-                      className='font-mono text-label uppercase tracking-[0.15em] text-cream bg-navy hover:bg-navy-mid px-3 py-1.5 transition-colors whitespace-nowrap'
-                    >
-                      Send intro email
-                    </button>
-                  </td>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {leads.map((lead, i) => (
+                  <tr
+                    key={`${lead.booking_id}-${i}`}
+                    className='border-b border-cream-mid/60 last:border-0 group'
+                  >
+                    <td className='py-3 pr-6 font-serif text-sm text-navy font-light whitespace-nowrap'>
+                      {lead.guest_name}
+                    </td>
+                    <td className='py-3 pr-6'>
+                      <a
+                        href={`mailto:${lead.guest_email}`}
+                        className='font-mono text-label text-gold hover:text-navy transition-colors underline underline-offset-2'
+                      >
+                        {lead.guest_email}
+                      </a>
+                    </td>
+                    <td className='py-3 pr-6 font-mono text-label text-navy/55 whitespace-nowrap'>
+                      {lead.member?.full_name ?? '—'}
+                    </td>
+                    <td className='py-3 pr-6 font-mono text-label text-navy/55 whitespace-nowrap'>
+                      {format(new Date(lead.start_time), 'MMM d, yyyy')}
+                    </td>
+                    <td className='py-3'>
+                      <button
+                        disabled={isPending}
+                        onClick={() => {
+                          if (!confirm(`Send intro email to ${lead.guest_email}?`)) return;
+                          run(() => sendGuestIntroEmailAction(lead.guest_email, lead.guest_name));
+                        }}
+                        className='font-mono text-label uppercase tracking-[0.15em] text-cream bg-navy hover:bg-navy-mid px-3 py-1.5 transition-colors whitespace-nowrap disabled:opacity-50'
+                      >
+                        {isPending ? 'Sending…' : 'Send intro email'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

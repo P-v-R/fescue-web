@@ -14,18 +14,19 @@ export default async function AccountPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: member } = await supabase
-    .from('members')
-    .select('full_name, email, phone, discord, created_at')
-    .eq('id', user!.id)
-    .single()
-
-  const { data: bookingsRaw } = await supabase
-    .from('bookings')
-    .select('*, bays(name)')
-    .eq('member_id', user!.id)
-    .is('cancelled_at', null)
-    .order('start_time', { ascending: false })
+  const [{ data: member }, { data: bookingsRaw }] = await Promise.all([
+    supabase
+      .from('members')
+      .select('full_name, email, phone, discord, created_at')
+      .eq('id', user!.id)
+      .single(),
+    supabase
+      .from('bookings')
+      .select('*, bays(name)')
+      .eq('member_id', user!.id)
+      .is('cancelled_at', null)
+      .order('start_time', { ascending: false }),
+  ])
 
   const bookings = (bookingsRaw ?? []) as BookingWithBay[]
   const now = new Date()

@@ -41,6 +41,11 @@ export function BookForMemberModal({ memberId, memberName, bays }: Props) {
   const [success, setSuccess] = useState(false)
   const [isPending, startTransition] = useTransition()
   const dialogRef = useRef<HTMLDivElement>(null)
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => { if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current) }
+  }, [])
 
   // Close on Escape
   useEffect(() => {
@@ -68,7 +73,7 @@ export function BookForMemberModal({ memberId, memberName, bays }: Props) {
         setError(result.error)
       } else {
         setSuccess(true)
-        setTimeout(() => {
+        successTimeoutRef.current = setTimeout(() => {
           setOpen(false)
           setSuccess(false)
         }, 1200)
