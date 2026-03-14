@@ -26,11 +26,11 @@ export function PublicNav() {
         {/* Left: Logo */}
         <Link href='/' className='shrink-0 justify-self-start'>
           <Image
-            src='/logo-badge2.png'
+            src='/logo-quail.png'
             alt='Fescue Golf Club'
-            width={44}
-            height={44}
-            className='object-contain mix-blend-multiply'
+            width={28}
+            height={28}
+            className='object-contain'
             priority
           />
         </Link>

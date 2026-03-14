@@ -108,6 +108,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           min={format(today, 'yyyy-MM-dd')}
           max={format(maxDate, 'yyyy-MM-dd')}
           onChange={(e) => {
+            if (!e.target.value) return
             const [year, month, day] = e.target.value.split('-').map(Number)
             setDate(startOfDay(new Date(year, month - 1, day)))
           }}

@@ -7,6 +7,7 @@ export type Member = {
   discord: string | null
   is_active: boolean
   is_admin: boolean
+  member_since: number | null
   created_at: string
 }
 

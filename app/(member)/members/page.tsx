@@ -104,39 +104,53 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
 }
 
 function MemberCard({ member }: { member: DirectoryMember }) {
-  return (
-    <div className='relative bg-white border border-cream-mid px-5 py-5 group hover:border-sand transition-colors'>
-      {/* Corner ticks */}
-      <span className='absolute top-0 left-0 w-3 h-3 border-t border-l border-gold/25 pointer-events-none' />
-      <span className='absolute top-0 right-0 w-3 h-3 border-t border-r border-gold/25 pointer-events-none' />
-      <span className='absolute bottom-0 left-0 w-3 h-3 border-b border-l border-gold/25 pointer-events-none' />
-      <span className='absolute bottom-0 right-0 w-3 h-3 border-b border-r border-gold/25 pointer-events-none' />
+  const joinYear =
+    member.member_since ?? new Date(member.created_at).getFullYear();
+  const yearLabel = `'${String(joinYear).slice(2)}`;
 
-      {/* Watermark quail */}
-      <div className='absolute bottom-3 right-4 opacity-[0.27] pointer-events-none select-none'>
-        <Image src='/logo-badge.png' alt='' width={48} height={57} />
+  return (
+    <div className='relative bg-white border border-cream-mid px-6 py-5 group hover:border-sand/60 transition-colors overflow-hidden'>
+      {/* Top row: name + member since */}
+      <div className='flex items-baseline justify-between gap-4 mb-4'>
+        <p className='font-serif text-2xl font-light text-navy group-hover:text-navy-dark transition-colors'>
+          {member.full_name}
+        </p>
+        <span className='font-mono text-[9px] uppercase tracking-[0.22em] text-sand whitespace-nowrap shrink-0 select-none'>
+          ◆ Member Since {yearLabel}
+        </span>
       </div>
 
-      <p className='font-serif text-lg font-light text-navy group-hover:text-navy-dark transition-colors mb-3'>
-        {member.full_name}
-      </p>
+      {/* Divider */}
+      <div className='flex items-center gap-2 mb-5'>
+        <div className='flex-1 h-px bg-sand/35' />
+        <div className='w-1 h-1 rotate-45 bg-sand/40 shrink-0' />
+        <div className='flex-1 h-px bg-sand/35' />
+      </div>
 
-      <div className='flex flex-col gap-1'>
-        {member.phone && (
-          <span className='font-mono text-label text-navy/40'>
-            {member.phone}
-          </span>
-        )}
-        {member.discord && (
-          <span className='font-mono text-label text-navy/40'>
-            {member.discord}
-          </span>
-        )}
-        {!member.phone && !member.discord && (
-          <span className='font-mono text-label text-navy/20'>
-            No contact listed
-          </span>
-        )}
+      {/* Contact + circular watermark */}
+      <div className='flex items-end justify-between gap-4'>
+        <div className='flex flex-col gap-1.5'>
+          {member.phone && (
+            <span className='font-serif text-base font-light text-navy/80'>
+              {member.phone}
+            </span>
+          )}
+          {member.discord && (
+            <span className='font-mono text-[11px] tracking-[0.1em] text-sand'>
+              {member.discord}
+            </span>
+          )}
+          {!member.phone && !member.discord && (
+            <span className='font-serif italic text-label text-navy/25'>
+              No contact listed
+            </span>
+          )}
+        </div>
+
+        {/* Watermark badge */}
+        <div className='opacity-[0.27] pointer-events-none select-none shrink-0'>
+          <Image src='/logo-badge.png' alt='' width={48} height={57} />
+        </div>
       </div>
     </div>
   );
