@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
@@ -42,19 +42,22 @@ export function CalendarClient({ initialEvents }: Props) {
     }
   }, [])
 
-  const handleEventClick = useCallback(
-    (arg: EventClickArg) => {
-      const event = events.find((e) => e._id === arg.event.id)
-      if (event) setSelectedEvent(event)
-    },
+  const eventsRef = useRef(events)
+  useEffect(() => { eventsRef.current = events }, [events])
+
+  const handleEventClick = useCallback((arg: EventClickArg) => {
+    const event = eventsRef.current.find((e) => e._id === arg.event.id)
+    if (event) setSelectedEvent(event)
+  }, [])
+
+  const calendarEvents = useMemo(
+    () => events.map((event) => ({
+      id: event._id,
+      title: event.title,
+      date: event.date.split('T')[0],
+    })),
     [events],
   )
-
-  const calendarEvents = events.map((event) => ({
-    id: event._id,
-    title: event.title,
-    date: event.date.split('T')[0], // all-day — avoids dot+time display
-  }))
 
   return (
     <div className="relative">
