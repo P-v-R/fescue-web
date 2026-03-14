@@ -33,13 +33,7 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
         {/* Header label */}
         <div className='flex items-center gap-4 mb-8'>
           <div className='flex-1 h-px bg-gold/20' />
-          <p
-            className='font-mono text-large uppercase text-gold/50 shrink-0'
-            style={{
-              fontFamily: "'Pinyon Script', cursive",
-              fontSize: '',
-            }}
-          >
+          <p className='font-mono text-label uppercase tracking-[0.3em] text-gold'>
             Fescue Club Champion
           </p>
           <div className='flex-1 h-px bg-gold/20' />
@@ -47,7 +41,13 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
 
         {/* Current champion — hero */}
         <div className='text-center mb-8'>
-          <p className='font-mono text-label uppercase tracking-[0.25em] text-gold/60 mb-3'>
+          <p
+            className='font-mono text-lg uppercase tracking-[0.25em] text-gold mb-3'
+            style={{
+              fontFamily: "'Pinyon Script', cursive",
+              fontSize: '',
+            }}
+          >
             {current.year}
           </p>
           <h2
@@ -60,7 +60,7 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
             {current.name}
           </h2>
           {current.tagline && (
-            <p className='font-serif text-sm italic text-cream/40 font-light mt-2'>
+            <p className='font-serif text-lg italic text-cream/70 font-light mt-2'>
               {current.tagline}
             </p>
           )}

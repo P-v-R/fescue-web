@@ -24,11 +24,11 @@ export default function HomePage() {
             <HeroReveal>
               <div className='relative z-10 max-w-2xl mx-auto flex flex-col items-center'>
                 <Image
-                  src='/logo-badge.png'
+                  src='/logo-badge2.png'
                   alt='Fescue Golf Club'
                   width={280}
                   height={280}
-                  className='hero-item object-contain mb-10 drop-shadow-[0_4px_32px_rgba(184,158,86,0.22)]'
+                  className='hero-item object-contain mb-10 drop-shadow-[0_4px_32px_rgba(184,158,86,0.22)] mix-blend-multiply'
                   style={{ transitionDelay: '0ms' }}
                   priority
                 />
@@ -246,7 +246,7 @@ export default function HomePage() {
         <footer className='border-t border-cream-mid bg-white py-8'>
           <div className='max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4'>
             <Image
-              src='/logo-badge.png'
+              src='/logo-badge2.png'
               alt='Fescue Golf Club'
               width={36}
               height={36}
