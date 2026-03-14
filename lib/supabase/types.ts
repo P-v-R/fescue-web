@@ -73,3 +73,8 @@ export type NewMember = {
 export type BookingWithBay = Booking & {
   bays: { name: string } | null
 }
+
+// Booking with member name joined (for the reservations grid)
+export type BookingWithMember = Booking & {
+  members: { full_name: string } | null
+}

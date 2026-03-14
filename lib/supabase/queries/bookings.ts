@@ -1,7 +1,7 @@
 import { startOfDay, endOfDay, startOfWeek, endOfWeek, addDays } from 'date-fns'
 import { createClient } from '../server'
 import { createAdminClient } from '../admin'
-import type { Booking, NewBooking } from '../types'
+import type { Booking, BookingWithMember, NewBooking } from '../types'
 
 export type AdminBooking = Booking & {
   members: { full_name: string; email: string } | null
@@ -128,20 +128,20 @@ export async function createBookingAdmin(data: NewBooking): Promise<Booking> {
 }
 
 // All bookings for a given date (across all bays), for the availability grid.
-// Includes non-cancelled bookings only.
-export async function getBookingsForDate(date: Date): Promise<Booking[]> {
+// Includes non-cancelled bookings only. Joins member name for display in the grid.
+export async function getBookingsForDate(date: Date): Promise<BookingWithMember[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('bookings')
-    .select('*')
+    .select('*, members(full_name)')
     .gte('start_time', startOfDay(date).toISOString())
     .lte('start_time', endOfDay(date).toISOString())
     .is('cancelled_at', null)
     .order('start_time', { ascending: true })
 
   if (error) throw new Error(`getBookingsForDate: ${error.message}`)
-  return (data ?? []) as Booking[]
+  return (data ?? []) as BookingWithMember[]
 }
 
 // Create a booking. Does an explicit overlap check first for a friendly error,
@@ -208,7 +208,6 @@ export async function getGuestLeads(): Promise<GuestLead[]> {
     .from('bookings')
     .select('id, guests, start_time, members(full_name, email)')
     .neq('guests', '[]')
-    .is('cancelled_at', null)
     .order('start_time', { ascending: false })
 
   if (error) throw new Error(`getGuestLeads: ${error.message}`)
