@@ -47,12 +47,20 @@ export function EventModal({ event, onClose }: Props) {
           <span className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-gold/40 z-10" />
           <span className="absolute bottom-0 right-0 w-4 h-4 border-b border-r border-gold/40 z-10" />
 
-          {/* Close */}
+          {/* Drag handle — mobile only */}
+          <div className="sm:hidden flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 rounded-full bg-navy/20" />
+          </div>
+
+          {/* Close button — always visible whether image is present or not */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-20 font-mono text-label uppercase tracking-[0.18em] text-sand hover:text-navy transition-colors"
+            aria-label="Close"
+            className="absolute top-3 right-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-cream/90 shadow-sm hover:bg-cream transition-colors"
           >
-            ✕
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M1 1l10 10M11 1L1 11" stroke="#0a2b5e" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
           </button>
 
           {/* Event image */}
