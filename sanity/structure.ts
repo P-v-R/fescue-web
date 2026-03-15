@@ -25,6 +25,16 @@ export const structure: StructureResolver = (S) =>
             .title('About Page'),
         ),
 
+      S.listItem()
+        .title('Announcement Banner')
+        .id('announcement')
+        .child(
+          S.document()
+            .schemaType('announcement')
+            .documentId('announcement')
+            .title('Announcement Banner'),
+        ),
+
       S.divider(),
 
       // ── Content ────────────────────────────────────────────────────────────

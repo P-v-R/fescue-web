@@ -3,5 +3,6 @@ import { socialEvent } from './social-event'
 import { clubChampion } from './club-champion'
 import { homePage } from './home-page'
 import { aboutPage } from './about-page'
+import { announcement } from './announcement'
 
-export const schemaTypes = [bulletinPost, socialEvent, clubChampion, homePage, aboutPage]
+export const schemaTypes = [bulletinPost, socialEvent, clubChampion, homePage, aboutPage, announcement]

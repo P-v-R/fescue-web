@@ -5,27 +5,11 @@ export const aboutPage = defineType({
   title: 'About Page',
   type: 'document',
   groups: [
-    { name: 'header', title: 'Header' },
     { name: 'whoWeAre', title: 'Who We Are' },
     { name: 'theSpace', title: 'The Space' },
     { name: 'values', title: 'Our Values' },
-    { name: 'cta', title: 'CTA' },
   ],
   fields: [
-    // ── Header ───────────────────────────────────────────────────────────────
-    defineField({
-      name: 'headerEyebrow',
-      title: 'Eyebrow',
-      type: 'string',
-      group: 'header',
-    }),
-    defineField({
-      name: 'headerHeadline',
-      title: 'Headline',
-      type: 'string',
-      group: 'header',
-    }),
-
     // ── Who We Are ───────────────────────────────────────────────────────────
     defineField({
       name: 'whoWeAreBody',
@@ -60,12 +44,6 @@ export const aboutPage = defineType({
 
     // ── Our Values ───────────────────────────────────────────────────────────
     defineField({
-      name: 'valuesEyebrow',
-      title: 'Eyebrow',
-      type: 'string',
-      group: 'values',
-    }),
-    defineField({
       name: 'values',
       title: 'Values',
       type: 'array',
@@ -87,20 +65,6 @@ export const aboutPage = defineType({
       validation: (Rule) => Rule.max(3),
       group: 'values',
       description: 'Up to 3 values.',
-    }),
-
-    // ── CTA ──────────────────────────────────────────────────────────────────
-    defineField({
-      name: 'ctaHeadline',
-      title: 'Headline',
-      type: 'string',
-      group: 'cta',
-    }),
-    defineField({
-      name: 'ctaSubtext',
-      title: 'Subtext',
-      type: 'string',
-      group: 'cta',
     }),
   ],
   preview: {

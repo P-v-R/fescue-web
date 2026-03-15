@@ -98,7 +98,7 @@ export function AdminClient({
   return (
     <div>
       {/* Tab bar */}
-      <div className='flex gap-0 border-b border-cream-mid mb-8 overflow-x-auto'>
+      <div className='flex gap-0 border-b border-cream-mid mb-8 flex-wrap'>
         {tabs.map((tab) => (
           <button
             key={tab.id}

@@ -45,10 +45,10 @@ export default async function AboutPage() {
       {/* Header */}
       <div className='mb-14'>
         <p className='font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-1'>
-          {cms?.headerEyebrow ?? 'Our Story'}
+          Our Story
         </p>
         <h1 className='font-serif text-3xl sm:text-display font-light text-navy'>
-          {cms?.headerHeadline ?? 'About Fescue'}
+          About Fescue
         </h1>
         <div className='w-12 h-px bg-gold mt-4' />
       </div>
@@ -134,7 +134,7 @@ export default async function AboutPage() {
         {/* Our Values */}
         <section>
           <p className='font-mono text-label font-medium uppercase tracking-[0.22em] text-navy/80 mb-8'>
-            {cms?.valuesEyebrow ?? 'Our Values'}
+            Our Values
           </p>
           <div className='grid grid-cols-1 sm:grid-cols-3 gap-8'>
             {values.map((v) => (
@@ -161,10 +161,10 @@ export default async function AboutPage() {
       {/* CTA */}
       <div className='mt-20 pt-12 border-t border-cream-mid text-center'>
         <p className='font-serif text-xl font-light text-navy mb-2'>
-          {cms?.ctaHeadline ?? 'Ready to see it in person?'}
+          Ready to see it in person?
         </p>
         <p className='font-mono text-label uppercase tracking-[0.15em] text-navy/45 mb-6'>
-          {cms?.ctaSubtext ?? 'Tours are available by appointment.'}
+          Tours are available by appointment.
         </p>
         <Link
           href='/contact'

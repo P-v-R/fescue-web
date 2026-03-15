@@ -107,6 +107,11 @@
   --sc: rgba(237, 230, 216, 0.8);
 }
 
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
 body {
   background-color: var(--cream-light);
 

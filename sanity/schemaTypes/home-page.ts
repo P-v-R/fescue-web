@@ -5,48 +5,37 @@ export const homePage = defineType({
   title: 'Homepage',
   type: 'document',
   groups: [
-    { name: 'hero', title: 'Hero' },
+    { name: 'features', title: 'Feature Strip' },
     { name: 'story', title: 'Our Story' },
     { name: 'clubhouse', title: 'Clubhouse' },
     { name: 'partners', title: 'Our Partners' },
-    { name: 'cta', title: 'CTA' },
   ],
   fields: [
-    // ── Hero ────────────────────────────────────────────────────────────────
+    // ── Feature Strip ────────────────────────────────────────────────────────
     defineField({
-      name: 'heroHeadline',
-      title: 'Headline',
-      type: 'string',
-      group: 'hero',
-    }),
-    defineField({
-      name: 'heroSubheadline',
-      title: 'Subheadline',
-      type: 'text',
-      rows: 3,
-      group: 'hero',
-    }),
-    defineField({
-      name: 'heroCtaLabel',
-      title: 'CTA Button Label',
-      type: 'string',
-      group: 'hero',
+      name: 'features',
+      title: 'Features (up to 3)',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            defineField({ name: 'label', title: 'Label', type: 'string' }),
+            defineField({ name: 'body', title: 'Body Copy', type: 'text', rows: 3 }),
+          ],
+          preview: {
+            select: { title: 'label' },
+            prepare({ title }) {
+              return { title: title || 'Untitled Feature' }
+            },
+          },
+        },
+      ],
+      validation: (Rule) => Rule.max(3),
+      group: 'features',
     }),
 
     // ── Our Story ────────────────────────────────────────────────────────────
-    defineField({
-      name: 'storyEyebrow',
-      title: 'Eyebrow',
-      type: 'string',
-      group: 'story',
-    }),
-    defineField({
-      name: 'storyHeadline',
-      title: 'Headline',
-      type: 'text',
-      rows: 3,
-      group: 'story',
-    }),
     defineField({
       name: 'storyBody',
       title: 'Body Copy',
@@ -64,26 +53,6 @@ export const homePage = defineType({
 
     // ── Clubhouse ────────────────────────────────────────────────────────────
     defineField({
-      name: 'clubhouseEyebrow',
-      title: 'Eyebrow',
-      type: 'string',
-      group: 'clubhouse',
-    }),
-    defineField({
-      name: 'clubhouseHeadline',
-      title: 'Headline',
-      type: 'text',
-      rows: 2,
-      group: 'clubhouse',
-    }),
-    defineField({
-      name: 'clubhouseBody',
-      title: 'Body Copy',
-      type: 'text',
-      rows: 4,
-      group: 'clubhouse',
-    }),
-    defineField({
       name: 'clubhousePhotos',
       title: 'Photos (up to 4)',
       type: 'array',
@@ -92,21 +61,15 @@ export const homePage = defineType({
       group: 'clubhouse',
       description: 'First photo displays larger. Remaining photos fill the grid.',
     }),
+    defineField({
+      name: 'clubhouseBody',
+      title: 'Body Copy',
+      type: 'text',
+      rows: 4,
+      group: 'clubhouse',
+    }),
 
     // ── Our Partners ─────────────────────────────────────────────────────────
-    defineField({
-      name: 'partnersEyebrow',
-      title: 'Eyebrow',
-      type: 'string',
-      group: 'partners',
-    }),
-    defineField({
-      name: 'partnersHeadline',
-      title: 'Headline',
-      type: 'text',
-      rows: 2,
-      group: 'partners',
-    }),
     defineField({
       name: 'partners',
       title: 'Partners',
@@ -132,27 +95,6 @@ export const homePage = defineType({
         },
       ],
       group: 'partners',
-    }),
-
-    // ── CTA ──────────────────────────────────────────────────────────────────
-    defineField({
-      name: 'ctaEyebrow',
-      title: 'Eyebrow',
-      type: 'string',
-      group: 'cta',
-    }),
-    defineField({
-      name: 'ctaHeadline',
-      title: 'Headline',
-      type: 'string',
-      group: 'cta',
-    }),
-    defineField({
-      name: 'ctaBody',
-      title: 'Body Copy',
-      type: 'text',
-      rows: 3,
-      group: 'cta',
     }),
   ],
   preview: {

@@ -35,6 +35,8 @@ function SanityImage({
   );
 }
 
+const FEATURE_PLACEHOLDERS = ['Feature One', 'Feature Two', 'Feature Three'];
+
 export default async function HomePage() {
   const cms = await getHomePage();
 
@@ -64,33 +66,21 @@ export default async function HomePage() {
                   className='hero-item font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'
                   style={{ transitionDelay: '200ms' }}
                 >
-                  {cms?.heroHeadline ?? (
-                    <>
-                      The membership golf club.
-                      <br />
-                      <em>reinvented</em>
-                    </>
-                  )}
+                  The membership golf club.
+                  <br />
+                  <em>reinvented</em>
                 </h1>
                 <div
                   className='hero-item w-12 h-px bg-gold mx-auto mb-8'
                   style={{ transitionDelay: '380ms' }}
                 />
                 <div
-                  className='hero-item max-w-sm mx-auto mb-2'
+                  className='hero-item max-w-sm mx-auto mb-2 space-y-2.5'
                   style={{ transitionDelay: '500ms' }}
                 >
-                  {cms?.heroSubheadline ? (
-                    <p className='font-sans text-sm text-cream/70 leading-relaxed'>
-                      {cms.heroSubheadline}
-                    </p>
-                  ) : (
-                    <div className='space-y-2.5'>
-                      <div className='h-3.5 bg-cream/10 rounded w-full' />
-                      <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
-                      <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
-                    </div>
-                  )}
+                  <div className='h-3.5 bg-cream/10 rounded w-full' />
+                  <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
+                  <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
                 </div>
                 <div
                   className='hero-item flex flex-col sm:flex-row gap-4 justify-center'
@@ -100,7 +90,7 @@ export default async function HomePage() {
                     href='/contact'
                     className='bg-gold text-navy-dark font-mono text-label uppercase tracking-[0.25em] px-8 py-3 mb-6 hover:opacity-80 transition-opacity'
                   >
-                    {cms?.heroCtaLabel ?? 'Request a Tour'}
+                    Request a Tour
                   </Link>
                 </div>
               </div>
@@ -111,19 +101,28 @@ export default async function HomePage() {
           <section className='relative overflow-hidden py-20 px-6 bg-cream border-b border-cream-mid'>
             <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
             <div className='relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10 text-center'>
-              {['Feature One', 'Feature Two', 'Feature Three'].map((label) => (
-                <div key={label} className='flex flex-col items-center gap-4'>
-                  <div className='w-8 h-px bg-gold' />
-                  <p className='font-mono text-label uppercase tracking-[0.25em] text-navy'>
-                    {label}
-                  </p>
-                  <div className='space-y-1.5 w-full max-w-[200px] mx-auto'>
-                    <div className='h-3 bg-navy/10 rounded w-full' />
-                    <div className='h-3 bg-navy/10 rounded w-5/6 mx-auto' />
-                    <div className='h-3 bg-navy/10 rounded w-4/6 mx-auto' />
+              {FEATURE_PLACEHOLDERS.map((placeholder, i) => {
+                const feature = cms?.features?.[i];
+                return (
+                  <div key={i} className='flex flex-col items-center gap-4'>
+                    <div className='w-8 h-px bg-gold' />
+                    <p className='font-mono text-label uppercase tracking-[0.25em] text-navy'>
+                      {feature?.label ?? placeholder}
+                    </p>
+                    {feature?.body ? (
+                      <p className='font-sans text-sm text-navy/60 leading-relaxed max-w-[200px]'>
+                        {feature.body}
+                      </p>
+                    ) : (
+                      <div className='space-y-1.5 w-full max-w-[200px] mx-auto'>
+                        <div className='h-3 bg-navy/10 rounded w-full' />
+                        <div className='h-3 bg-navy/10 rounded w-5/6 mx-auto' />
+                        <div className='h-3 bg-navy/10 rounded w-4/6 mx-auto' />
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
@@ -147,16 +146,12 @@ export default async function HomePage() {
             <div className='relative z-10 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center'>
               <div>
                 <p className='font-mono text-label uppercase tracking-[0.28em] text-gold mb-2'>
-                  {cms?.storyEyebrow ?? 'Our Story'}
+                  Our Story
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-cream mb-6 leading-snug'>
-                  {cms?.storyHeadline ?? (
-                    <>
-                      <em>The country club</em>
-                      <br />
-                      for the <em>not</em> country club set.
-                    </>
-                  )}
+                  <em>The country club</em>
+                  <br />
+                  for the <em>not</em> country club set.
                 </h2>
                 <div className='w-10 h-px bg-gold mb-8' />
                 {cms?.storyBody ? (
@@ -204,16 +199,12 @@ export default async function HomePage() {
             <div className='relative z-10 max-w-5xl mx-auto'>
               <div className='text-center mb-14'>
                 <p className='font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-2'>
-                  {cms?.clubhouseEyebrow ?? 'Clubhouse'}
+                  Clubhouse
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-navy leading-snug'>
-                  {cms?.clubhouseHeadline ?? (
-                    <>
-                      Not for everyone.
-                      <br />
-                      <em>For us.</em>
-                    </>
-                  )}
+                  Not for everyone.
+                  <br />
+                  <em>For us.</em>
                 </h2>
                 <div className='w-10 h-px bg-gold mx-auto mt-6' />
               </div>
@@ -291,16 +282,12 @@ export default async function HomePage() {
             <div className='relative z-10 max-w-5xl mx-auto'>
               <div className='text-center mb-14'>
                 <p className='font-mono text-label uppercase tracking-[0.28em] text-gold mb-2'>
-                  {cms?.partnersEyebrow ?? 'Our Partners'}
+                  Our Partners
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-cream leading-snug'>
-                  {cms?.partnersHeadline ?? (
-                    <>
-                      <em>Supported by brands</em>
-                      <br />
-                      that share our standards.
-                    </>
-                  )}
+                  <em>Supported by brands</em>
+                  <br />
+                  that share our standards.
                 </h2>
                 <div className='w-10 h-px bg-gold mx-auto mt-6' />
               </div>
@@ -349,20 +336,14 @@ export default async function HomePage() {
             <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
             <div className='relative z-10'>
               <p className='font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-3'>
-                {cms?.ctaEyebrow ?? 'Interested?'}
+                Interested?
               </p>
               <h2 className='font-serif text-2xl sm:text-3xl font-light text-navy mb-5'>
-                {cms?.ctaHeadline ?? 'Come see it for yourself.'}
+                Come see it for yourself.
               </h2>
-              <div className='max-w-xs mx-auto mb-8'>
-                {cms?.ctaBody ? (
-                  <p className='font-sans text-sm text-navy/60 leading-relaxed'>{cms.ctaBody}</p>
-                ) : (
-                  <div className='space-y-2'>
-                    <div className='h-3 bg-navy/10 rounded w-full' />
-                    <div className='h-3 bg-navy/10 rounded w-4/5 mx-auto' />
-                  </div>
-                )}
+              <div className='max-w-xs mx-auto space-y-2 mb-8'>
+                <div className='h-3 bg-navy/10 rounded w-full' />
+                <div className='h-3 bg-navy/10 rounded w-4/5 mx-auto' />
               </div>
               <Link
                 href='/contact'

@@ -55,41 +55,37 @@ export type SanityPartner = {
   logo: SanityImageAsset | null
 }
 
+export type SanityFeature = {
+  _key: string
+  label: string | null
+  body: string | null
+}
+
 export type SanityValueCard = {
   _key: string
   title: string | null
   body: string | null
 }
 
+export type SanityAnnouncement = {
+  isActive: boolean
+  type: 'announcement' | 'alert'
+  message: string
+}
+
 export type HomePage = {
-  heroHeadline: string | null
-  heroSubheadline: string | null
-  heroCtaLabel: string | null
-  storyEyebrow: string | null
-  storyHeadline: string | null
+  features: SanityFeature[] | null
   storyBody: string | null
   storyPhoto: SanityImageAsset | null
-  clubhouseEyebrow: string | null
-  clubhouseHeadline: string | null
-  clubhouseBody: string | null
   clubhousePhotos: SanityImageAsset[] | null
-  partnersEyebrow: string | null
-  partnersHeadline: string | null
+  clubhouseBody: string | null
   partners: SanityPartner[] | null
-  ctaEyebrow: string | null
-  ctaHeadline: string | null
-  ctaBody: string | null
 }
 
 export type AboutPage = {
-  headerEyebrow: string | null
-  headerHeadline: string | null
   whoWeAreBody: string | null
   whoWeArePhoto: SanityImageAsset | null
   theSpaceBody: string | null
   theSpacePhoto: SanityImageAsset | null
-  valuesEyebrow: string | null
   values: SanityValueCard[] | null
-  ctaHeadline: string | null
-  ctaSubtext: string | null
 }
