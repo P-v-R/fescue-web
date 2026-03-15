@@ -21,8 +21,9 @@ export function PublicNav() {
   }, [pathname]);
 
   return (
-    <header className='border-b border-white/10 bg-navy-dark sticky top-0 z-30'>
-      <div className='max-w-6xl mx-auto px-4 sm:px-8 h-14 grid grid-cols-3 items-center'>
+    <header className='relative border-b border-white/10 bg-navy-dark sticky top-0 z-30'>
+      <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.12] pointer-events-none' />
+      <div className='relative z-10 max-w-6xl mx-auto px-4 sm:px-8 h-14 grid grid-cols-3 items-center'>
         {/* Left: Logo */}
         <Link href='/' className='shrink-0 justify-self-start'>
           <Image
@@ -96,7 +97,8 @@ export function PublicNav() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className='sm:hidden bg-navy-dark border-t border-white/10 px-4 py-3 space-y-1'>
+        <div className='relative sm:hidden bg-navy-dark border-t border-white/10 px-4 py-3 space-y-1'>
+          <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.12] pointer-events-none' />
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}

@@ -13,6 +13,7 @@
   --sand: #c8b89a;
   --sand-light: #e0d4bc;
   --gold: #b8963c;
+  --gold-dark: #7a6328;
   --gold-light: #d4af60;
   --white: #ffffff;
   --border: rgba(10, 43, 94, 0.1);
@@ -32,6 +33,7 @@
   --color-sand: var(--sand);
   --color-sand-light: var(--sand-light);
   --color-gold: var(--gold);
+  --color-gold-dark: var(--gold-dark);
   --color-gold-light: var(--gold-light);
   --color-alert: var(--alert);
 

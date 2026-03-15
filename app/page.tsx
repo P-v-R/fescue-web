@@ -19,6 +19,7 @@ export default function HomePage() {
         <main className='flex-1'>
           {/* ── Hero ─────────────────────────────────────────────────────── */}
           <section className='relative flex flex-col items-center justify-center text-center px-6 py-28 sm:py-44 overflow-hidden bg-navy-dark'>
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.12] pointer-events-none' />
             <div className='absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_40%,rgba(184,158,86,0.08),transparent)] pointer-events-none' />
 
             <HeroReveal>
@@ -58,7 +59,7 @@ export default function HomePage() {
                 >
                   <Link
                     href='/contact'
-                    className='bg-gold text-navy-dark font-mono text-label uppercase tracking-[0.25em] px-8 py-3 mb-6 hover:opacity-90 transition-opacity'
+                    className='bg-gold text-navy-dark font-mono text-label uppercase tracking-[0.25em] px-8 py-3 mb-6 hover:opacity-80 transition-opacity'
                   >
                     Request a Tour
                   </Link>
@@ -69,7 +70,8 @@ export default function HomePage() {
 
           {/* ── Feature strip (cream) ─────────────────────────────────────── */}
           <section className='relative overflow-hidden py-20 px-6 bg-cream border-b border-cream-mid'>
-            <div className='max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10 text-center'>
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none' />
+            <div className='relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10 text-center'>
               {['Feature One', 'Feature Two', 'Feature Three'].map((label) => (
                 <div key={label} className='flex flex-col items-center gap-4'>
                   <div className='w-8 h-px bg-gold' />
@@ -77,9 +79,9 @@ export default function HomePage() {
                     {label}
                   </p>
                   <div className='space-y-1.5 w-full max-w-[200px] mx-auto'>
-                    <div className='h-3 bg-cream-mid rounded w-full' />
-                    <div className='h-3 bg-cream-mid rounded w-5/6 mx-auto' />
-                    <div className='h-3 bg-cream-mid rounded w-4/6 mx-auto' />
+                    <div className='h-3 bg-navy/10 rounded w-full' />
+                    <div className='h-3 bg-navy/10 rounded w-5/6 mx-auto' />
+                    <div className='h-3 bg-navy/10 rounded w-4/6 mx-auto' />
                   </div>
                 </div>
               ))}
@@ -88,6 +90,7 @@ export default function HomePage() {
 
           {/* ── Our Story (navy-dark) ─────────────────────────────────────── */}
           <section className='relative overflow-hidden bg-navy-dark py-24 sm:py-32 px-6'>
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.12] pointer-events-none' />
             <ParallaxDecor
               speed={0.2}
               className='absolute top-1/2 -translate-y-1/2 -left-10 pointer-events-none select-none'
@@ -138,9 +141,10 @@ export default function HomePage() {
 
           {/* ── Clubhouse (cream/sand) ─────────────────────────────────────── */}
           <section className='relative overflow-hidden bg-[#f5ede0] py-24 sm:py-32 px-6 border-y border-sand/30'>
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none' />
             <div className='relative z-10 max-w-5xl mx-auto'>
               <div className='text-center mb-14'>
-                <p className='font-mono text-label uppercase tracking-[0.28em] text-gold mb-2'>
+                <p className='font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-2'>
                   Clubhouse
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-navy leading-snug'>
@@ -181,6 +185,7 @@ export default function HomePage() {
 
           {/* ── Our Partners (navy-dark) ──────────────────────────────────── */}
           <section className='relative overflow-hidden bg-navy-dark py-24 sm:py-32 px-6'>
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.12] pointer-events-none' />
             <ParallaxDecor
               speed={0.2}
               className='absolute top-1/2 -translate-y-1/2 -right-10 pointer-events-none select-none'
@@ -223,28 +228,32 @@ export default function HomePage() {
           </section>
 
           {/* ── CTA (cream) ───────────────────────────────────────────────── */}
-          <section className='py-24 px-6 bg-cream text-center border-t border-cream-mid'>
-            <p className='font-mono text-label uppercase tracking-[0.28em] text-gold mb-3'>
-              Interested?
-            </p>
-            <h2 className='font-serif text-2xl sm:text-3xl font-light text-navy mb-5'>
-              Come see it for yourself.
-            </h2>
-            <div className='max-w-xs mx-auto space-y-2 mb-8'>
-              <div className='h-3 bg-cream-mid rounded w-full' />
-              <div className='h-3 bg-cream-mid rounded w-4/5 mx-auto' />
+          <section className='relative py-24 px-6 bg-cream text-center border-t border-cream-mid'>
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none' />
+            <div className='relative z-10'>
+              <p className='font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-3'>
+                Interested?
+              </p>
+              <h2 className='font-serif text-2xl sm:text-3xl font-light text-navy mb-5'>
+                Come see it for yourself.
+              </h2>
+              <div className='max-w-xs mx-auto space-y-2 mb-8'>
+                <div className='h-3 bg-navy/10 rounded w-full' />
+                <div className='h-3 bg-navy/10 rounded w-4/5 mx-auto' />
+              </div>
+              <Link
+                href='/contact'
+                className='inline-block bg-navy text-cream font-mono text-label uppercase tracking-[0.25em] px-8 py-3 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-80 transition-opacity'
+              >
+                Request a Tour
+              </Link>
             </div>
-            <Link
-              href='/contact'
-              className='inline-block bg-navy text-cream font-mono text-label uppercase tracking-[0.25em] px-8 py-3 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity'
-            >
-              Request a Tour
-            </Link>
           </section>
         </main>
 
-        <footer className='border-t border-cream-mid bg-white py-8'>
-          <div className='max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4'>
+        <footer className='relative border-t border-cream-mid bg-cream py-8'>
+          <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none' />
+          <div className='relative z-10 max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4'>
             <Image
               src='/logo-badge2.png'
               alt='Fescue Golf Club'
