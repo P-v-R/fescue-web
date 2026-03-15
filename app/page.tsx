@@ -19,7 +19,7 @@ export default function HomePage() {
         <main className='flex-1'>
           {/* ── Hero ─────────────────────────────────────────────────────── */}
           <section className='relative flex flex-col items-center justify-center text-center px-6 py-28 sm:py-44 overflow-hidden bg-navy-dark'>
-            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.12] pointer-events-none' />
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.08] pointer-events-none' />
             <div className='absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_40%,rgba(184,158,86,0.08),transparent)] pointer-events-none' />
 
             <HeroReveal>
@@ -70,7 +70,7 @@ export default function HomePage() {
 
           {/* ── Feature strip (cream) ─────────────────────────────────────── */}
           <section className='relative overflow-hidden py-20 px-6 bg-cream border-b border-cream-mid'>
-            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none' />
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
             <div className='relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10 text-center'>
               {['Feature One', 'Feature Two', 'Feature Three'].map((label) => (
                 <div key={label} className='flex flex-col items-center gap-4'>
@@ -90,7 +90,7 @@ export default function HomePage() {
 
           {/* ── Our Story (navy-dark) ─────────────────────────────────────── */}
           <section className='relative overflow-hidden bg-navy-dark py-24 sm:py-32 px-6'>
-            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.12] pointer-events-none' />
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.08] pointer-events-none' />
             <ParallaxDecor
               speed={0.2}
               className='absolute top-1/2 -translate-y-1/2 -left-10 pointer-events-none select-none'
@@ -141,7 +141,7 @@ export default function HomePage() {
 
           {/* ── Clubhouse (cream/sand) ─────────────────────────────────────── */}
           <section className='relative overflow-hidden bg-[#f5ede0] py-24 sm:py-32 px-6 border-y border-sand/30'>
-            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none' />
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
             <div className='relative z-10 max-w-5xl mx-auto'>
               <div className='text-center mb-14'>
                 <p className='font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-2'>
@@ -185,7 +185,7 @@ export default function HomePage() {
 
           {/* ── Our Partners (navy-dark) ──────────────────────────────────── */}
           <section className='relative overflow-hidden bg-navy-dark py-24 sm:py-32 px-6'>
-            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.12] pointer-events-none' />
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.08] pointer-events-none' />
             <ParallaxDecor
               speed={0.2}
               className='absolute top-1/2 -translate-y-1/2 -right-10 pointer-events-none select-none'
@@ -229,7 +229,7 @@ export default function HomePage() {
 
           {/* ── CTA (cream) ───────────────────────────────────────────────── */}
           <section className='relative py-24 px-6 bg-cream text-center border-t border-cream-mid'>
-            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none' />
+            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
             <div className='relative z-10'>
               <p className='font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-3'>
                 Interested?
@@ -252,7 +252,7 @@ export default function HomePage() {
         </main>
 
         <footer className='relative border-t border-cream-mid bg-cream py-8'>
-          <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none' />
+          <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
           <div className='relative z-10 max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4'>
             <Image
               src='/logo-badge2.png'

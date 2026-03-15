@@ -11,7 +11,7 @@ export default function PublicLayout({
   return (
     <CartProvider>
       <div className='relative min-h-screen bg-cream flex flex-col'>
-        <div className='fixed inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-80 pointer-events-none z-0' />
+        <div className='fixed inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none z-0' />
         <div className='relative z-10 flex flex-col min-h-screen'>
         <PublicNav />
 
