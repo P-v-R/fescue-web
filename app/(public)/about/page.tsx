@@ -1,83 +1,157 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import { getAboutPage } from '@/lib/sanity/queries';
+import { urlFor } from '@/lib/sanity/client';
+import type { SanityImageAsset } from '@/lib/sanity/types';
 
 export const metadata = {
   title: 'About — Fescue Golf Club',
 };
 
-export default function AboutPage() {
+function SanityImage({
+  image,
+  alt,
+  sizes,
+}: {
+  image: SanityImageAsset;
+  alt: string;
+  sizes?: string;
+}) {
+  return (
+    <Image
+      src={urlFor(image).width(1200).url()}
+      alt={alt}
+      fill
+      className='object-cover'
+      sizes={sizes ?? '(max-width: 640px) 100vw, 50vw'}
+    />
+  );
+}
+
+export default async function AboutPage() {
+  const cms = await getAboutPage();
+
+  const values =
+    cms?.values && cms.values.length > 0
+      ? cms.values
+      : [
+          { _key: 'game', title: 'The Game', body: null },
+          { _key: 'community', title: 'The Community', body: null },
+          { _key: 'experience', title: 'The Experience', body: null },
+        ];
+
   return (
     <div className='max-w-4xl mx-auto px-4 sm:px-8 py-16 sm:py-24'>
       {/* Header */}
       <div className='mb-14'>
         <p className='font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-1'>
-          Our Story
+          {cms?.headerEyebrow ?? 'Our Story'}
         </p>
         <h1 className='font-serif text-3xl sm:text-display font-light text-navy'>
-          About Fescue
+          {cms?.headerHeadline ?? 'About Fescue'}
         </h1>
         <div className='w-12 h-px bg-gold mt-4' />
       </div>
 
       <div className='space-y-16'>
+        {/* Who We Are */}
         <section className='grid grid-cols-1 sm:grid-cols-2 gap-12 items-start'>
           <div className='space-y-4'>
             <p className='font-mono text-label font-medium uppercase tracking-[0.22em] text-navy/80'>
               Who We Are
             </p>
-            <div className='space-y-2'>
-              <div className='h-4 bg-navy/10 rounded w-full' />
-              <div className='h-4 bg-navy/10 rounded w-5/6' />
-              <div className='h-4 bg-navy/10 rounded w-full' />
-              <div className='h-4 bg-navy/10 rounded w-4/6' />
-            </div>
+            {cms?.whoWeAreBody ? (
+              <div className='space-y-3'>
+                {cms.whoWeAreBody.split('\n\n').map((para, i) => (
+                  <p key={i} className='font-sans text-sm text-navy/70 leading-relaxed'>
+                    {para}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className='space-y-2'>
+                <div className='h-4 bg-navy/10 rounded w-full' />
+                <div className='h-4 bg-navy/10 rounded w-5/6' />
+                <div className='h-4 bg-navy/10 rounded w-full' />
+                <div className='h-4 bg-navy/10 rounded w-4/6' />
+              </div>
+            )}
           </div>
-          <div className='aspect-[4/3] bg-navy/[0.06] border border-navy/10 flex items-center justify-center'>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/20'>
-              Photo
-            </p>
+          <div className='relative aspect-[4/3] overflow-hidden'>
+            {cms?.whoWeArePhoto ? (
+              <SanityImage image={cms.whoWeArePhoto} alt='Who we are' />
+            ) : (
+              <div className='absolute inset-0 bg-navy/[0.06] border border-navy/10 flex items-center justify-center'>
+                <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/20'>
+                  Photo
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
         <div className='h-px bg-sand/30' />
 
+        {/* The Space */}
         <section className='grid grid-cols-1 sm:grid-cols-2 gap-12 items-start'>
-          <div className='aspect-[4/3] bg-navy/[0.06] border border-navy/10 flex items-center justify-center sm:order-first order-last'>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/20'>
-              Photo
-            </p>
+          <div className='relative aspect-[4/3] overflow-hidden sm:order-first order-last'>
+            {cms?.theSpacePhoto ? (
+              <SanityImage image={cms.theSpacePhoto} alt='The space' />
+            ) : (
+              <div className='absolute inset-0 bg-navy/[0.06] border border-navy/10 flex items-center justify-center'>
+                <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/20'>
+                  Photo
+                </p>
+              </div>
+            )}
           </div>
           <div className='space-y-4'>
             <p className='font-mono text-label font-medium uppercase tracking-[0.22em] text-navy/80'>
               The Space
             </p>
-            <div className='space-y-2'>
-              <div className='h-4 bg-navy/10 rounded w-full' />
-              <div className='h-4 bg-navy/10 rounded w-3/4' />
-              <div className='h-4 bg-navy/10 rounded w-full' />
-              <div className='h-4 bg-navy/10 rounded w-5/6' />
-              <div className='h-4 bg-navy/10 rounded w-2/3' />
-            </div>
+            {cms?.theSpaceBody ? (
+              <div className='space-y-3'>
+                {cms.theSpaceBody.split('\n\n').map((para, i) => (
+                  <p key={i} className='font-sans text-sm text-navy/70 leading-relaxed'>
+                    {para}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className='space-y-2'>
+                <div className='h-4 bg-navy/10 rounded w-full' />
+                <div className='h-4 bg-navy/10 rounded w-3/4' />
+                <div className='h-4 bg-navy/10 rounded w-full' />
+                <div className='h-4 bg-navy/10 rounded w-5/6' />
+                <div className='h-4 bg-navy/10 rounded w-2/3' />
+              </div>
+            )}
           </div>
         </section>
 
         <div className='h-px bg-sand/30' />
 
+        {/* Our Values */}
         <section>
           <p className='font-mono text-label font-medium uppercase tracking-[0.22em] text-navy/80 mb-8'>
-            Our Values
+            {cms?.valuesEyebrow ?? 'Our Values'}
           </p>
           <div className='grid grid-cols-1 sm:grid-cols-3 gap-8'>
-            {['The Game', 'The Community', 'The Experience'].map((v) => (
-              <div key={v} className='space-y-3'>
+            {values.map((v) => (
+              <div key={v._key} className='space-y-3'>
                 <div className='w-6 h-px bg-gold' />
                 <p className='font-mono text-label uppercase tracking-[0.2em] text-navy'>
-                  {v}
+                  {v.title ?? ''}
                 </p>
-                <div className='space-y-1.5'>
-                  <div className='h-3 bg-navy/10 rounded w-full' />
-                  <div className='h-3 bg-navy/10 rounded w-5/6' />
-                  <div className='h-3 bg-navy/10 rounded w-4/6' />
-                </div>
+                {v.body ? (
+                  <p className='font-sans text-sm text-navy/60 leading-relaxed'>{v.body}</p>
+                ) : (
+                  <div className='space-y-1.5'>
+                    <div className='h-3 bg-navy/10 rounded w-full' />
+                    <div className='h-3 bg-navy/10 rounded w-5/6' />
+                    <div className='h-3 bg-navy/10 rounded w-4/6' />
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -87,10 +161,10 @@ export default function AboutPage() {
       {/* CTA */}
       <div className='mt-20 pt-12 border-t border-cream-mid text-center'>
         <p className='font-serif text-xl font-light text-navy mb-2'>
-          Ready to see it in person?
+          {cms?.ctaHeadline ?? 'Ready to see it in person?'}
         </p>
         <p className='font-mono text-label uppercase tracking-[0.15em] text-navy/45 mb-6'>
-          Tours are available by appointment.
+          {cms?.ctaSubtext ?? 'Tours are available by appointment.'}
         </p>
         <Link
           href='/contact'

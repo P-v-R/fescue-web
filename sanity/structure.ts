@@ -4,6 +4,30 @@ export const structure: StructureResolver = (S) =>
   S.list()
     .title('Fescue Club')
     .items([
+      // ── Pages ──────────────────────────────────────────────────────────────
+      S.listItem()
+        .title('Homepage')
+        .id('homePage')
+        .child(
+          S.document()
+            .schemaType('homePage')
+            .documentId('homePage')
+            .title('Homepage'),
+        ),
+
+      S.listItem()
+        .title('About Page')
+        .id('aboutPage')
+        .child(
+          S.document()
+            .schemaType('aboutPage')
+            .documentId('aboutPage')
+            .title('About Page'),
+        ),
+
+      S.divider(),
+
+      // ── Content ────────────────────────────────────────────────────────────
       S.listItem()
         .title('Bulletin Board')
         .child(

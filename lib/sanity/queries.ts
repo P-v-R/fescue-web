@@ -1,6 +1,6 @@
 import { startOfMonth, endOfMonth } from 'date-fns'
 import { sanityClient, isSanityConfigured } from './client'
-import type { BulletinPost, SocialEvent, ClubChampion } from './types'
+import type { BulletinPost, SocialEvent, ClubChampion, HomePage, AboutPage } from './types'
 
 // ─── Bulletin Posts ───────────────────────────────────────────────────────────
 
@@ -74,6 +74,65 @@ export async function getAllUpcomingEvents(): Promise<SocialEvent[]> {
     )
   } catch {
     return []
+  }
+}
+
+// ─── Page Content (Singletons) ────────────────────────────────────────────────
+
+export async function getHomePage(): Promise<HomePage | null> {
+  if (!isSanityConfigured()) return null
+
+  try {
+    return await sanityClient.fetch(
+      `*[_type == "homePage"][0] {
+        heroHeadline,
+        heroSubheadline,
+        heroCtaLabel,
+        storyEyebrow,
+        storyHeadline,
+        storyBody,
+        storyPhoto,
+        clubhouseEyebrow,
+        clubhouseHeadline,
+        clubhouseBody,
+        clubhousePhotos,
+        partnersEyebrow,
+        partnersHeadline,
+        partners[] { _key, name, logo },
+        ctaEyebrow,
+        ctaHeadline,
+        ctaBody,
+      }`,
+      {},
+      { next: { revalidate: 60 } },
+    )
+  } catch {
+    return null
+  }
+}
+
+export async function getAboutPage(): Promise<AboutPage | null> {
+  if (!isSanityConfigured()) return null
+
+  try {
+    return await sanityClient.fetch(
+      `*[_type == "aboutPage"][0] {
+        headerEyebrow,
+        headerHeadline,
+        whoWeAreBody,
+        whoWeArePhoto,
+        theSpaceBody,
+        theSpacePhoto,
+        valuesEyebrow,
+        values[] { _key, title, body },
+        ctaHeadline,
+        ctaSubtext,
+      }`,
+      {},
+      { next: { revalidate: 60 } },
+    )
+  } catch {
+    return null
   }
 }
 

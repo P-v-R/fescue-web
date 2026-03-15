@@ -48,3 +48,48 @@ export type ClubChampion = {
   name: string
   tagline: string | null
 }
+
+export type SanityPartner = {
+  _key: string
+  name: string | null
+  logo: SanityImageAsset | null
+}
+
+export type SanityValueCard = {
+  _key: string
+  title: string | null
+  body: string | null
+}
+
+export type HomePage = {
+  heroHeadline: string | null
+  heroSubheadline: string | null
+  heroCtaLabel: string | null
+  storyEyebrow: string | null
+  storyHeadline: string | null
+  storyBody: string | null
+  storyPhoto: SanityImageAsset | null
+  clubhouseEyebrow: string | null
+  clubhouseHeadline: string | null
+  clubhouseBody: string | null
+  clubhousePhotos: SanityImageAsset[] | null
+  partnersEyebrow: string | null
+  partnersHeadline: string | null
+  partners: SanityPartner[] | null
+  ctaEyebrow: string | null
+  ctaHeadline: string | null
+  ctaBody: string | null
+}
+
+export type AboutPage = {
+  headerEyebrow: string | null
+  headerHeadline: string | null
+  whoWeAreBody: string | null
+  whoWeArePhoto: SanityImageAsset | null
+  theSpaceBody: string | null
+  theSpacePhoto: SanityImageAsset | null
+  valuesEyebrow: string | null
+  values: SanityValueCard[] | null
+  ctaHeadline: string | null
+  ctaSubtext: string | null
+}
