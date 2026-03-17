@@ -12,6 +12,7 @@ import { findBlackout, type BlackoutPeriod } from '@/lib/utils/blackout'
 import type { Bay, BookingWithMember } from '@/lib/supabase/types'
 
 type SelectedSlot = { bayId: string; bayName: string; startTime: Date }
+type ViewMode = 'bay' | 'all'
 
 type Props = {
   bays: Bay[]
@@ -21,6 +22,13 @@ type Props = {
   userId: string
   onSlotClick: (slot: SelectedSlot) => void
   blackoutPeriods: BlackoutPeriod[]
+}
+
+function formatMemberName(fullName: string | null | undefined): string {
+  if (!fullName) return 'Member'
+  const parts = fullName.trim().split(/\s+/)
+  if (parts.length === 1) return parts[0]
+  return `${parts[0]} ${parts[parts.length - 1][0]}.`
 }
 
 // ─── Next Available ────────────────────────────────────────────────────────────
@@ -119,6 +127,107 @@ function useBayCells(
   }, [bayId, bookings, date, userId, blackoutPeriods])
 }
 
+// ─── Single bay slot list ──────────────────────────────────────────────────────
+
+function BaySlotList({
+  bay,
+  bookings,
+  date,
+  userId,
+  blackoutPeriods,
+  onSlotClick,
+}: {
+  bay: Bay
+  bookings: BookingWithMember[]
+  date: Date
+  userId: string
+  blackoutPeriods: BlackoutPeriod[]
+  onSlotClick: (slot: SelectedSlot) => void
+}) {
+  const cells = useBayCells(bay.id, bookings, date, userId, blackoutPeriods)
+
+  return (
+    <div className='divide-y divide-sand/25 border border-sand/40 bg-white'>
+      {cells.map((cell, i) => {
+        if (cell.kind === 'past') {
+          return (
+            <div key={i} className='flex items-center gap-4 px-4 h-11 opacity-35'>
+              <span className='font-mono text-label tracking-[0.1em] text-navy w-16'>
+                {formatSlotShort(cell.slotTime)}
+              </span>
+              <span className='h-px flex-1 bg-sand/50' />
+            </div>
+          )
+        }
+
+        if (cell.kind === 'available') {
+          return (
+            <button
+              key={i}
+              onClick={() => onSlotClick({ bayId: bay.id, bayName: bay.name, startTime: cell.slotTime })}
+              className='w-full flex items-center gap-4 px-4 h-14 hover:bg-gold/[0.07] active:bg-gold/[0.14] transition-colors group'
+            >
+              <span className='font-mono text-label tracking-[0.12em] text-navy w-16'>
+                {formatSlotShort(cell.slotTime)}
+              </span>
+              <span className='flex-1 text-left font-mono text-label uppercase tracking-[0.18em] text-navy/30 group-hover:text-navy/50 transition-colors'>
+                Available
+              </span>
+              <svg width='16' height='16' viewBox='0 0 16 16' fill='none' className='text-gold/60 group-hover:text-gold transition-colors'>
+                <path d='M6 3l5 5-5 5' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+              </svg>
+            </button>
+          )
+        }
+
+        if (cell.kind === 'mine') {
+          return (
+            <div key={i} className='flex items-center gap-4 px-4 h-14 bg-navy'>
+              <span className='font-mono text-label tracking-[0.12em] text-cream/70 w-16'>
+                {formatSlotShort(cell.slotTime)}
+              </span>
+              <span className='flex-1 font-mono text-label uppercase tracking-[0.18em] text-cream/90'>
+                Your Booking
+              </span>
+              <span className='font-mono text-label text-gold/70'>
+                {cell.booking.duration_minutes}m
+              </span>
+            </div>
+          )
+        }
+
+        if (cell.kind === 'other') {
+          return (
+            <div key={i} className='flex items-center gap-4 px-4 h-14 bg-navy/[0.07]'>
+              <span className='font-mono text-label tracking-[0.12em] text-navy/50 w-16'>
+                {formatSlotShort(cell.slotTime)}
+              </span>
+              <span className='flex-1 font-mono text-label uppercase tracking-[0.18em] text-navy/40'>
+                {formatMemberName(cell.booking.members?.full_name)}
+              </span>
+            </div>
+          )
+        }
+
+        if (cell.kind === 'blackout') {
+          return (
+            <div key={i} className='flex items-center gap-4 px-4 h-14 bg-gold/[0.08]'>
+              <span className='font-mono text-label tracking-[0.12em] text-navy/50 w-16'>
+                {formatSlotShort(cell.slotTime)}
+              </span>
+              <span className='font-mono text-label uppercase tracking-[0.15em] text-gold/70'>
+                {cell.reason ?? 'Unavailable'}
+              </span>
+            </div>
+          )
+        }
+
+        return null
+      })}
+    </div>
+  )
+}
+
 // ─── Root component ───────────────────────────────────────────────────────────
 
 export function MobileBayList({
@@ -131,9 +240,9 @@ export function MobileBayList({
   blackoutPeriods,
 }: Props) {
   const [selectedBayId, setSelectedBayId] = useState(bays[0]?.id ?? '')
+  const [viewMode, setViewMode] = useState<ViewMode>('bay')
   const selectedBay = bays.find((b) => b.id === selectedBayId) ?? bays[0]
   const nextAvailable = useNextAvailable(bays, bookings, date, blackoutPeriods)
-  const cells = useBayCells(selectedBayId, bookings, date, userId, blackoutPeriods)
 
   const today = startOfDay(new Date())
   const maxDate = addDays(today, 30)
@@ -188,6 +297,32 @@ export function MobileBayList({
         </button>
       </div>
 
+      {/* ── View toggle ── */}
+      <div className='flex border border-sand/40 bg-white overflow-hidden'>
+        <button
+          onClick={() => setViewMode('bay')}
+          className={[
+            'flex-1 py-2 font-mono text-label uppercase tracking-[0.18em] transition-colors',
+            viewMode === 'bay'
+              ? 'bg-navy text-cream'
+              : 'text-navy/50 hover:text-navy',
+          ].join(' ')}
+        >
+          By Bay
+        </button>
+        <button
+          onClick={() => setViewMode('all')}
+          className={[
+            'flex-1 py-2 font-mono text-label uppercase tracking-[0.18em] transition-colors border-l border-sand/40',
+            viewMode === 'all'
+              ? 'bg-navy text-cream'
+              : 'text-navy/50 hover:text-navy',
+          ].join(' ')}
+        >
+          All Bays
+        </button>
+      </div>
+
       {/* ── Next available ── */}
       {nextAvailable.length > 0 && (
         <div>
@@ -213,103 +348,56 @@ export function MobileBayList({
         </div>
       )}
 
-      {/* ── Bay tabs ── */}
-      <div className='flex border-b border-cream-mid'>
-        {bays.map((bay) => (
-          <button
-            key={bay.id}
-            onClick={() => setSelectedBayId(bay.id)}
-            className={[
-              'flex-1 py-2.5 font-mono text-label uppercase tracking-[0.2em] border-b-2 -mb-px transition-colors',
-              bay.id === selectedBayId
-                ? 'border-gold text-navy'
-                : 'border-transparent text-navy/40 hover:text-navy',
-            ].join(' ')}
-          >
-            {bay.name}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Slot list ── */}
-      <div className='divide-y divide-sand/25 border border-sand/40 bg-white'>
-        {cells.map((cell, i) => {
-          if (cell.kind === 'past') {
-            return (
-              <div key={i} className='flex items-center gap-4 px-4 h-11 opacity-35'>
-                <span className='font-mono text-label tracking-[0.1em] text-navy w-16'>
-                  {formatSlotShort(cell.slotTime)}
-                </span>
-                <span className='h-px flex-1 bg-sand/50' />
-              </div>
-            )
-          }
-
-          if (cell.kind === 'available') {
-            return (
+      {viewMode === 'bay' ? (
+        <>
+          {/* ── Bay tabs ── */}
+          <div className='flex border-b border-cream-mid'>
+            {bays.map((bay) => (
               <button
-                key={i}
-                onClick={() => onSlotClick({ bayId: selectedBayId, bayName: selectedBay.name, startTime: cell.slotTime })}
-                className='w-full flex items-center gap-4 px-4 h-14 hover:bg-gold/[0.07] active:bg-gold/[0.14] transition-colors group'
+                key={bay.id}
+                onClick={() => setSelectedBayId(bay.id)}
+                className={[
+                  'flex-1 py-2.5 font-mono text-label uppercase tracking-[0.2em] border-b-2 -mb-px transition-colors',
+                  bay.id === selectedBayId
+                    ? 'border-gold text-navy'
+                    : 'border-transparent text-navy/40 hover:text-navy',
+                ].join(' ')}
               >
-                <span className='font-mono text-label tracking-[0.12em] text-navy w-16'>
-                  {formatSlotShort(cell.slotTime)}
-                </span>
-                <span className='flex-1 text-left font-mono text-label uppercase tracking-[0.18em] text-navy/30 group-hover:text-navy/50 transition-colors'>
-                  Available
-                </span>
-                <svg width='16' height='16' viewBox='0 0 16 16' fill='none' className='text-gold/60 group-hover:text-gold transition-colors'>
-                  <path d='M6 3l5 5-5 5' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
-                </svg>
+                {bay.name}
               </button>
-            )
-          }
+            ))}
+          </div>
 
-          if (cell.kind === 'mine') {
-            return (
-              <div key={i} className='flex items-center gap-4 px-4 h-14 bg-navy'>
-                <span className='font-mono text-label tracking-[0.12em] text-cream/70 w-16'>
-                  {formatSlotShort(cell.slotTime)}
-                </span>
-                <span className='flex-1 font-mono text-label uppercase tracking-[0.18em] text-cream/90'>
-                  Your Booking
-                </span>
-                <span className='font-mono text-label text-gold/70'>
-                  {cell.booking.duration_minutes}m
-                </span>
-              </div>
-            )
-          }
-
-          if (cell.kind === 'other') {
-            return (
-              <div key={i} className='flex items-center gap-4 px-4 h-14 bg-navy/[0.07]'>
-                <span className='font-mono text-label tracking-[0.12em] text-navy/50 w-16'>
-                  {formatSlotShort(cell.slotTime)}
-                </span>
-                <span className='flex-1 font-mono text-label uppercase tracking-[0.18em] text-navy/40'>
-                  Booked
-                </span>
-              </div>
-            )
-          }
-
-          if (cell.kind === 'blackout') {
-            return (
-              <div key={i} className='flex items-center gap-4 px-4 h-14 bg-gold/[0.08]'>
-                <span className='font-mono text-label tracking-[0.12em] text-navy/50 w-16'>
-                  {formatSlotShort(cell.slotTime)}
-                </span>
-                <span className='font-mono text-label uppercase tracking-[0.15em] text-gold/70'>
-                  {cell.reason ?? 'Unavailable'}
-                </span>
-              </div>
-            )
-          }
-
-          return null
-        })}
-      </div>
+          {/* ── Slot list (single bay) ── */}
+          <BaySlotList
+            bay={selectedBay}
+            bookings={bookings}
+            date={date}
+            userId={userId}
+            blackoutPeriods={blackoutPeriods}
+            onSlotClick={onSlotClick}
+          />
+        </>
+      ) : (
+        <>
+          {/* ── All bays stacked ── */}
+          {bays.map((bay) => (
+            <div key={bay.id}>
+              <p className='font-mono text-label uppercase tracking-[0.28em] text-gold mb-2 px-0.5'>
+                {bay.name}
+              </p>
+              <BaySlotList
+                bay={bay}
+                bookings={bookings}
+                date={date}
+                userId={userId}
+                blackoutPeriods={blackoutPeriods}
+                onSlotClick={onSlotClick}
+              />
+            </div>
+          ))}
+        </>
+      )}
     </div>
   )
 }
