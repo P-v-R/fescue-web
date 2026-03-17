@@ -5,38 +5,26 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import type { DatesSetArg, EventClickArg } from '@fullcalendar/core'
-import { startOfMonth, endOfMonth } from 'date-fns'
-import { sanityClient } from '@/lib/sanity/client'
 import { EventModal } from '@/components/calendar/event-modal'
-import type { SocialEvent } from '@/lib/sanity/types'
+import { fetchEventsForMonthAction } from './actions'
+import type { Event, EventRsvp } from '@/lib/supabase/types'
 
 type Props = {
-  initialEvents: SocialEvent[]
+  initialEvents: Event[]
+  initialUserRsvps: EventRsvp[]
 }
 
-// Direct Sanity fetch without Next.js caching — for client-side month navigation
-async function fetchEventsForMonth(month: Date): Promise<SocialEvent[]> {
-  const start = startOfMonth(month).toISOString()
-  const end = endOfMonth(month).toISOString()
-
-  return sanityClient.fetch(
-    `*[_type == "socialEvent" && date >= $start && date <= $end] | order(date asc) {
-      _id, _type, title, description, date, location, image, rsvpUrl
-    }`,
-    { start, end },
-  )
-}
-
-export function CalendarClient({ initialEvents }: Props) {
-  const [events, setEvents] = useState<SocialEvent[]>(initialEvents)
-  const [selectedEvent, setSelectedEvent] = useState<SocialEvent | null>(null)
+export function CalendarClient({ initialEvents, initialUserRsvps }: Props) {
+  const [events, setEvents] = useState<Event[]>(initialEvents)
+  const [userRsvps, setUserRsvps] = useState<EventRsvp[]>(initialUserRsvps)
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleDatesSet = useCallback(async (arg: DatesSetArg) => {
     setIsLoading(true)
     try {
-      const newEvents = await fetchEventsForMonth(arg.view.currentStart)
-      setEvents(newEvents)
+      const result = await fetchEventsForMonthAction(arg.view.currentStart.toISOString())
+      if (result.data) setEvents(result.data)
     } finally {
       setIsLoading(false)
     }
@@ -46,18 +34,41 @@ export function CalendarClient({ initialEvents }: Props) {
   useEffect(() => { eventsRef.current = events }, [events])
 
   const handleEventClick = useCallback((arg: EventClickArg) => {
-    const event = eventsRef.current.find((e) => e._id === arg.event.id)
+    const event = eventsRef.current.find((e) => e.id === arg.event.id)
     if (event) setSelectedEvent(event)
   }, [])
 
   const calendarEvents = useMemo(
     () => events.map((event) => ({
-      id: event._id,
+      id: event.id,
       title: event.title,
-      date: event.date.split('T')[0],
+      date: event.starts_at.split('T')[0],
     })),
     [events],
   )
+
+  function handleRsvpChange(eventId: string, status: 'going' | 'not_going' | null) {
+    setUserRsvps((prev) => {
+      const without = prev.filter((r) => r.event_id !== eventId)
+      if (status === null) return without
+      const existing = prev.find((r) => r.event_id === eventId)
+      if (existing) return [...without, { ...existing, status }]
+      return [
+        ...without,
+        {
+          id: crypto.randomUUID(),
+          event_id: eventId,
+          member_id: '',
+          status,
+          created_at: new Date().toISOString(),
+        },
+      ]
+    })
+  }
+
+  const selectedRsvpStatus = selectedEvent
+    ? (userRsvps.find((r) => r.event_id === selectedEvent.id)?.status ?? null)
+    : null
 
   return (
     <div className="relative">
@@ -87,7 +98,12 @@ export function CalendarClient({ initialEvents }: Props) {
       </div>
 
       {selectedEvent && (
-        <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        <EventModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          userRsvpStatus={selectedRsvpStatus}
+          onRsvpChange={handleRsvpChange}
+        />
       )}
     </div>
   )

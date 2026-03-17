@@ -1,13 +1,18 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import type { SocialEvent } from '@/lib/sanity/types'
+import type { Event, EventRsvp } from '@/lib/supabase/types'
 
 const CalendarClient = dynamic(
   () => import('./calendar-client').then((m) => ({ default: m.CalendarClient })),
   { ssr: false },
 )
 
-export function CalendarWrapper({ initialEvents }: { initialEvents: SocialEvent[] }) {
-  return <CalendarClient initialEvents={initialEvents} />
+type Props = {
+  initialEvents: Event[]
+  initialUserRsvps: EventRsvp[]
+}
+
+export function CalendarWrapper({ initialEvents, initialUserRsvps }: Props) {
+  return <CalendarClient initialEvents={initialEvents} initialUserRsvps={initialUserRsvps} />
 }

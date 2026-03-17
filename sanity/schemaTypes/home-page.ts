@@ -13,6 +13,14 @@ export const homePage = defineType({
   fields: [
     // ── Feature Strip ────────────────────────────────────────────────────────
     defineField({
+      name: 'featuresPhoto',
+      title: 'Background Photo',
+      type: 'image',
+      options: { hotspot: true },
+      group: 'features',
+      description: 'Full-bleed background photo for the feature strip. Displays edge-to-edge behind the three features.',
+    }),
+    defineField({
       name: 'features',
       title: 'Features (up to 3)',
       type: 'array',

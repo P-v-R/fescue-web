@@ -1,11 +1,10 @@
-import Link from 'next/link';
-import { format } from 'date-fns';
-import type { SocialEvent } from '@/lib/sanity/types';
+import Link from 'next/link'
+import { format } from 'date-fns'
+import type { Event } from '@/lib/supabase/types'
 
-export function UpcomingEvents({ events }: { events: SocialEvent[] }) {
+export function UpcomingEvents({ events }: { events: Event[] }) {
   return (
     <aside>
-      {/* className='p-6 bg-cream/50 border border-cream-mid rounded-sm' */}
       <div className='flex items-center justify-between mb-5'>
         <p className='font-mono text-label uppercase tracking-[0.28em] text-sage'>
           Upcoming Events
@@ -25,7 +24,7 @@ export function UpcomingEvents({ events }: { events: SocialEvent[] }) {
       ) : (
         <div className='flex flex-col'>
           {events.map((event, idx) => (
-            <div key={event._id}>
+            <div key={event.id}>
               <EventRow event={event} />
               {idx < events.length - 1 && (
                 <div className='flex items-center gap-2 my-3'>
@@ -38,11 +37,11 @@ export function UpcomingEvents({ events }: { events: SocialEvent[] }) {
         </div>
       )}
     </aside>
-  );
+  )
 }
 
-function EventRow({ event }: { event: SocialEvent }) {
-  const date = new Date(event.date);
+function EventRow({ event }: { event: Event }) {
+  const date = new Date(event.starts_at)
   return (
     <div className='flex gap-4'>
       {/* Date block */}
@@ -72,5 +71,5 @@ function EventRow({ event }: { event: SocialEvent }) {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -70,6 +70,31 @@ export type NewMember = {
   password: string
 }
 
+export type Event = {
+  id: string
+  title: string
+  description: string | null
+  starts_at: string
+  ends_at: string | null
+  location: string | null
+  image_url: string | null
+  rsvp_enabled: boolean
+  created_by: string | null
+  created_at: string
+}
+
+export type EventRsvp = {
+  id: string
+  event_id: string
+  member_id: string
+  status: 'going' | 'not_going'
+  created_at: string
+}
+
+export type EventRsvpWithMember = EventRsvp & {
+  members: { full_name: string; email: string } | null
+}
+
 // Booking with bay name joined (from getMemberBookings)
 export type BookingWithBay = Booking & {
   bays: { name: string } | null

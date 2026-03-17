@@ -97,27 +97,42 @@ export default async function HomePage() {
             </HeroReveal>
           </section>
 
-          {/* ── Feature strip (cream) ─────────────────────────────────────── */}
-          <section className='relative overflow-hidden py-20 px-6 bg-cream border-b border-cream-mid'>
-            <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
-            <div className='relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-10 text-center'>
+          {/* ── Feature strip (full-bleed photo) ──────────────────────────── */}
+          <section className='relative overflow-hidden min-h-screen flex items-center justify-center px-6 py-28'>
+            {/* Background photo from Sanity */}
+            {cms?.featuresPhoto ? (
+              <Image
+                src={urlFor(cms.featuresPhoto).width(2400).url()}
+                alt=''
+                fill
+                className='object-cover object-center'
+                sizes='100vw'
+                priority
+              />
+            ) : (
+              <div className='absolute inset-0 bg-navy-dark' />
+            )}
+            {/* Dark overlay for legibility */}
+            <div className='absolute inset-0 bg-navy-dark/55' />
+
+            <div className='relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-14 text-center'>
               {FEATURE_PLACEHOLDERS.map((placeholder, i) => {
                 const feature = cms?.features?.[i];
                 return (
                   <div key={i} className='flex flex-col items-center gap-4'>
                     <div className='w-8 h-px bg-gold' />
-                    <p className='font-mono text-label uppercase tracking-[0.25em] text-navy'>
+                    <p className='font-mono text-label uppercase tracking-[0.25em] text-cream'>
                       {feature?.label ?? placeholder}
                     </p>
                     {feature?.body ? (
-                      <p className='font-sans text-sm text-navy/60 leading-relaxed max-w-[200px]'>
+                      <p className='font-sans text-sm text-cream/65 leading-relaxed max-w-[220px]'>
                         {feature.body}
                       </p>
                     ) : (
                       <div className='space-y-1.5 w-full max-w-[200px] mx-auto'>
-                        <div className='h-3 bg-navy/10 rounded w-full' />
-                        <div className='h-3 bg-navy/10 rounded w-5/6 mx-auto' />
-                        <div className='h-3 bg-navy/10 rounded w-4/6 mx-auto' />
+                        <div className='h-3 bg-cream/15 rounded w-full' />
+                        <div className='h-3 bg-cream/15 rounded w-5/6 mx-auto' />
+                        <div className='h-3 bg-cream/15 rounded w-4/6 mx-auto' />
                       </div>
                     )}
                   </div>

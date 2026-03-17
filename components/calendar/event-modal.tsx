@@ -1,18 +1,21 @@
 'use client'
 
-import { useEffect } from 'react'
-import Image from 'next/image'
+import { useEffect, useState, useTransition } from 'react'
 import { format } from 'date-fns'
-import { PortableText } from '@portabletext/react'
-import { urlFor } from '@/lib/sanity/client'
-import type { SocialEvent } from '@/lib/sanity/types'
+import { setRsvpAction, getEventAttendeesAction } from '@/app/(member)/calendar/actions'
+import type { Event, EventRsvpWithMember } from '@/lib/supabase/types'
 
 type Props = {
-  event: SocialEvent
+  event: Event
   onClose: () => void
+  userRsvpStatus: 'going' | 'not_going' | null
+  onRsvpChange: (eventId: string, status: 'going' | 'not_going' | null) => void
 }
 
-export function EventModal({ event, onClose }: Props) {
+export function EventModal({ event, onClose, userRsvpStatus, onRsvpChange }: Props) {
+  const [attendees, setAttendees] = useState<EventRsvpWithMember[]>([])
+  const [isPending, startTransition] = useTransition()
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
@@ -21,7 +24,29 @@ export function EventModal({ event, onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const date = new Date(event.date)
+  // Load attendees when modal opens
+  useEffect(() => {
+    if (!event.rsvp_enabled) return
+    getEventAttendeesAction(event.id).then((result) => {
+      if (result.data) setAttendees(result.data)
+    })
+  }, [event.id, event.rsvp_enabled])
+
+  function handleRsvp(newStatus: 'going' | 'not_going') {
+    // Toggle off if clicking the same status
+    const next = userRsvpStatus === newStatus ? null : newStatus
+    startTransition(async () => {
+      onRsvpChange(event.id, next)
+      await setRsvpAction(event.id, next)
+      // Refresh attendees after change
+      const result = await getEventAttendeesAction(event.id)
+      if (result.data) setAttendees(result.data)
+    })
+  }
+
+  const date = new Date(event.starts_at)
+  const goingAttendees = attendees.filter((a) => a.status === 'going')
+  const goingCount = goingAttendees.length
 
   return (
     <>
@@ -52,7 +77,7 @@ export function EventModal({ event, onClose }: Props) {
             <div className="w-10 h-1 rounded-full bg-navy/20" />
           </div>
 
-          {/* Close button — always visible whether image is present or not */}
+          {/* Close button */}
           <button
             onClick={onClose}
             aria-label="Close"
@@ -64,15 +89,14 @@ export function EventModal({ event, onClose }: Props) {
           </button>
 
           {/* Event image */}
-          {event.image && (
+          {event.image_url && (
             <div className="relative w-full h-44 sm:h-56 overflow-hidden">
-              <Image
-                src={urlFor(event.image).width(600).height(300).url()}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={event.image_url}
                 alt={event.title}
-                fill
-                className="object-cover"
+                className="w-full h-full object-cover"
               />
-              {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-navy-dark/40 to-transparent" />
             </div>
           )}
@@ -91,39 +115,68 @@ export function EventModal({ event, onClose }: Props) {
             {/* Meta row */}
             <div className="flex flex-wrap gap-4 mb-5 pb-5 border-b border-cream-mid">
               <MetaItem label="Time" value={format(date, 'h:mm a')} />
+              {event.ends_at && (
+                <MetaItem label="Until" value={format(new Date(event.ends_at), 'h:mm a')} />
+              )}
               {event.location && (
                 <MetaItem label="Location" value={event.location} />
               )}
             </div>
 
             {/* Description */}
-            {event.description && event.description.length > 0 && (
-              <div className="prose-sm text-navy-dark mb-5">
-                <PortableText
-                  value={event.description}
-                  components={{
-                    block: {
-                      normal: ({ children }) => (
-                        <p className="font-sans text-sm font-light text-navy-dark leading-relaxed mb-3 last:mb-0">
-                          {children}
-                        </p>
-                      ),
-                    },
-                  }}
-                />
+            {event.description && (
+              <div className="mb-5">
+                <p className="font-sans text-sm font-light text-navy-dark leading-relaxed">
+                  {event.description}
+                </p>
               </div>
             )}
 
-            {/* RSVP */}
-            {event.rsvpUrl && (
-              <a
-                href={event.rsvpUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block font-mono text-label uppercase tracking-[0.22em] bg-navy text-cream px-6 py-3 shadow-[inset_0_0_0_1px_rgba(184,150,60,0.25)] hover:bg-navy-mid transition-colors duration-200"
-              >
-                RSVP →
-              </a>
+            {/* RSVP section */}
+            {event.rsvp_enabled && (
+              <div className="pt-1">
+                {/* RSVP buttons */}
+                <div className="flex gap-3 mb-4">
+                  <button
+                    onClick={() => handleRsvp('going')}
+                    disabled={isPending}
+                    className={[
+                      'font-mono text-label uppercase tracking-[0.22em] px-5 py-2.5 transition-all duration-200 disabled:opacity-50',
+                      userRsvpStatus === 'going'
+                        ? 'bg-navy text-cream shadow-[inset_0_0_0_1px_rgba(184,150,60,0.4)]'
+                        : 'border border-navy/30 text-navy hover:border-navy hover:bg-navy/5',
+                    ].join(' ')}
+                  >
+                    {goingCount > 0 ? `Going (${goingCount})` : 'Going'}
+                  </button>
+                  <button
+                    onClick={() => handleRsvp('not_going')}
+                    disabled={isPending}
+                    className={[
+                      'font-mono text-label uppercase tracking-[0.22em] px-5 py-2.5 transition-all duration-200 disabled:opacity-50',
+                      userRsvpStatus === 'not_going'
+                        ? 'bg-navy/10 text-navy border border-navy/20'
+                        : 'border border-cream-mid text-navy/50 hover:border-navy/30 hover:text-navy/70',
+                    ].join(' ')}
+                  >
+                    Can&apos;t make it
+                  </button>
+                </div>
+
+                {/* Attendee list */}
+                {goingCount > 0 && (
+                  <p className="font-mono text-label text-navy/50 tracking-[0.08em]">
+                    <span className="text-sage uppercase tracking-[0.18em] mr-2">Going:</span>
+                    {goingAttendees
+                      .slice(0, 5)
+                      .map((a) => a.members?.full_name?.split(' ')[0] ?? 'Member')
+                      .join(', ')}
+                    {goingCount > 5 && (
+                      <span className="text-navy/35"> +{goingCount - 5} more</span>
+                    )}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>

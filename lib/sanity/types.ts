@@ -32,17 +32,6 @@ export type BulletinPost = {
   publishedAt: string | null
 }
 
-export type SocialEvent = {
-  _id: string
-  _type: 'socialEvent'
-  title: string
-  description: PortableTextBlock[] | null
-  date: string
-  location: string | null
-  image: SanityImageAsset | null
-  rsvpUrl: string | null
-}
-
 export type ClubChampion = {
   year: number
   name: string
@@ -74,6 +63,7 @@ export type SanityAnnouncement = {
 }
 
 export type HomePage = {
+  featuresPhoto: SanityImageAsset | null
   features: SanityFeature[] | null
   storyBody: string | null
   storyPhoto: SanityImageAsset | null

@@ -1,4 +1,7 @@
-import { getSocialEvents } from '@/lib/sanity/queries'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { getEventsForMonth } from '@/lib/supabase/queries/events'
+import { getMemberRsvpsForEvents } from '@/lib/supabase/queries/event-rsvps'
 import { CalendarWrapper } from './calendar-wrapper'
 
 export const metadata = {
@@ -6,7 +9,17 @@ export const metadata = {
 }
 
 export default async function CalendarPage() {
-  const initialEvents = await getSocialEvents(new Date())
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const initialEvents = await getEventsForMonth(new Date())
+  const initialUserRsvps = await getMemberRsvpsForEvents(
+    user.id,
+    initialEvents.map((e) => e.id),
+  )
 
   return (
     <div>
@@ -18,7 +31,7 @@ export default async function CalendarPage() {
         <div className="w-12 h-px bg-gold mt-4" />
       </div>
 
-      <CalendarWrapper initialEvents={initialEvents} />
+      <CalendarWrapper initialEvents={initialEvents} initialUserRsvps={initialUserRsvps} />
     </div>
   )
 }
