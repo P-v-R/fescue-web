@@ -10,6 +10,7 @@ import {
 } from '@/lib/utils/time-slots'
 import { findBlackout, type BlackoutPeriod } from '@/lib/utils/blackout'
 import type { Bay, BookingWithMember } from '@/lib/supabase/types'
+import { BayGrid } from '@/components/reservations/bay-grid'
 
 type SelectedSlot = { bayId: string; bayName: string; startTime: Date }
 type ViewMode = 'bay' | 'all'
@@ -379,24 +380,14 @@ export function MobileBayList({
           />
         </>
       ) : (
-        <>
-          {/* ── All bays stacked ── */}
-          {bays.map((bay) => (
-            <div key={bay.id}>
-              <p className='font-mono text-label uppercase tracking-[0.28em] text-gold mb-2 px-0.5'>
-                {bay.name}
-              </p>
-              <BaySlotList
-                bay={bay}
-                bookings={bookings}
-                date={date}
-                userId={userId}
-                blackoutPeriods={blackoutPeriods}
-                onSlotClick={onSlotClick}
-              />
-            </div>
-          ))}
-        </>
+        <BayGrid
+          bays={bays}
+          bookings={bookings}
+          date={date}
+          userId={userId}
+          onSlotClick={onSlotClick}
+          blackoutPeriods={blackoutPeriods}
+        />
       )}
     </div>
   )
