@@ -6,6 +6,8 @@ import { createBooking, cancelBooking } from '@/lib/supabase/queries/bookings'
 import { getUpcomingBlackoutPeriods, findBlackout } from '@/lib/supabase/queries/blackout-periods'
 import { newBookingSchema } from '@/lib/validations/booking'
 import { isWithinOperatingHours } from '@/lib/utils/time-slots'
+import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/resend/client'
+import { bookingConfirmationHtml, bookingConfirmationText } from '@/lib/resend/templates/booking-confirmation'
 import type { Booking } from '@/lib/supabase/types'
 import type { NewBookingInput } from '@/lib/validations/booking'
 
@@ -62,6 +64,44 @@ export async function createBookingAction(input: NewBookingInput): Promise<Creat
       duration_minutes,
       guests: guests ?? [],
     })
+
+    // Send confirmation email — fire and forget, don't block the booking response
+    if (isResendConfigured()) {
+      const { data: member } = await supabase
+        .from('members')
+        .select('full_name, email')
+        .eq('id', user.id)
+        .single()
+
+      const { data: bay } = await supabase
+        .from('bays')
+        .select('name')
+        .eq('id', bay_id)
+        .single()
+
+      if (member && bay) {
+        const resend = createResendClient()
+        void resend.emails.send({
+          from: FROM_ADDRESSES.bookings,
+          to: member.email,
+          subject: `Booking Confirmed — ${bay.name}`,
+          html: bookingConfirmationHtml({
+            memberName: member.full_name,
+            bayName: bay.name,
+            startTime: new Date(start_time),
+            durationMinutes: duration_minutes,
+            guests: guests ?? [],
+          }),
+          text: bookingConfirmationText({
+            memberName: member.full_name,
+            bayName: bay.name,
+            startTime: new Date(start_time),
+            durationMinutes: duration_minutes,
+            guests: guests ?? [],
+          }),
+        })
+      }
+    }
 
     revalidatePath('/reservations')
     revalidatePath('/account')

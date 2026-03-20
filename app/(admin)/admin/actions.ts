@@ -12,7 +12,7 @@ import { createBlackoutPeriod, deleteBlackoutPeriod } from '@/lib/supabase/queri
 import { createEvent, updateEvent, deleteEvent } from '@/lib/supabase/queries/events'
 import { deleteRsvpAdmin } from '@/lib/supabase/queries/event-rsvps'
 import { createEventSchema } from '@/lib/validations/event'
-import { createResendClient, isResendConfigured, FROM_ADDRESS } from '@/lib/resend/client'
+import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/resend/client'
 import { inviteEmailHtml, inviteEmailText } from '@/lib/resend/templates/invite'
 import { introEmailHtml, introEmailText } from '@/lib/resend/templates/intro'
 
@@ -48,7 +48,7 @@ async function sendInviteEmail(email: string, token: string, name?: string | nul
 
   const resend = createResendClient()
   await resend.emails.send({
-    from: FROM_ADDRESS,
+    from: FROM_ADDRESSES.noreply,
     to: email,
     subject: 'Your Fescue Golf Club Invitation',
     html: inviteEmailHtml({ inviteUrl, recipientEmail: email, recipientName: name, expiresAt }),
@@ -292,7 +292,7 @@ export async function sendIntroEmailAction(
     } else {
       const resend = createResendClient()
       await resend.emails.send({
-        from: FROM_ADDRESS,
+        from: FROM_ADDRESSES.hello,
         to: email,
         subject: 'Thanks for your interest in Fescue Golf Club',
         html: introEmailHtml({ firstName, scheduleUrl }),
@@ -336,7 +336,7 @@ export async function sendGuestIntroEmailAction(
     } else {
       const resend = createResendClient()
       await resend.emails.send({
-        from: FROM_ADDRESS,
+        from: FROM_ADDRESSES.hello,
         to: email,
         subject: 'Thanks for your interest in Fescue Golf Club',
         html: introEmailHtml({ firstName, scheduleUrl }),
