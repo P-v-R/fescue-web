@@ -1,61 +1,74 @@
-import type { StructureResolver } from 'sanity/structure'
+import type { StructureResolver } from 'sanity/structure';
 
 export const structure: StructureResolver = (S) =>
   S.list()
     .title('Fescue Club')
     .items([
-      // ── Pages ──────────────────────────────────────────────────────────────
-      S.listItem()
-        .title('Homepage')
-        .id('homePage')
-        .child(
-          S.document()
-            .schemaType('homePage')
-            .documentId('homePage')
-            .title('Homepage'),
-        ),
 
+      // ── 📣 Marketing Site ──────────────────────────────────────────────────
       S.listItem()
-        .title('About Page')
-        .id('aboutPage')
+        .title('📣 Marketing Site')
         .child(
-          S.document()
-            .schemaType('aboutPage')
-            .documentId('aboutPage')
-            .title('About Page'),
-        ),
+          S.list()
+            .title('Marketing Site')
+            .items([
+              S.listItem()
+                .title('Homepage')
+                .id('homePage')
+                .child(
+                  S.document()
+                    .schemaType('homePage')
+                    .documentId('homePage')
+                    .title('Homepage'),
+                ),
 
-      S.listItem()
-        .title('Announcement Banner')
-        .id('announcement')
-        .child(
-          S.document()
-            .schemaType('announcement')
-            .documentId('announcement')
-            .title('Announcement Banner'),
-        ),
-
-      S.divider(),
-
-      // ── Content ────────────────────────────────────────────────────────────
-      S.listItem()
-        .title('Bulletin Board')
-        .child(
-          S.documentTypeList('bulletinPost')
-            .title('Bulletin Posts')
-            .defaultOrdering([
-              { field: 'pinned', direction: 'desc' },
-              { field: 'publishedAt', direction: 'desc' },
+              S.listItem()
+                .title('About Page')
+                .id('aboutPage')
+                .child(
+                  S.document()
+                    .schemaType('aboutPage')
+                    .documentId('aboutPage')
+                    .title('About Page'),
+                ),
             ]),
         ),
 
-      S.divider(),
-
+      // ── 🏌️ Club Management ─────────────────────────────────────────────────
       S.listItem()
-        .title('Club Champions')
+        .title('🏌️ Club Management')
         .child(
-          S.documentTypeList('clubChampion')
-            .title('Club Champions')
-            .defaultOrdering([{ field: 'year', direction: 'desc' }]),
+          S.list()
+            .title('Club Management')
+            .items([
+              S.listItem()
+                .title('Announcement Banner')
+                .id('announcement')
+                .child(
+                  S.document()
+                    .schemaType('announcement')
+                    .documentId('announcement')
+                    .title('Announcement Banner'),
+                ),
+
+              S.listItem()
+                .title('Bulletin Board')
+                .child(
+                  S.documentTypeList('bulletinPost')
+                    .title('Bulletin Posts')
+                    .defaultOrdering([
+                      { field: 'pinned', direction: 'desc' },
+                      { field: 'publishedAt', direction: 'desc' },
+                    ]),
+                ),
+
+              S.listItem()
+                .title('Club Champions')
+                .child(
+                  S.documentTypeList('clubChampion')
+                    .title('Club Champions')
+                    .defaultOrdering([{ field: 'year', direction: 'desc' }]),
+                ),
+            ]),
         ),
-    ])
+    ]);
