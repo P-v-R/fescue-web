@@ -1395,9 +1395,25 @@ function EventsTab({
     setEditingEvent(event);
     setTitle(event.title);
     setDescription(event.description ?? '');
-    setStartsDate(event.starts_at.slice(0, 10));
-    setStartsTime(event.starts_at.slice(11, 16));
-    setEndsTime(event.ends_at ? event.ends_at.slice(11, 16) : '');
+
+    // Convert UTC timestamps to local date/time for the form inputs.
+    // Slicing the ISO string directly would give UTC values, shifting dates
+    // for users in timezones behind UTC (e.g. Pacific evening → next UTC day).
+    const startsLocal = new Date(event.starts_at);
+    setStartsDate(startsLocal.toLocaleDateString('en-CA')); // YYYY-MM-DD in local tz
+    setStartsTime(
+      `${String(startsLocal.getHours()).padStart(2, '0')}:${String(startsLocal.getMinutes()).padStart(2, '0')}`,
+    );
+
+    if (event.ends_at) {
+      const endsLocal = new Date(event.ends_at);
+      setEndsTime(
+        `${String(endsLocal.getHours()).padStart(2, '0')}:${String(endsLocal.getMinutes()).padStart(2, '0')}`,
+      );
+    } else {
+      setEndsTime('');
+    }
+
     setLocation(event.location ?? '');
     setImageUrl(event.image_url ?? '');
     setRsvpEnabled(event.rsvp_enabled);

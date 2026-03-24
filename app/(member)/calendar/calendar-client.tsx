@@ -42,7 +42,7 @@ export function CalendarClient({ initialEvents, initialUserRsvps }: Props) {
     () => events.map((event) => ({
       id: event.id,
       title: event.title,
-      date: event.starts_at.split('T')[0],
+      start: event.starts_at, // full UTC timestamp — FullCalendar converts to browser local time
     })),
     [events],
   )
