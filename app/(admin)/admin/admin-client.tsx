@@ -7,6 +7,7 @@ import type { Member, Invite, MembershipRequest, JoinRequest, Event, EventRsvpWi
 import type { AdminBooking, GuestLead } from '@/lib/supabase/queries/bookings';
 import type { BlackoutPeriod } from '@/lib/supabase/queries/blackout-periods';
 import type { Bay } from '@/lib/supabase/types';
+import { EventImageUpload } from '@/components/ui/event-image-upload';
 import {
   sendInviteAction,
   resendInviteAction,
@@ -1533,15 +1534,9 @@ function EventsTab({
           </div>
           <div>
             <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
-              Image URL <span className='normal-case text-navy/30'>(optional)</span>
+              Photo <span className='normal-case text-navy/30'>(optional)</span>
             </p>
-            <input
-              type='url'
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder='https://…'
-              className='w-full border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-navy/30 focus:outline-none focus:border-navy'
-            />
+            <EventImageUpload value={imageUrl} onChange={setImageUrl} />
           </div>
           <label className='flex items-center gap-2 cursor-pointer'>
             <input
