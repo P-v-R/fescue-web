@@ -95,6 +95,18 @@ export type EventRsvpWithMember = EventRsvp & {
   members: { full_name: string; email: string } | null
 }
 
+export type JoinRequest = {
+  id: string
+  full_name: string
+  email: string
+  phone: string | null
+  discord: string | null
+  // encrypted_password is intentionally omitted — never sent to the client
+  status: 'pending' | 'approved' | 'declined'
+  reviewed_at: string | null
+  created_at: string
+}
+
 // Booking with bay name joined (from getMemberBookings)
 export type BookingWithBay = Booking & {
   bays: { name: string } | null

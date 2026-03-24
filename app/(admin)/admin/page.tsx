@@ -9,6 +9,7 @@ import { getBlackoutPeriods } from '@/lib/supabase/queries/blackout-periods'
 import { getActiveBays } from '@/lib/supabase/queries/bays'
 import { getAdminEvents } from '@/lib/supabase/queries/events'
 import { getAdminRsvpsForEvents } from '@/lib/supabase/queries/event-rsvps'
+import { getJoinRequests } from '@/lib/supabase/queries/join-requests'
 import { AdminClient } from './admin-client'
 import { DashboardStats } from './dashboard-stats'
 
@@ -36,10 +37,11 @@ export default async function AdminPage() {
   if (!member?.is_admin) redirect('/dashboard')
 
   // Parallel data fetch
-  const [members, pendingInvites, requests, todaysBookings, guestLeads, blackoutPeriods, bays, bookingsThisWeek, events] = await Promise.all([
+  const [members, pendingInvites, requests, joinRequests, todaysBookings, guestLeads, blackoutPeriods, bays, bookingsThisWeek, events] = await Promise.all([
     getAllMembers(),
     getPendingInvites(),
     getMembershipRequests(),
+    getJoinRequests(),
     getAdminBookingsForToday(),
     getGuestLeads(),
     getBlackoutPeriods(),
@@ -84,6 +86,7 @@ export default async function AdminPage() {
         members={members}
         pendingInvites={pendingInvites}
         requests={requests}
+        joinRequests={joinRequests}
         todaysBookings={todaysBookings}
         guestLeads={guestLeads}
         blackoutPeriods={blackoutPeriods}
