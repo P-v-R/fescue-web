@@ -5,6 +5,7 @@ import { ParallaxDecor } from '@/components/ui/parallax-decor';
 import { HeroReveal } from '@/components/ui/hero-reveal';
 import { CartProvider } from '@/components/shop/cart-provider';
 import { CartDrawer } from '@/components/shop/cart-drawer';
+import { ClubhouseCarousel } from '@/components/ui/clubhouse-carousel';
 import { getHomePage } from '@/lib/sanity/queries';
 import { urlFor } from '@/lib/sanity/client';
 import type { SanityImageAsset } from '@/lib/sanity/types';
@@ -224,40 +225,18 @@ export default async function HomePage() {
                 <div className='w-10 h-px bg-gold mx-auto mt-6' />
               </div>
 
-              {/* Photo grid */}
-              <div className='grid grid-cols-2 sm:grid-cols-4 gap-4 mb-14'>
-                {[0, 1, 2, 3].map((i) => {
-                  const photo = cms?.clubhousePhotos?.[i] ?? null;
-                  return (
-                    <div
-                      key={i}
-                      className={[
-                        'relative overflow-hidden',
-                        i === 0
-                          ? 'aspect-square sm:col-span-2 sm:row-span-2'
-                          : 'aspect-square',
-                      ].join(' ')}
-                    >
-                      {photo ? (
-                        <SanityImage
-                          image={photo}
-                          alt={`Clubhouse photo ${i + 1}`}
-                          sizes={
-                            i === 0
-                              ? '(max-width: 640px) 50vw, 50vw'
-                              : '(max-width: 640px) 50vw, 25vw'
-                          }
-                        />
-                      ) : (
-                        <div className='absolute inset-0 bg-sand/30 border border-sand/40 flex items-center justify-center'>
-                          <p className='font-mono text-label uppercase tracking-[0.15em] text-navy/20'>
-                            Photo
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              {/* Carousel */}
+              <div className='mb-14 overflow-hidden'>
+                <ClubhouseCarousel
+                  slides={
+                    cms?.clubhousePhotos && cms.clubhousePhotos.length > 0
+                      ? cms.clubhousePhotos.map((photo, i) => ({
+                          url: urlFor(photo).width(1800).url(),
+                          alt: `Clubhouse photo ${i + 1}`,
+                        }))
+                      : null
+                  }
+                />
               </div>
 
               {/* Body */}

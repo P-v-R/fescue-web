@@ -62,12 +62,12 @@ export const homePage = defineType({
     // ── Clubhouse ────────────────────────────────────────────────────────────
     defineField({
       name: 'clubhousePhotos',
-      title: 'Photos (up to 4)',
+      title: 'Carousel Photos — "Not for everyone. For us."',
       type: 'array',
       of: [{ type: 'image', options: { hotspot: true } }],
-      validation: (Rule) => Rule.max(4),
       group: 'clubhouse',
-      description: 'First photo displays larger. Remaining photos fill the grid.',
+      description:
+        'Photos for the full-width carousel in the Clubhouse section. Auto-advances every 5 seconds with smooth crossfade. Add as many as you like — they cycle continuously.',
     }),
     defineField({
       name: 'clubhouseBody',
