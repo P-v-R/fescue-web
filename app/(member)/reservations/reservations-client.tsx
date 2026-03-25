@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { format, addDays, startOfDay, endOfDay } from 'date-fns'
+import { format, addDays, startOfDay, endOfDay, isBefore } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { BayGrid } from '@/components/reservations/bay-grid'
+import { MobileBayList } from '@/components/reservations/mobile-bay-list'
 import { BookingModal } from '@/components/reservations/booking-modal'
 import type { Bay, BookingWithMember } from '@/lib/supabase/types'
 import type { BlackoutPeriod } from '@/lib/utils/blackout'
@@ -97,60 +98,99 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
 
   return (
     <div>
-      {/* Date picker row */}
-      <div className="flex items-center gap-5 mb-6 flex-wrap">
-        <label className="font-mono text-label uppercase tracking-[0.28em] text-sage">
-          Date
-        </label>
-        <input
-          type="date"
-          value={format(date, 'yyyy-MM-dd')}
-          min={format(today, 'yyyy-MM-dd')}
-          max={format(maxDate, 'yyyy-MM-dd')}
-          onChange={(e) => {
-            const [year, month, day] = e.target.value.split('-').map(Number)
-            setDate(startOfDay(new Date(year, month - 1, day)))
-          }}
-          className={[
-            'font-sans text-sm font-light text-navy-dark',
-            'bg-transparent border-0 border-b border-sand-light pb-1',
-            'outline-none focus:border-navy transition-colors duration-200',
-          ].join(' ')}
+      {/* ── Mobile layout ── */}
+      <div className='sm:hidden'>
+        <MobileBayList
+          bays={bays}
+          bookings={bookings}
+          date={date}
+          setDate={(d) => setDate(startOfDay(d))}
+          userId={userId}
+          onSlotClick={setSelectedSlot}
+          blackoutPeriods={periodsForDate}
         />
-        <span className="font-serif italic text-base text-sand">
-          {format(date, 'EEEE, MMMM d')}
-        </span>
-        {isLoading && (
-          <span className="font-mono text-label uppercase tracking-[0.2em] text-sand animate-pulse">
-            Updating…
-          </span>
-        )}
       </div>
 
-      {/* Blackout banner — only shown for full-day all-bays closures */}
-      {fullDayBlackout && (
-        <div className="mb-6 border border-sand/40 bg-cream-mid/40 px-5 py-4 flex items-start gap-4">
-          <div className="w-1 self-stretch bg-sand/60 shrink-0" />
-          <div>
-            <p className="font-mono text-label uppercase tracking-[0.22em] text-navy/60 mb-0.5">
-              Bays Unavailable
-            </p>
-            <p className="font-serif italic text-base text-navy/50">
-              {fullDayBlackout.reason ?? 'Bay Unavailable'}
-            </p>
+      {/* ── Desktop layout ── */}
+      <div className='hidden sm:block'>
+        {/* Date picker row */}
+        <div className="flex items-center gap-5 mb-6 flex-wrap">
+          <label className="font-mono text-label uppercase tracking-[0.28em] text-sage">
+            Date
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setDate(startOfDay(addDays(date, -1)))}
+              disabled={isBefore(addDays(date, -1), today)}
+              className="w-7 h-7 flex items-center justify-center text-navy/40 disabled:opacity-20 hover:text-navy transition-colors"
+              aria-label="Previous day"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <input
+              type="date"
+              value={format(date, 'yyyy-MM-dd')}
+              min={format(today, 'yyyy-MM-dd')}
+              max={format(maxDate, 'yyyy-MM-dd')}
+              onChange={(e) => {
+                if (!e.target.value) return
+                const [year, month, day] = e.target.value.split('-').map(Number)
+                setDate(startOfDay(new Date(year, month - 1, day)))
+              }}
+              className={[
+                'font-sans text-sm font-light text-navy-dark',
+                'bg-transparent border-0 border-b border-sand-light pb-1',
+                'outline-none focus:border-navy transition-colors duration-200',
+              ].join(' ')}
+            />
+            <button
+              onClick={() => setDate(startOfDay(addDays(date, 1)))}
+              disabled={isBefore(maxDate, addDays(date, 1))}
+              className="w-7 h-7 flex items-center justify-center text-navy/40 disabled:opacity-20 hover:text-navy transition-colors"
+              aria-label="Next day"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           </div>
+          <span className="font-serif italic text-base text-sand">
+            {format(date, 'EEEE, MMMM d')}
+          </span>
+          {isLoading && (
+            <span className="font-mono text-label uppercase tracking-[0.2em] text-sand animate-pulse">
+              Updating…
+            </span>
+          )}
         </div>
-      )}
 
-      {/* Bay grid */}
-      <BayGrid
-        bays={bays}
-        bookings={bookings}
-        date={date}
-        userId={userId}
-        onSlotClick={setSelectedSlot}
-        blackoutPeriods={periodsForDate}
-      />
+        {/* Blackout banner */}
+        {fullDayBlackout && (
+          <div className="mb-6 border border-sand/40 bg-cream-mid/40 px-5 py-4 flex items-start gap-4">
+            <div className="w-1 self-stretch bg-sand/60 shrink-0" />
+            <div>
+              <p className="font-mono text-label uppercase tracking-[0.22em] text-navy/60 mb-0.5">
+                Bays Unavailable
+              </p>
+              <p className="font-serif italic text-base text-navy/50">
+                {fullDayBlackout.reason ?? 'Bay Unavailable'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Bay grid */}
+        <BayGrid
+          bays={bays}
+          bookings={bookings}
+          date={date}
+          userId={userId}
+          onSlotClick={setSelectedSlot}
+          blackoutPeriods={periodsForDate}
+        />
+      </div>
 
       {/* Booking modal */}
       {selectedSlot && (

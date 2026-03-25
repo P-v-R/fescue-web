@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import type { ReactNode } from 'react'
 
 // Shared card shell for all auth pages (login, forgot-password, invite)
 export function AuthCard({
@@ -7,7 +8,7 @@ export function AuthCard({
   children,
 }: {
   title: string
-  subtitle?: string
+  subtitle?: ReactNode
   children: React.ReactNode
 }) {
   return (

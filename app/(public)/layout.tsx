@@ -10,14 +10,16 @@ export default function PublicLayout({
 }) {
   return (
     <CartProvider>
-      <div className='min-h-screen bg-cream flex flex-col'>
+      <div className='relative min-h-screen bg-cream flex flex-col'>
+        <div className='fixed inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none z-0' />
+        <div className='relative z-10 flex flex-col min-h-screen'>
         <PublicNav />
 
         {/* Content */}
         <main className='flex-1'>{children}</main>
 
         {/* Footer */}
-        <footer className='border-t border-cream-mid bg-white py-8 mt-auto'>
+        <footer className='border-t border-cream-mid bg-cream py-8 mt-auto'>
           <div className='max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4'>
             <Image
               src='/logo-badge2.png'
@@ -32,6 +34,7 @@ export default function PublicLayout({
             </p>
           </div>
         </footer>
+        </div>
       </div>
 
       <CartDrawer />

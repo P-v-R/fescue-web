@@ -1,5 +1,7 @@
 export * from './bays'
 export * from './bookings'
+export * from './event-rsvps'
+export * from './events'
 export * from './invites'
 export * from './members'
 export * from './membership-requests'

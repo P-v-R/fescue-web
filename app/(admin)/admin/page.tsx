@@ -7,6 +7,9 @@ import { getMembershipRequests } from '@/lib/supabase/queries/membership-request
 import { getAdminBookingsForToday, getGuestLeads, getBookingsThisWeek } from '@/lib/supabase/queries/bookings'
 import { getBlackoutPeriods } from '@/lib/supabase/queries/blackout-periods'
 import { getActiveBays } from '@/lib/supabase/queries/bays'
+import { getAdminEvents } from '@/lib/supabase/queries/events'
+import { getAdminRsvpsForEvents } from '@/lib/supabase/queries/event-rsvps'
+import { getJoinRequests } from '@/lib/supabase/queries/join-requests'
 import { AdminClient } from './admin-client'
 import { DashboardStats } from './dashboard-stats'
 
@@ -34,16 +37,20 @@ export default async function AdminPage() {
   if (!member?.is_admin) redirect('/dashboard')
 
   // Parallel data fetch
-  const [members, pendingInvites, requests, todaysBookings, guestLeads, blackoutPeriods, bays, bookingsThisWeek] = await Promise.all([
+  const [members, pendingInvites, requests, joinRequests, todaysBookings, guestLeads, blackoutPeriods, bays, bookingsThisWeek, events] = await Promise.all([
     getAllMembers(),
     getPendingInvites(),
     getMembershipRequests(),
+    getJoinRequests(),
     getAdminBookingsForToday(),
     getGuestLeads(),
     getBlackoutPeriods(),
     getActiveBays(),
     getBookingsThisWeek(),
+    getAdminEvents(),
   ])
+
+  const eventRsvps = await getAdminRsvpsForEvents(events.map((e) => e.id))
 
   const activeMembers = members.filter((m) => m.is_active && !m.is_admin).length
   const pendingRequests = requests.filter((r) => r.status === 'pending').length
@@ -79,10 +86,13 @@ export default async function AdminPage() {
         members={members}
         pendingInvites={pendingInvites}
         requests={requests}
+        joinRequests={joinRequests}
         todaysBookings={todaysBookings}
         guestLeads={guestLeads}
         blackoutPeriods={blackoutPeriods}
         bays={bays}
+        events={events}
+        eventRsvps={eventRsvps}
       />
     </div>
   )

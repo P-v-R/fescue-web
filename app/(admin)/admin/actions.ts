@@ -9,9 +9,14 @@ import { deactivateMember } from '@/lib/supabase/queries/members'
 import { cancelBookingAdmin, getAdminBookingsForDate, createBookingAdmin, type AdminBooking } from '@/lib/supabase/queries/bookings'
 import { updateMembershipRequestStatus } from '@/lib/supabase/queries/membership-requests'
 import { createBlackoutPeriod, deleteBlackoutPeriod } from '@/lib/supabase/queries/blackout-periods'
-import { createResendClient, isResendConfigured, FROM_ADDRESS } from '@/lib/resend/client'
+import { createEvent, updateEvent, deleteEvent } from '@/lib/supabase/queries/events'
+import { deleteRsvpAdmin } from '@/lib/supabase/queries/event-rsvps'
+import { getJoinRequestForApproval, markJoinRequestApproved, markJoinRequestDeclined } from '@/lib/supabase/queries/join-requests'
+import { createEventSchema } from '@/lib/validations/event'
+import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/resend/client'
 import { inviteEmailHtml, inviteEmailText } from '@/lib/resend/templates/invite'
 import { introEmailHtml, introEmailText } from '@/lib/resend/templates/intro'
+import { welcomeEmailHtml, welcomeEmailText } from '@/lib/resend/templates/welcome'
 
 // ─── Auth guard helper ────────────────────────────────────────────────────────
 
@@ -45,7 +50,7 @@ async function sendInviteEmail(email: string, token: string, name?: string | nul
 
   const resend = createResendClient()
   await resend.emails.send({
-    from: FROM_ADDRESS,
+    from: FROM_ADDRESSES.noreply,
     to: email,
     subject: 'Your Fescue Golf Club Invitation',
     html: inviteEmailHtml({ inviteUrl, recipientEmail: email, recipientName: name, expiresAt }),
@@ -289,7 +294,7 @@ export async function sendIntroEmailAction(
     } else {
       const resend = createResendClient()
       await resend.emails.send({
-        from: FROM_ADDRESS,
+        from: FROM_ADDRESSES.hello,
         to: email,
         subject: 'Thanks for your interest in Fescue Golf Club',
         html: introEmailHtml({ firstName, scheduleUrl }),
@@ -333,7 +338,7 @@ export async function sendGuestIntroEmailAction(
     } else {
       const resend = createResendClient()
       await resend.emails.send({
-        from: FROM_ADDRESS,
+        from: FROM_ADDRESSES.hello,
         to: email,
         subject: 'Thanks for your interest in Fescue Golf Club',
         html: introEmailHtml({ firstName, scheduleUrl }),
@@ -359,3 +364,207 @@ export async function markPendingAction(
     return { error: err instanceof Error ? err.message : 'Failed to update request.' }
   }
 }
+
+// ─── Join request actions ─────────────────────────────────────────────────────
+
+export async function approveJoinRequestAction(
+  id: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+
+    // 1. Fetch and decrypt (does not modify the record)
+    const req = await getJoinRequestForApproval(id)
+
+    const supabase = createAdminClient()
+
+    // 2. Create Supabase auth user with the member's chosen password
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: req.email,
+      password: req.password,
+      email_confirm: true,
+    })
+    if (authError) {
+      throw new Error(
+        authError.message.includes('already registered')
+          ? `An account already exists for ${req.email}. If this person should have access, activate their existing account.`
+          : `Failed to create auth user: ${authError.message}`,
+      )
+    }
+
+    const authUser = authData.user
+    if (!authUser) throw new Error('Auth user creation returned no user.')
+
+    // 3. Insert member row
+    const { error: memberError } = await supabase.from('members').insert({
+      id: authUser.id,
+      email: req.email,
+      full_name: req.full_name,
+      phone: req.phone,
+      discord: req.discord,
+    })
+
+    if (memberError) {
+      // Roll back auth user on member insert failure
+      await supabase.auth.admin.deleteUser(authUser.id)
+      throw new Error(`Failed to create member profile: ${memberError.message}`)
+    }
+
+    // 4. Mark approved + wipe encrypted password
+    await markJoinRequestApproved(id)
+
+    // 5. Send welcome email
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    const loginUrl = `${appUrl}/login`
+
+    if (!isResendConfigured()) {
+      console.log(`[DEV] Welcome email → ${req.email} — login: ${loginUrl}`)
+    } else {
+      const resend = createResendClient()
+      await resend.emails.send({
+        from: FROM_ADDRESSES.noreply,
+        to: req.email,
+        subject: "You're in — Fescue Golf Club",
+        html: welcomeEmailHtml({ loginUrl, recipientName: req.full_name }),
+        text: welcomeEmailText({ loginUrl, recipientName: req.full_name }),
+      })
+    }
+
+    revalidatePath('/admin')
+    return { success: `Account created and welcome email sent to ${req.full_name}.` }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to approve request.' }
+  }
+}
+
+export async function declineJoinRequestAction(
+  id: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await markJoinRequestDeclined(id)
+    revalidatePath('/admin')
+    return { success: 'Request declined.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to decline request.' }
+  }
+}
+
+// ─── Event actions ────────────────────────────────────────────────────────────
+
+// Combines a datetime-local string (YYYY-MM-DDTHH:MM) with a time-only string
+// (HH:MM) so that ends_at is always on the same calendar day as starts_at.
+function combineDateAndTime(dateTimeLocal: string, timeOnly: string): string {
+  const datePart = dateTimeLocal.slice(0, 10) // YYYY-MM-DD
+  return new Date(`${datePart}T${timeOnly}`).toISOString()
+}
+
+export async function createEventAction(
+  formData: FormData,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    const adminId = await requireAdmin()
+
+    const raw = {
+      title: (formData.get('title') as string | null)?.trim() ?? '',
+      description: (formData.get('description') as string | null)?.trim() || undefined,
+      starts_at: (formData.get('starts_at') as string | null) ?? '',
+      ends_at: (formData.get('ends_at') as string | null)?.trim() || undefined,
+      location: (formData.get('location') as string | null)?.trim() || undefined,
+      image_url: (formData.get('image_url') as string | null)?.trim() || undefined,
+      rsvp_enabled: formData.get('rsvp_enabled') === 'true',
+    }
+
+    const parsed = createEventSchema.safeParse(raw)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
+
+    const startsAtIso = new Date(parsed.data.starts_at).toISOString()
+    const endsAtIso = parsed.data.ends_at
+      ? combineDateAndTime(parsed.data.starts_at, parsed.data.ends_at)
+      : undefined
+
+    await createEvent({
+      ...parsed.data,
+      starts_at: startsAtIso,
+      ends_at: endsAtIso,
+      created_by: adminId,
+    })
+
+    revalidatePath('/admin')
+    revalidatePath('/calendar')
+    revalidatePath('/dashboard')
+    return { success: 'Event created.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to create event.' }
+  }
+}
+
+export async function updateEventAction(
+  id: string,
+  formData: FormData,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+
+    const raw = {
+      title: (formData.get('title') as string | null)?.trim() ?? '',
+      description: (formData.get('description') as string | null)?.trim() || undefined,
+      starts_at: (formData.get('starts_at') as string | null) ?? '',
+      ends_at: (formData.get('ends_at') as string | null)?.trim() || undefined,
+      location: (formData.get('location') as string | null)?.trim() || undefined,
+      image_url: (formData.get('image_url') as string | null)?.trim() || undefined,
+      rsvp_enabled: formData.get('rsvp_enabled') === 'true',
+    }
+
+    const parsed = createEventSchema.safeParse(raw)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
+
+    const startsAtIso = new Date(parsed.data.starts_at).toISOString()
+    const endsAtIso = parsed.data.ends_at
+      ? combineDateAndTime(parsed.data.starts_at, parsed.data.ends_at)
+      : undefined
+
+    await updateEvent(id, {
+      ...parsed.data,
+      starts_at: startsAtIso,
+      ends_at: endsAtIso,
+    })
+
+    revalidatePath('/admin')
+    revalidatePath('/calendar')
+    revalidatePath('/dashboard')
+    return { success: 'Event updated.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to update event.' }
+  }
+}
+
+export async function deleteEventAction(
+  id: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await deleteEvent(id)
+    revalidatePath('/admin')
+    revalidatePath('/calendar')
+    revalidatePath('/dashboard')
+    return { success: 'Event deleted.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to delete event.' }
+  }
+}
+
+export async function removeRsvpAction(
+  eventId: string,
+  memberId: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await deleteRsvpAdmin(eventId, memberId)
+    revalidatePath('/admin')
+    return { success: 'RSVP removed.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to remove RSVP.' }
+  }
+}
+

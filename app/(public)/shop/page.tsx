@@ -23,7 +23,7 @@ export default async function ShopPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
       {/* Header */}
       <div className="mb-10">
-        <p className="font-mono text-label uppercase tracking-[0.28em] text-gold mb-1">
+        <p className="font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-1">
           Fescue Club
         </p>
         <h1 className="font-serif text-2xl sm:text-display font-light text-navy">Club Shop</h1>
@@ -91,7 +91,7 @@ function ShopComingSoon() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-8 py-12 sm:py-16">
       <div className="mb-10">
-        <p className="font-mono text-label uppercase tracking-[0.28em] text-gold mb-1">
+        <p className="font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-1">
           Fescue Club
         </p>
         <h1 className="font-serif text-2xl sm:text-display font-light text-navy">Club Shop</h1>

@@ -58,7 +58,7 @@ export function MembershipForm() {
       {/* Name row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2">
+          <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/60 mb-2">
             First Name
           </label>
           <input
@@ -72,7 +72,7 @@ export function MembershipForm() {
           )}
         </div>
         <div>
-          <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2">
+          <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/60 mb-2">
             Last Name
           </label>
           <input
@@ -89,7 +89,7 @@ export function MembershipForm() {
 
       {/* Email */}
       <div>
-        <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2">
+        <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/60 mb-2">
           Email Address
         </label>
         <input
@@ -105,7 +105,7 @@ export function MembershipForm() {
 
       {/* Phone */}
       <div>
-        <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2">
+        <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/60 mb-2">
           Phone <span className="normal-case text-navy/25">(optional)</span>
         </label>
         <input
@@ -119,7 +119,7 @@ export function MembershipForm() {
 
       {/* Referral */}
       <div>
-        <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2">
+        <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/60 mb-2">
           How did you hear about us? <span className="normal-case text-navy/25">(optional)</span>
         </label>
         <input
@@ -132,7 +132,7 @@ export function MembershipForm() {
 
       {/* Message */}
       <div>
-        <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2">
+        <label className="block font-mono text-label uppercase tracking-[0.2em] text-navy/60 mb-2">
           Message <span className="normal-case text-navy/25">(optional)</span>
         </label>
         <textarea

@@ -8,7 +8,7 @@ export default function ContactPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-8 py-16 sm:py-24">
       <div className="mb-12">
-        <p className="font-mono text-label uppercase tracking-[0.28em] text-gold mb-1">
+        <p className="font-mono text-label uppercase tracking-[0.28em] text-gold-dark mb-1">
           Come Visit
         </p>
         <h1 className="font-serif text-3xl sm:text-display font-light text-navy">

@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
-import { getBulletinPosts, getAllUpcomingEvents } from '@/lib/sanity/queries';
+import { getBulletinPosts } from '@/lib/sanity/queries';
+import { getAllUpcomingEvents } from '@/lib/supabase/queries/events';
 import { getUpcomingMemberBookings } from '@/lib/supabase/queries/bookings';
 import { BulletinPostCard } from '@/components/bulletin/bulletin-post';
 import { UpcomingEvents } from '@/components/bulletin/upcoming-events';
