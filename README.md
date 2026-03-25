@@ -8,24 +8,27 @@ A member management and reservation platform for Fescue, a private golf simulato
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15 (App Router, TypeScript) |
+| Framework | Next.js 16 (App Router, TypeScript) |
 | Styling | Tailwind CSS v4 |
 | Auth & DB | Supabase (Postgres + Row-Level Security) |
 | CMS | Sanity v3 |
 | Merch | Shopify Storefront API |
 | Email | Resend |
+| Testing | Vitest |
 | Package manager | pnpm |
 
 ---
 
 ## Features
 
-- **Member auth** — invite-only sign-up, magic link / password login
-- **Bay reservation system** — real-time availability grid, 1–2 hr bookings, guest support (up to 3 guests per booking / foursome)
+- **Member auth** — invite-only sign-up, password login, forgot-password flow
+- **Bay reservation system** — real-time availability grid, 1–2 hr bookings, guest support
 - **Member dashboard** — bulletin feed (Sanity), upcoming reservations, club events calendar
-- **Admin panel** — reservation management, blackout periods, member directory, guest leads
+- **Member directory** — 2-column card grid with club champion plaque (Sanity-backed)
+- **Admin panel** — stats dashboard, member search/profiles, book-on-behalf, membership request pipeline with intro email (Resend)
+- **Tour request flow** — `/contact` form feeds membership pipeline; admin can send intro email and track status
 - **Public site** — landing page, about, request-a-tour contact form
-- **Merch store** — Shopify-powered product pages and cart
+- **Merch store** — Shopify-powered product pages and cart (in progress)
 
 ---
 
@@ -33,7 +36,7 @@ A member management and reservation platform for Fescue, a private golf simulato
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+ (see `.nvmrc`)
 - pnpm
 - Supabase project
 - Sanity project
@@ -62,11 +65,13 @@ See `.env.example` for all required keys:
 
 ### Database migrations
 
-Migrations live in `supabase/migrations/`. Apply with:
+Migrations live in `supabase/migrations/`. Create a new one with:
 
 ```bash
-supabase db push
+supabase migration new my_migration_name
 ```
+
+Production migrations run automatically when a release PR is merged to `main` (via `release.yml`). Never run `supabase db push` against production manually.
 
 ---
 
@@ -87,7 +92,8 @@ lib/
   supabase/       — client, admin client, queries, types
   sanity/         — client, queries
   shopify/        — storefront client
-  utils/          — time slots, blackout helpers
+  resend/         — email templates
+  utils/          — time slots, blackout helpers, phone formatter
   validations/    — Zod schemas
 sanity/           — Sanity studio schemas
 supabase/
@@ -121,49 +127,37 @@ Supabase and Sanity projects are managed separately via their respective dashboa
 
 ### Day-to-day
 
-Work directly on `staging` for most changes:
-
-```bash
-git checkout staging
-# make changes
-git commit -m "feat: add member profile photo"
-git push
-# → Railway deploys staging automatically
-# → Release PR on GitHub auto-opens/updates
-```
-
-### Feature branches
-
-Use a branch only for multi-session work or changes you might abandon:
+All work happens on a feature branch. Never commit directly to `staging`.
 
 ```bash
 git checkout -b feat/my-feature
-# work freely, commit message prefixes don't matter mid-branch
+# work freely — commit messages here don't affect versioning
 git checkout staging
-git merge feat/my-feature
-git push
+git merge --squash feat/my-feature
+git commit -m "feat: describe the feature"   # this message drives the changelog
+git push origin staging
+# → Railway deploys staging automatically
+git branch -d feat/my-feature
 ```
 
 ### Releasing to production
 
-When staging is tested and ready, merge the open release PR on GitHub.
-This triggers `release.yml` which:
-1. Bumps `package.json` version
-2. Creates a git tag
-3. Publishes a GitHub Release with changelog
-4. Railway deploys production
+When staging is tested and ready, merge the open Release Please PR on GitHub (`chore: release X.Y.Z`). This automatically:
+1. Tags the release
+2. Runs database migrations against production (`release.yml`)
+3. Railway deploys production from `main`
 
 ### Commit message prefixes
 
-The prefix on the **last commit before merging to staging** determines the version bump:
+The squash commit message when merging into `staging` determines the version bump:
 
 | Prefix | Bump | Example |
 |---|---|---|
 | `feat:` | minor | `feat: add guest booking` |
 | `fix:` | patch | `fix: correct timezone bug` |
-| `chore:` | patch | `chore: update deps` |
-| `BREAKING:` | major | `BREAKING: new auth flow` |
+| `chore:` | patch (hidden) | `chore: update deps` |
+| `BREAKING CHANGE:` | major | `BREAKING CHANGE: new auth flow` |
 
 ### Branch protection
 
-`main` is protected — direct pushes are blocked. All production changes must go through a PR from `staging`.
+`main` is protected — direct pushes are blocked. The Release Please bot owns the `staging → main` PR; never open one manually.

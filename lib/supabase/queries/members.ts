@@ -16,19 +16,33 @@ export async function getAllMembers(): Promise<Member[]> {
 }
 
 // Active members directory — readable by any authenticated member.
-export type DirectoryMember = Pick<Member, 'id' | 'full_name' | 'phone' | 'discord'>
+export type DirectoryMember = Pick<Member, 'id' | 'full_name' | 'phone' | 'discord' | 'member_since' | 'created_at'>
 
 export async function getActiveMembers(): Promise<DirectoryMember[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('members')
-    .select('id, full_name, phone, discord')
+    .select('id, full_name, phone, discord, member_since, created_at')
     .eq('is_active', true)
     .order('full_name', { ascending: true })
 
   if (error) throw new Error(`getActiveMembers: ${error.message}`)
   return (data ?? []) as DirectoryMember[]
+}
+
+// Admin only — single member by ID with all fields.
+export async function getMemberById(id: string): Promise<Member | null> {
+  const supabase = createAdminClient()
+
+  const { data, error } = await supabase
+    .from('members')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) return null
+  return data as Member
 }
 
 // Admin only — deactivate a member and sign them out.

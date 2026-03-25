@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { createClient } from '@/lib/supabase/server';
-import { getBulletinPosts, getAllUpcomingEvents } from '@/lib/sanity/queries';
+import { getBulletinPosts } from '@/lib/sanity/queries';
+import { getAllUpcomingEvents } from '@/lib/supabase/queries/events';
 import { getUpcomingMemberBookings } from '@/lib/supabase/queries/bookings';
 import { BulletinPostCard } from '@/components/bulletin/bulletin-post';
 import { UpcomingEvents } from '@/components/bulletin/upcoming-events';
@@ -17,19 +18,14 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: member } = await supabase
-    .from('members')
-    .select('full_name')
-    .eq('id', user!.id)
-    .single();
-
-  const [posts, upcomingEvents, upcomingBookings] = await Promise.all([
+  const [memberResult, posts, upcomingEvents, upcomingBookings] = await Promise.all([
+    supabase.from('members').select('full_name').eq('id', user!.id).single(),
     getBulletinPosts(),
     getAllUpcomingEvents(),
     getUpcomingMemberBookings(user!.id),
   ]);
 
-  const firstName = member?.full_name?.split(' ')[0] ?? 'Member';
+  const firstName = memberResult.data?.full_name?.split(' ')[0] ?? 'Member';
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';

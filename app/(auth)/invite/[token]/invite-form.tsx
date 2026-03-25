@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { acceptInviteSchema, type AcceptInviteInput } from '@/lib/validations/auth'
 import { acceptInviteAction } from './actions'
+import { formatPhone } from '@/lib/utils/phone'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
@@ -18,6 +19,7 @@ export function InviteForm({ token, inviteEmail }: Props) {
 
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<AcceptInviteInput>({
@@ -58,6 +60,7 @@ export function InviteForm({ token, inviteEmail }: Props) {
         placeholder="(555) 000-0000"
         error={errors.phone?.message}
         {...register('phone')}
+        onChange={(e) => setValue('phone', formatPhone(e.target.value), { shouldValidate: true })}
       />
 
       <div className="flex flex-col gap-2">

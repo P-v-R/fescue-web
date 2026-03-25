@@ -1,4 +1,5 @@
 import { createClient as createServerClient } from '../server'
+import { createAdminClient } from '../admin'
 import type { MembershipRequest } from '../types'
 
 // Admin only — returns all membership requests ordered by date.
@@ -14,17 +15,26 @@ export async function getMembershipRequests(): Promise<MembershipRequest[]> {
   return (data ?? []) as MembershipRequest[]
 }
 
-// Public — anyone can submit a membership request from /membership.
-export async function createMembershipRequest(
-  fullName: string,
-  email: string,
-  message?: string,
-): Promise<MembershipRequest> {
-  const supabase = await createServerClient()
+// Public — anyone can submit a membership request from /contact.
+// Uses admin client to bypass RLS — the server action is the trust boundary.
+export async function createMembershipRequest(params: {
+  full_name: string
+  email: string
+  phone?: string
+  referral_source?: string
+  message?: string
+}): Promise<MembershipRequest> {
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('membership_requests')
-    .insert({ full_name: fullName, email, message: message ?? null })
+    .insert({
+      full_name: params.full_name,
+      email: params.email,
+      phone: params.phone ?? null,
+      referral_source: params.referral_source ?? null,
+      message: params.message ?? null,
+    })
     .select()
     .single()
 
@@ -32,10 +42,27 @@ export async function createMembershipRequest(
   return data as MembershipRequest
 }
 
+// Admin only — check for existing active request by email (uses admin client to bypass RLS).
+export async function getMembershipRequestByEmailAdmin(
+  email: string,
+): Promise<MembershipRequest | null> {
+  const supabase = createAdminClient()
+
+  const { data } = await supabase
+    .from('membership_requests')
+    .select('*')
+    .eq('email', email.toLowerCase().trim())
+    .not('status', 'in', '("declined","onboarded")')
+    .limit(1)
+    .maybeSingle()
+
+  return (data as MembershipRequest | null) ?? null
+}
+
 // Admin only — update request status.
 export async function updateMembershipRequestStatus(
   id: string,
-  status: 'invited' | 'declined',
+  status: 'pending' | 'contacted' | 'invited' | 'declined' | 'onboarded',
 ): Promise<void> {
   const supabase = await createServerClient()
 

@@ -4,10 +4,14 @@ import { createClient } from '@/lib/supabase/server'
 import { getAllMembers } from '@/lib/supabase/queries/members'
 import { getPendingInvites } from '@/lib/supabase/queries/invites'
 import { getMembershipRequests } from '@/lib/supabase/queries/membership-requests'
-import { getAdminBookingsForToday, getGuestLeads } from '@/lib/supabase/queries/bookings'
+import { getAdminBookingsForToday, getGuestLeads, getBookingsThisWeek } from '@/lib/supabase/queries/bookings'
 import { getBlackoutPeriods } from '@/lib/supabase/queries/blackout-periods'
 import { getActiveBays } from '@/lib/supabase/queries/bays'
+import { getAdminEvents } from '@/lib/supabase/queries/events'
+import { getAdminRsvpsForEvents } from '@/lib/supabase/queries/event-rsvps'
+import { getJoinRequests } from '@/lib/supabase/queries/join-requests'
 import { AdminClient } from './admin-client'
+import { DashboardStats } from './dashboard-stats'
 
 export const metadata = {
   title: 'Admin — Fescue',
@@ -33,15 +37,23 @@ export default async function AdminPage() {
   if (!member?.is_admin) redirect('/dashboard')
 
   // Parallel data fetch
-  const [members, pendingInvites, requests, todaysBookings, guestLeads, blackoutPeriods, bays] = await Promise.all([
+  const [members, pendingInvites, requests, joinRequests, todaysBookings, guestLeads, blackoutPeriods, bays, bookingsThisWeek, events] = await Promise.all([
     getAllMembers(),
     getPendingInvites(),
     getMembershipRequests(),
+    getJoinRequests(),
     getAdminBookingsForToday(),
     getGuestLeads(),
     getBlackoutPeriods(),
     getActiveBays(),
+    getBookingsThisWeek(),
+    getAdminEvents(),
   ])
+
+  const eventRsvps = await getAdminRsvpsForEvents(events.map((e) => e.id))
+
+  const activeMembers = members.filter((m) => m.is_active && !m.is_admin).length
+  const pendingRequests = requests.filter((r) => r.status === 'pending').length
 
   return (
     <div>
@@ -62,14 +74,25 @@ export default async function AdminPage() {
         </Link>
       </div>
 
+      <DashboardStats
+        activeMembers={activeMembers}
+        bookingsThisWeek={bookingsThisWeek}
+        todaysBookings={todaysBookings}
+        bays={bays}
+        pendingRequests={pendingRequests}
+      />
+
       <AdminClient
         members={members}
         pendingInvites={pendingInvites}
         requests={requests}
+        joinRequests={joinRequests}
         todaysBookings={todaysBookings}
         guestLeads={guestLeads}
         blackoutPeriods={blackoutPeriods}
         bays={bays}
+        events={events}
+        eventRsvps={eventRsvps}
       />
     </div>
   )
