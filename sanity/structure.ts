@@ -1,74 +1,97 @@
-import type { StructureResolver } from 'sanity/structure';
+import type { StructureResolver } from 'sanity/structure'
+import { createHubPane } from './components/hub-pane'
+import type { HubItem } from './components/hub-pane'
+
+const marketingItems: HubItem[] = [
+  {
+    id: 'homePage',
+    icon: '🏠',
+    title: 'Homepage',
+    description:
+      'The public-facing home page — hero text, feature strip photos, clubhouse carousel, our story, and partner logos.',
+  },
+  {
+    id: 'aboutPage',
+    icon: '📖',
+    title: 'About Page',
+    description: 'The "About" page content visible to visitors on the public website.',
+  },
+]
+
+const clubItems: HubItem[] = [
+  {
+    id: 'announcement',
+    icon: '📢',
+    title: 'Announcement Banner',
+    description:
+      "A highlighted notice shown at the top of every member's dashboard. Use this for urgent news, closures, or upcoming events.",
+  },
+  {
+    id: 'bulletin',
+    icon: '📋',
+    title: 'Bulletin Board',
+    description:
+      'News posts and updates that appear in the member dashboard feed. Members see these when they log in. Pinned posts stay at the top.',
+  },
+  {
+    id: 'champions',
+    icon: '🏆',
+    title: 'Club Champions',
+    description:
+      'The leaderboard that displays member achievements by year. Add a new entry each season to recognise the champion.',
+  },
+]
+
+const MarketingHub = createHubPane(marketingItems)
+const ClubHub = createHubPane(clubItems)
 
 export const structure: StructureResolver = (S) =>
   S.list()
     .title('Fescue Club')
     .items([
 
-      // ── 📣 Marketing Site ──────────────────────────────────────────────────
+      // ── 📣 Marketing Site ────────────────────────────────────────────────
       S.listItem()
         .title('📣 Marketing Site')
         .child(
-          S.list()
+          S.component(MarketingHub)
             .title('Marketing Site')
-            .items([
-              S.listItem()
-                .title('Homepage')
-                .id('homePage')
-                .child(
-                  S.document()
-                    .schemaType('homePage')
-                    .documentId('homePage')
-                    .title('Homepage'),
-                ),
-
-              S.listItem()
-                .title('About Page')
-                .id('aboutPage')
-                .child(
-                  S.document()
-                    .schemaType('aboutPage')
-                    .documentId('aboutPage')
-                    .title('About Page'),
-                ),
-            ]),
+            .child((id) => {
+              if (id === 'homePage')
+                return S.document().schemaType('homePage').documentId('homePage').title('Homepage')
+              if (id === 'aboutPage')
+                return S.document()
+                  .schemaType('aboutPage')
+                  .documentId('aboutPage')
+                  .title('About Page')
+              return S.list().title('Not found').items([])
+            }),
         ),
 
-      // ── 🏌️ Club Management ─────────────────────────────────────────────────
+      // ── 🏌️ Club Management ───────────────────────────────────────────────
       S.listItem()
         .title('🏌️ Club Management')
         .child(
-          S.list()
+          S.component(ClubHub)
             .title('Club Management')
-            .items([
-              S.listItem()
-                .title('Announcement Banner')
-                .id('announcement')
-                .child(
-                  S.document()
-                    .schemaType('announcement')
-                    .documentId('announcement')
-                    .title('Announcement Banner'),
-                ),
-
-              S.listItem()
-                .title('Bulletin Board')
-                .child(
-                  S.documentTypeList('bulletinPost')
-                    .title('Bulletin Posts')
-                    .defaultOrdering([
-                      { field: 'pinned', direction: 'desc' },
-                      { field: 'publishedAt', direction: 'desc' },
-                    ]),
-                ),
-
-              S.listItem()
-                .title('Club Champions')
-                .child(
-                  S.documentTypeList('clubChampion')
-                    .title('Club Champions')
-                    .defaultOrdering([{ field: 'year', direction: 'desc' }]),
-                ),
-            ]),
+            .child((id) => {
+              if (id === 'announcement')
+                return S.document()
+                  .schemaType('announcement')
+                  .documentId('announcement')
+                  .title('Announcement Banner')
+              if (id === 'bulletin')
+                return S.documentTypeList('bulletinPost')
+                  .title('Bulletin Board')
+                  .defaultOrdering([
+                    { field: 'pinned', direction: 'desc' },
+                    { field: 'publishedAt', direction: 'desc' },
+                  ])
+              if (id === 'champions')
+                return S.documentTypeList('clubChampion')
+                  .title('Club Champions')
+                  .defaultOrdering([{ field: 'year', direction: 'desc' }])
+              return S.list().title('Not found').items([])
+            }),
         ),
-    ]);
+    ])

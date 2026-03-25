@@ -67,9 +67,7 @@ export default async function HomePage() {
                   className='hero-item font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'
                   style={{ transitionDelay: '200ms' }}
                 >
-                  The membership golf club.
-                  <br />
-                  <em>reinvented</em>
+                  Private. Not Exclusive.
                 </h1>
                 <div
                   className='hero-item w-12 h-px bg-gold mx-auto mb-8'
@@ -173,7 +171,10 @@ export default async function HomePage() {
                 {cms?.storyBody ? (
                   <div className='space-y-4'>
                     {cms.storyBody.split('\n\n').map((para, i) => (
-                      <p key={i} className='font-sans text-sm text-cream/75 leading-relaxed'>
+                      <p
+                        key={i}
+                        className='font-sans text-sm text-cream/75 leading-relaxed'
+                      >
                         {para}
                       </p>
                     ))}
@@ -360,7 +361,8 @@ export default async function HomePage() {
               className='object-contain opacity-60'
             />
             <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/30'>
-              © {new Date().getFullYear()} Fescue Golf Club. All rights reserved.
+              © {new Date().getFullYear()} Fescue Golf Club. All rights
+              reserved.
             </p>
           </div>
         </footer>
