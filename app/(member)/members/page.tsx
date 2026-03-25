@@ -44,7 +44,7 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
           <p
             className='font-mono text-lg uppercase tracking-[0.25em] text-gold mb-3'
             style={{
-              fontFamily: "'Pinyon Script', cursive",
+              fontFamily: 'var(--font-pinyon), cursive',
               fontSize: '',
             }}
           >
@@ -53,7 +53,7 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
           <h2
             className='text-cream leading-none mb-3'
             style={{
-              fontFamily: "'Pinyon Script', cursive",
+              fontFamily: 'var(--font-pinyon), cursive',
               fontSize: 'clamp(2.4rem, 6vw, 3.6rem)',
             }}
           >
@@ -131,12 +131,12 @@ function MemberCard({ member }: { member: DirectoryMember }) {
       <div className='flex items-end justify-between gap-4'>
         <div className='flex flex-col gap-1.5'>
           {member.phone && (
-            <span className='font-serif text-base font-light text-navy/80'>
+            <span className='font-serif text-base font-semibold text-navy'>
               {member.phone}
             </span>
           )}
           {member.discord && (
-            <span className='font-mono text-[11px] tracking-[0.1em] text-sand'>
+            <span className='font-mono text-[11px] tracking-[0.1em] text-navy-mid/60'>
               {member.discord}
             </span>
           )}

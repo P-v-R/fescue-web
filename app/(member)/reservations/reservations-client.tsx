@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { format, addDays, startOfDay, endOfDay } from 'date-fns'
+import { format, addDays, startOfDay, endOfDay, isBefore } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { BayGrid } from '@/components/reservations/bay-grid'
 import { MobileBayList } from '@/components/reservations/mobile-bay-list'
@@ -118,22 +118,44 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           <label className="font-mono text-label uppercase tracking-[0.28em] text-sage">
             Date
           </label>
-          <input
-            type="date"
-            value={format(date, 'yyyy-MM-dd')}
-            min={format(today, 'yyyy-MM-dd')}
-            max={format(maxDate, 'yyyy-MM-dd')}
-            onChange={(e) => {
-              if (!e.target.value) return
-              const [year, month, day] = e.target.value.split('-').map(Number)
-              setDate(startOfDay(new Date(year, month - 1, day)))
-            }}
-            className={[
-              'font-sans text-sm font-light text-navy-dark',
-              'bg-transparent border-0 border-b border-sand-light pb-1',
-              'outline-none focus:border-navy transition-colors duration-200',
-            ].join(' ')}
-          />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setDate(startOfDay(addDays(date, -1)))}
+              disabled={isBefore(addDays(date, -1), today)}
+              className="w-7 h-7 flex items-center justify-center text-navy/40 disabled:opacity-20 hover:text-navy transition-colors"
+              aria-label="Previous day"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <input
+              type="date"
+              value={format(date, 'yyyy-MM-dd')}
+              min={format(today, 'yyyy-MM-dd')}
+              max={format(maxDate, 'yyyy-MM-dd')}
+              onChange={(e) => {
+                if (!e.target.value) return
+                const [year, month, day] = e.target.value.split('-').map(Number)
+                setDate(startOfDay(new Date(year, month - 1, day)))
+              }}
+              className={[
+                'font-sans text-sm font-light text-navy-dark',
+                'bg-transparent border-0 border-b border-sand-light pb-1',
+                'outline-none focus:border-navy transition-colors duration-200',
+              ].join(' ')}
+            />
+            <button
+              onClick={() => setDate(startOfDay(addDays(date, 1)))}
+              disabled={isBefore(maxDate, addDays(date, 1))}
+              className="w-7 h-7 flex items-center justify-center text-navy/40 disabled:opacity-20 hover:text-navy transition-colors"
+              aria-label="Next day"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
           <span className="font-serif italic text-base text-sand">
             {format(date, 'EEEE, MMMM d')}
           </span>
