@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.supabase.co',
       },
+      // Google Static Maps
+      {
+        protocol: 'https',
+        hostname: 'maps.googleapis.com',
+      },
       // Shopify CDN (for Prompt 7)
       {
         protocol: 'https',
