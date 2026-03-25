@@ -84,7 +84,7 @@ export function EventModal({ event, onClose, userRsvpStatus, onRsvpChange }: Pro
             className="absolute top-3 right-3 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-cream/90 shadow-sm hover:bg-cream transition-colors"
           >
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M1 1l10 10M11 1L1 11" stroke="#1a3020" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M1 1l10 10M11 1L1 11" stroke="#004225" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </button>
 

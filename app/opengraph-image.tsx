@@ -15,7 +15,7 @@ export default function Image() {
     (
       <div
         style={{
-          background: '#0e1c12',
+          background: '#002918',
           width: '100%',
           height: '100%',
           display: 'flex',
