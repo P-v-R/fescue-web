@@ -9,7 +9,7 @@ export const joinRequestSchema = z
     phone: z.string().optional(),
     discord: z.string().optional(),
     member_since: z
-      .number({ required_error: 'Please select the year you joined.' })
+      .number({ message: 'Please select the year you joined.' })
       .int()
       .min(FOUNDING_YEAR, `Year must be ${FOUNDING_YEAR} or later.`)
       .max(new Date().getFullYear(), 'Year cannot be in the future.'),
