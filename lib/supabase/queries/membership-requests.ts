@@ -20,8 +20,12 @@ export async function getMembershipRequests(): Promise<MembershipRequest[]> {
 export async function createMembershipRequest(params: {
   full_name: string
   email: string
-  phone?: string
-  referral_source?: string
+  phone: string
+  zip_code?: string
+  profession: string
+  referral_source: string
+  has_membership_org?: boolean
+  membership_org_names?: string
   message?: string
 }): Promise<MembershipRequest> {
   const supabase = createAdminClient()
@@ -31,8 +35,12 @@ export async function createMembershipRequest(params: {
     .insert({
       full_name: params.full_name,
       email: params.email,
-      phone: params.phone ?? null,
-      referral_source: params.referral_source ?? null,
+      phone: params.phone,
+      zip_code: params.zip_code ?? null,
+      profession: params.profession,
+      referral_source: params.referral_source,
+      has_membership_org: params.has_membership_org ?? null,
+      membership_org_names: params.membership_org_names ?? null,
       message: params.message ?? null,
     })
     .select()
