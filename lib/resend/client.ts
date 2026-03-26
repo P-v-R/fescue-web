@@ -12,9 +12,9 @@ export function isResendConfigured(): boolean {
   return !!process.env.RESEND_API_KEY
 }
 
-// Per-purpose from addresses — all sent from the verified fescuegolfclub.com domain.
+// Per-purpose from addresses — all sent from the verified mail.fescuegolfclub.com domain.
 export const FROM_ADDRESSES = {
-  bookings: 'bookings@fescuegolfclub.com',
-  noreply: 'noreply@fescuegolfclub.com',
-  hello: 'hello@fescuegolfclub.com',
+  bookings: 'bookings@mail.fescuegolfclub.com',
+  noreply: 'noreply@mail.fescuegolfclub.com',
+  hello: 'hello@mail.fescuegolfclub.com',
 }
