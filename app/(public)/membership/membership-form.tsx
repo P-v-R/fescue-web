@@ -14,7 +14,7 @@ const labelClass = 'block font-mono text-label uppercase tracking-[0.2em] text-n
 
 const errorClass = 'font-mono text-label text-red-500 mt-1'
 
-export function MembershipForm() {
+export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
   const [submitted, setSubmitted] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [serverError, setServerError] = useState<string | null>(null)
@@ -42,6 +42,7 @@ export function MembershipForm() {
         } else if (result.success) {
           setSuccessMessage(result.success)
           setSubmitted(true)
+          onSubmitted?.()
         } else {
           setServerError('Unexpected response. Please try again.')
         }
