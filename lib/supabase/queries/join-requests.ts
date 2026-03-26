@@ -21,6 +21,7 @@ export async function createJoinRequest(params: {
   email: string
   phone?: string | null
   discord?: string | null
+  member_since: number
   encrypted_password: string
 }): Promise<void> {
   const supabase = createAdminClient()
@@ -30,6 +31,7 @@ export async function createJoinRequest(params: {
     email: params.email.toLowerCase().trim(),
     phone: params.phone?.trim() || null,
     discord: params.discord?.trim() || null,
+    member_since: params.member_since,
     encrypted_password: params.encrypted_password,
   })
 
@@ -51,13 +53,14 @@ export async function getJoinRequestForApproval(id: string): Promise<{
   full_name: string
   phone: string | null
   discord: string | null
+  member_since: number | null
   password: string
 }> {
   const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('join_requests')
-    .select('id, email, full_name, phone, discord, encrypted_password, status')
+    .select('id, email, full_name, phone, discord, member_since, encrypted_password, status')
     .eq('id', id)
     .single()
 
@@ -73,6 +76,7 @@ export async function getJoinRequestForApproval(id: string): Promise<{
     full_name: data.full_name as string,
     phone: (data.phone as string | null) ?? null,
     discord: (data.discord as string | null) ?? null,
+    member_since: (data.member_since as number | null) ?? null,
     password,
   }
 }

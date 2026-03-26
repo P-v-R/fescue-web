@@ -402,6 +402,7 @@ export async function approveJoinRequestAction(
       full_name: req.full_name,
       phone: req.phone,
       discord: req.discord,
+      member_since: req.member_since,
     })
 
     if (memberError) {
