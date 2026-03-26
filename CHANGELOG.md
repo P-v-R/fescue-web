@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.1.0...fescue-web-v1.1.1) (2026-03-26)
+
+
+### Bug Fixes
+
+* release-please target-branch should be main not staging ([14343b6](https://github.com/P-v-R/fescue-web/commit/14343b63c718d990dc23df49298897d5bb11c422))
+
 ## [1.1.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.0.2...fescue-web-v1.1.0) (2026-03-25)
 
 
