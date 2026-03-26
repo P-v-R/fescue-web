@@ -37,8 +37,12 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r))
-  const isMemberRoute = MEMBER_ROUTES.some((r) => pathname.startsWith(r))
   const isAdminRoute = ADMIN_ROUTES.some((r) => pathname.startsWith(r))
+  // Exclude the reset-password page — recovery token arrives in the URL hash (client-side only)
+  // so the server sees no session and would incorrectly redirect to /login
+  const isMemberRoute =
+    pathname !== '/account/reset-password' &&
+    MEMBER_ROUTES.some((r) => pathname.startsWith(r))
 
   // No session — redirect to login for any protected route
   if (!user && (isMemberRoute || isAdminRoute)) {
