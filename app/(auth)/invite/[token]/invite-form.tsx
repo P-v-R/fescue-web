@@ -9,6 +9,10 @@ import { formatPhone } from '@/lib/utils/phone'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
+const FOUNDING_YEAR = 2022
+const currentYear = new Date().getFullYear()
+const memberYears = Array.from({ length: currentYear - FOUNDING_YEAR + 1 }, (_, i) => currentYear - i)
+
 type Props = {
   token: string
   inviteEmail: string
@@ -74,6 +78,28 @@ export function InviteForm({ token, inviteEmail }: Props) {
         <p className="font-mono text-label text-navy/40 tracking-[0.1em]">
           Discord is our primary means of club communication.
         </p>
+      </div>
+
+      {/* Member since */}
+      <div className="flex flex-col gap-2">
+        <label className="font-mono text-label uppercase tracking-[0.28em] text-sage">
+          Member Since
+        </label>
+        <select
+          {...register('member_since', { valueAsNumber: true })}
+          className="font-sans text-sm font-light text-navy-dark bg-transparent border-0 border-b border-sand-light pb-1 outline-none focus:border-navy transition-colors duration-200"
+          defaultValue=""
+        >
+          <option value="" disabled>Select year</option>
+          {memberYears.map((year) => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+        {errors.member_since && (
+          <p className="font-mono text-label tracking-[0.15em] uppercase text-red-500">
+            {errors.member_since.message}
+          </p>
+        )}
       </div>
 
       <Input
