@@ -63,19 +63,29 @@ export type SanityAnnouncement = {
 }
 
 export type HomePage = {
+  heroHeading: PortableTextBlock[] | null
+  heroSubtext: string | null
   featuresPhoto: SanityImageAsset | null
   features: SanityFeature[] | null
+  storyHeading: PortableTextBlock[] | null
   storyBody: string | null
   storyPhoto: SanityImageAsset | null
+  clubhouseHeading: PortableTextBlock[] | null
   clubhousePhotos: SanityImageAsset[] | null
   clubhouseBody: string | null
+  partnersHeading: PortableTextBlock[] | null
   partners: SanityPartner[] | null
+  ctaHeading: PortableTextBlock[] | null
+  ctaSubtext: string | null
 }
 
 export type AboutPage = {
+  pageHeading: PortableTextBlock[] | null
   whoWeAreBody: string | null
   whoWeArePhoto: SanityImageAsset | null
   theSpaceBody: string | null
   theSpacePhoto: SanityImageAsset | null
   values: SanityValueCard[] | null
+  ctaHeading: PortableTextBlock[] | null
+  ctaSubtext: string | null
 }

@@ -9,6 +9,9 @@ import { ClubhouseCarousel } from '@/components/ui/clubhouse-carousel';
 import { getHomePage } from '@/lib/sanity/queries';
 import { urlFor } from '@/lib/sanity/client';
 import type { SanityImageAsset } from '@/lib/sanity/types';
+import { PortableTextHeading } from '@/components/ui/portable-text-heading';
+
+const hasContent = (v: unknown) => Array.isArray(v) && v.length > 0
 
 export const metadata = {
   title: 'Fescue Golf Club — Private Golf Club',
@@ -67,7 +70,9 @@ export default async function HomePage() {
                   className='hero-item font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'
                   style={{ transitionDelay: '200ms' }}
                 >
-                  Private. Not Exclusive.
+                  {hasContent(cms?.heroHeading)
+                    ? <PortableTextHeading value={cms!.heroHeading!} />
+                    : 'Private. Not Exclusive.'}
                 </h1>
                 <div
                   className='hero-item w-12 h-px bg-gold mx-auto mb-8'
@@ -77,9 +82,17 @@ export default async function HomePage() {
                   className='hero-item max-w-sm mx-auto mb-2 space-y-2.5'
                   style={{ transitionDelay: '500ms' }}
                 >
-                  <div className='h-3.5 bg-cream/10 rounded w-full' />
-                  <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
-                  <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
+                  {cms?.heroSubtext ? (
+                    <p className='font-sans text-sm text-cream/75 leading-relaxed'>
+                      {cms.heroSubtext}
+                    </p>
+                  ) : (
+                    <>
+                      <div className='h-3.5 bg-cream/10 rounded w-full' />
+                      <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
+                      <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
+                    </>
+                  )}
                 </div>
                 <div
                   className='hero-item flex flex-col sm:flex-row gap-4 justify-center'
@@ -163,9 +176,15 @@ export default async function HomePage() {
                   Our Story
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-cream mb-6 leading-snug'>
-                  <em>The country club</em>
-                  <br />
-                  for the <em>not</em> country club set.
+                  {hasContent(cms?.storyHeading) ? (
+                    <PortableTextHeading value={cms!.storyHeading!} />
+                  ) : (
+                    <>
+                      <em>The country club</em>
+                      <br />
+                      for the <em>not</em> country club set.
+                    </>
+                  )}
                 </h2>
                 <div className='w-10 h-px bg-gold mb-8' />
                 {cms?.storyBody ? (
@@ -219,9 +238,15 @@ export default async function HomePage() {
                   Clubhouse
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-navy leading-snug'>
-                  Not for everyone.
-                  <br />
-                  <em>For us.</em>
+                  {hasContent(cms?.clubhouseHeading) ? (
+                    <PortableTextHeading value={cms!.clubhouseHeading!} />
+                  ) : (
+                    <>
+                      Not for everyone.
+                      <br />
+                      <em>For us.</em>
+                    </>
+                  )}
                 </h2>
                 <div className='w-10 h-px bg-gold mx-auto mt-6' />
               </div>
@@ -280,9 +305,15 @@ export default async function HomePage() {
                   Our Partners
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-cream leading-snug'>
-                  <em>Supported by brands</em>
-                  <br />
-                  that share our standards.
+                  {hasContent(cms?.partnersHeading) ? (
+                    <PortableTextHeading value={cms!.partnersHeading!} />
+                  ) : (
+                    <>
+                      <em>Supported by brands</em>
+                      <br />
+                      that share our standards.
+                    </>
+                  )}
                 </h2>
                 <div className='w-10 h-px bg-gold mx-auto mt-6' />
               </div>
@@ -334,12 +365,22 @@ export default async function HomePage() {
                 Interested?
               </p>
               <h2 className='font-serif text-2xl sm:text-3xl font-light text-navy mb-5'>
-                Come see it for yourself.
+                {hasContent(cms?.ctaHeading) ? (
+                  <PortableTextHeading value={cms!.ctaHeading!} />
+                ) : (
+                  'Come see it for yourself.'
+                )}
               </h2>
-              <div className='max-w-xs mx-auto space-y-2 mb-8'>
-                <div className='h-3 bg-navy/10 rounded w-full' />
-                <div className='h-3 bg-navy/10 rounded w-4/5 mx-auto' />
-              </div>
+              {cms?.ctaSubtext ? (
+                <p className='max-w-xs mx-auto font-sans text-sm text-navy/70 leading-relaxed mb-8'>
+                  {cms.ctaSubtext}
+                </p>
+              ) : (
+                <div className='max-w-xs mx-auto space-y-2 mb-8'>
+                  <div className='h-3 bg-navy/10 rounded w-full' />
+                  <div className='h-3 bg-navy/10 rounded w-4/5 mx-auto' />
+                </div>
+              )}
               <Link
                 href='/contact'
                 className='inline-block bg-navy text-cream font-mono text-label uppercase tracking-[0.25em] px-8 py-3 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-80 transition-opacity'

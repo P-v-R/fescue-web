@@ -3,6 +3,9 @@ import Image from 'next/image';
 import { getAboutPage } from '@/lib/sanity/queries';
 import { urlFor } from '@/lib/sanity/client';
 import type { SanityImageAsset } from '@/lib/sanity/types';
+import { PortableTextHeading } from '@/components/ui/portable-text-heading';
+
+const hasContent = (v: unknown) => Array.isArray(v) && v.length > 0
 
 export const metadata = {
   title: 'About — Fescue Golf Club',
@@ -48,7 +51,11 @@ export default async function AboutPage() {
           Our Story
         </p>
         <h1 className='font-serif text-3xl sm:text-display font-light text-navy'>
-          About Fescue
+          {hasContent(cms?.pageHeading) ? (
+            <PortableTextHeading value={cms!.pageHeading!} />
+          ) : (
+            'About Fescue'
+          )}
         </h1>
         <div className='w-12 h-px bg-gold mt-4' />
       </div>
@@ -161,10 +168,14 @@ export default async function AboutPage() {
       {/* CTA */}
       <div className='mt-20 pt-12 border-t border-cream-mid text-center'>
         <p className='font-serif text-xl font-light text-navy mb-2'>
-          Ready to see it in person?
+          {hasContent(cms?.ctaHeading) ? (
+            <PortableTextHeading value={cms!.ctaHeading!} />
+          ) : (
+            'Ready to see it in person?'
+          )}
         </p>
         <p className='font-mono text-label uppercase tracking-[0.15em] text-navy/45 mb-6'>
-          Tours are available by appointment.
+          {cms?.ctaSubtext ?? 'Tours are available by appointment.'}
         </p>
         <Link
           href='/contact'

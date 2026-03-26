@@ -33,13 +33,20 @@ export async function getHomePage(): Promise<HomePage | null> {
   try {
     return await sanityClient.fetch(
       `*[_type == "homePage"][0] {
+        heroHeading,
+        heroSubtext,
         featuresPhoto,
         features[] { _key, label, body },
+        storyHeading,
         storyBody,
         storyPhoto,
+        clubhouseHeading,
         clubhousePhotos,
         clubhouseBody,
+        partnersHeading,
         partners[] { _key, name, logo },
+        ctaHeading,
+        ctaSubtext,
       }`,
       {},
       { next: { revalidate: 60 } },
@@ -55,11 +62,14 @@ export async function getAboutPage(): Promise<AboutPage | null> {
   try {
     return await sanityClient.fetch(
       `*[_type == "aboutPage"][0] {
+        pageHeading,
         whoWeAreBody,
         whoWeArePhoto,
         theSpaceBody,
         theSpacePhoto,
         values[] { _key, title, body },
+        ctaHeading,
+        ctaSubtext,
       }`,
       {},
       { next: { revalidate: 60 } },
