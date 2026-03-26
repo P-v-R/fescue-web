@@ -294,7 +294,7 @@ export async function sendIntroEmailAction(
     } else {
       const resend = createResendClient()
       await resend.emails.send({
-        from: FROM_ADDRESSES.hello,
+        from: FROM_ADDRESSES.noreply,
         to: email,
         subject: 'Thanks for your interest in Fescue Golf Club',
         html: introEmailHtml({ firstName, scheduleUrl }),
@@ -338,7 +338,7 @@ export async function sendGuestIntroEmailAction(
     } else {
       const resend = createResendClient()
       await resend.emails.send({
-        from: FROM_ADDRESSES.hello,
+        from: FROM_ADDRESSES.noreply,
         to: email,
         subject: 'Thanks for your interest in Fescue Golf Club',
         html: introEmailHtml({ firstName, scheduleUrl }),

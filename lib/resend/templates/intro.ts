@@ -63,6 +63,10 @@ export function introEmailHtml({ firstName, scheduleUrl }: IntroEmailData): stri
           </tr>
         </table>
 
+        <p style="margin:28px 0 0;font-family:'Courier New',monospace;font-size:9px;color:#6b6b6b;letter-spacing:0.12em;">
+          Questions? Reach Sean directly at <a href="mailto:sean@fescuegolfclub.com" style="color:#004225;text-decoration:none;">sean@fescuegolfclub.com</a> — replies to this email are not monitored.
+        </p>
+
       </td>
     </tr>
   `)
