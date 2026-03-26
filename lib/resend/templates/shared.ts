@@ -1,12 +1,7 @@
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://fescuegolfclub.com'
-const LOGO_URL = `${APP_URL}/logo-badge2.png`
-
 export const emailHeader = `
   <!-- Header -->
   <tr>
     <td style="background-color:#004225;padding:32px 40px 28px;text-align:center;">
-      <img src="${LOGO_URL}" width="56" height="56" alt="Fescue Golf Club"
-           style="display:block;margin:0 auto 14px;border:0;" />
       <p style="margin:0;font-family:Georgia,serif;font-size:20px;letter-spacing:0.22em;color:#F5F0E8;text-transform:uppercase;">
         Fescue
       </p>
