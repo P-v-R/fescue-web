@@ -8,7 +8,8 @@ import { CartIcon } from '@/components/shop/cart-icon';
 
 const NAV_LINKS = [
   { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Request a Tour' },
+  { href: '/location', label: 'Locations' },
+  { href: '/contact', label: 'Membership' },
   { href: '/shop', label: 'Shop' },
 ];
 
