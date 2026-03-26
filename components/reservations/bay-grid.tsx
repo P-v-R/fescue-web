@@ -30,10 +30,11 @@ type Props = {
   date: Date;
   userId: string;
   onSlotClick: (slot: SelectedSlot) => void;
+  onBookingClick?: (booking: BookingWithMember, bayName: string) => void;
   blackoutPeriods?: BlackoutPeriod[];
 };
 
-export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPeriods = [] }: Props) {
+export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingClick, blackoutPeriods = [] }: Props) {
   const now = new Date();
   const slots = useMemo(() => generateTimeSlots(date), [date]);
 
@@ -128,10 +129,12 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, blackoutPer
                         <td
                           key={bay.id}
                           rowSpan={span}
+                          onClick={isMine && onBookingClick ? () => onBookingClick(booking, bay.name) : undefined}
                           className={[
                             'px-2 py-1 border-r border-sand/35 last:border-r-0 border-b border-b-sand/20',
                             'align-top text-center',
                             isMine ? 'bg-navy' : 'bg-navy/[0.22]',
+                            isMine && onBookingClick ? 'cursor-pointer hover:bg-navy-mid transition-colors' : '',
                           ].join(' ')}
                         >
                           <div className='flex flex-col items-center gap-0.5 pt-1'>

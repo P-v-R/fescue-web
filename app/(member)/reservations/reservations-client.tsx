@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { BayGrid } from '@/components/reservations/bay-grid'
 import { MobileBayList } from '@/components/reservations/mobile-bay-list'
 import { BookingModal } from '@/components/reservations/booking-modal'
+import { BookingDetailModal } from '@/components/reservations/booking-detail-modal'
 import type { Bay, BookingWithMember } from '@/lib/supabase/types'
 import type { BlackoutPeriod } from '@/lib/utils/blackout'
 
@@ -26,6 +27,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
   const [date, setDate] = useState<Date>(startOfDay(new Date()))
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null)
+  const [selectedBooking, setSelectedBooking] = useState<{ booking: BookingWithMember; bayName: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const isInitialMount = useRef(true)
@@ -107,6 +109,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           setDate={(d) => setDate(startOfDay(d))}
           userId={userId}
           onSlotClick={setSelectedSlot}
+          onBookingClick={(booking, bayName) => setSelectedBooking({ booking, bayName })}
           blackoutPeriods={periodsForDate}
         />
       </div>
@@ -188,11 +191,25 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           date={date}
           userId={userId}
           onSlotClick={setSelectedSlot}
+          onBookingClick={(booking, bayName) => setSelectedBooking({ booking, bayName })}
           blackoutPeriods={periodsForDate}
         />
       </div>
 
-      {/* Booking modal */}
+      {/* Booking detail modal */}
+      {selectedBooking && (
+        <BookingDetailModal
+          booking={selectedBooking.booking}
+          bayName={selectedBooking.bayName}
+          onClose={() => setSelectedBooking(null)}
+          onCancelled={(id) => {
+            setBookings((prev) => prev.filter((b) => b.id !== id))
+            showToast('Booking cancelled.')
+          }}
+        />
+      )}
+
+      {/* New booking modal */}
       {selectedSlot && (
         <BookingModal
           slot={selectedSlot}
