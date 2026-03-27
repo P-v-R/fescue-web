@@ -38,7 +38,7 @@ export function introEmailHtml({ firstName, scheduleUrl }: IntroEmailData): stri
 
         <table role="presentation" cellspacing="0" cellpadding="0">
           <tr>
-            <td style="background-color:#004225;box-shadow:inset 0 -2px 0 0 rgba(184,150,60,0.5);">
+            <td bgcolor="#004225" style="background-color:#004225;box-shadow:inset 0 -2px 0 0 rgba(184,150,60,0.5);">
               <a href="${scheduleUrl}"
                  style="display:inline-block;padding:16px 36px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.22em;color:#F5F0E8;text-transform:uppercase;text-decoration:none;">
                 Schedule a Visit
