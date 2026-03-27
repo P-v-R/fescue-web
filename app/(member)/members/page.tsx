@@ -21,9 +21,10 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
     return acc
   }, {})
   const years = Object.keys(byYear).map(Number).sort((a, b) => b - a)
-  const currentYear = years[0]
+  // Use the most recent year that has at least one named winner
+  const currentYear = years.find((y) => byYear[y].some((c) => c.name?.trim())) ?? years[0]
   const currentChamps = byYear[currentYear]
-  const pastYears = years.slice(1)
+  const pastYears = years.filter((y) => y !== currentYear)
 
   return (
     <div className='relative bg-navy overflow-hidden mb-14'>
@@ -60,7 +61,7 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
               const champ = currentChamps.find((c) => c.category === cat)
               return (
                 <div key={cat} className='text-center'>
-                  <p className='font-mono text-label uppercase tracking-[0.25em] text-gold/50 mb-3'>
+                  <p className='font-mono text-label uppercase tracking-[0.25em] text-gold/75 mb-3'>
                     {cat} champion
                   </p>
                   {champ ? (
@@ -103,13 +104,13 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
                 const net = byYear[year].find((c) => c.category === 'net')
                 return (
                   <div key={year} className='grid grid-cols-[3rem_1fr_1fr] gap-x-4 items-baseline'>
-                    <span className='font-mono text-gold/35 text-right' style={{ fontSize: '10px', letterSpacing: '0.08em' }}>
+                    <span className='font-mono text-gold/60 text-right' style={{ fontSize: '10px', letterSpacing: '0.08em' }}>
                       {year}
                     </span>
-                    <span className='font-serif text-cream/35 text-xs font-light truncate'>
+                    <span className='font-serif text-cream/60 text-xs font-light truncate'>
                       {gross?.name ?? '—'}
                     </span>
-                    <span className='font-serif text-cream/35 text-xs font-light truncate'>
+                    <span className='font-serif text-cream/60 text-xs font-light truncate'>
                       {net?.name ?? '—'}
                     </span>
                   </div>
@@ -118,8 +119,8 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
               {/* Column headers for past years */}
               <div className='grid grid-cols-[3rem_1fr_1fr] gap-x-4 mt-1'>
                 <span />
-                <span className='font-mono text-gold/20 uppercase' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>Gross</span>
-                <span className='font-mono text-gold/20 uppercase' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>Net</span>
+                <span className='font-mono text-gold/40 uppercase' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>Gross</span>
+                <span className='font-mono text-gold/40 uppercase' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>Net</span>
               </div>
             </div>
           </>
