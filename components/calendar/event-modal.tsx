@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, useCallback } from 'react'
 import { format } from 'date-fns'
 import { setRsvpAction, getEventAttendeesAction } from '@/app/(member)/calendar/actions'
 import type { Event, EventRsvpWithMember } from '@/lib/supabase/types'
@@ -10,11 +10,13 @@ type Props = {
   onClose: () => void
   userRsvpStatus: 'going' | 'not_going' | null
   onRsvpChange: (eventId: string, status: 'going' | 'not_going' | null) => void
+  isAdmin?: boolean
 }
 
-export function EventModal({ event, onClose, userRsvpStatus, onRsvpChange }: Props) {
+export function EventModal({ event, onClose, userRsvpStatus, onRsvpChange, isAdmin }: Props) {
   const [attendees, setAttendees] = useState<EventRsvpWithMember[]>([])
   const [isPending, startTransition] = useTransition()
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -47,6 +49,17 @@ export function EventModal({ event, onClose, userRsvpStatus, onRsvpChange }: Pro
   const date = new Date(event.starts_at)
   const goingAttendees = attendees.filter((a) => a.status === 'going')
   const goingCount = goingAttendees.length
+
+  const copyEmails = useCallback(() => {
+    const emails = goingAttendees
+      .map((a) => a.members?.email)
+      .filter(Boolean)
+      .join(', ')
+    navigator.clipboard.writeText(emails).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [goingAttendees])
 
   return (
     <>
@@ -165,16 +178,26 @@ export function EventModal({ event, onClose, userRsvpStatus, onRsvpChange }: Pro
 
                 {/* Attendee list */}
                 {goingCount > 0 && (
-                  <p className="font-mono text-label text-navy/50 tracking-[0.08em]">
-                    <span className="text-sage uppercase tracking-[0.18em] mr-2">Going:</span>
-                    {goingAttendees
-                      .slice(0, 5)
-                      .map((a) => a.members?.full_name?.split(' ')[0] ?? 'Member')
-                      .join(', ')}
-                    {goingCount > 5 && (
-                      <span className="text-navy/35"> +{goingCount - 5} more</span>
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="font-mono text-label text-navy/50 tracking-[0.08em]">
+                      <span className="text-sage uppercase tracking-[0.18em] mr-2">Going:</span>
+                      {goingAttendees
+                        .slice(0, 5)
+                        .map((a) => a.members?.full_name?.split(' ')[0] ?? 'Member')
+                        .join(', ')}
+                      {goingCount > 5 && (
+                        <span className="text-navy/35"> +{goingCount - 5} more</span>
+                      )}
+                    </p>
+                    {isAdmin && (
+                      <button
+                        onClick={copyEmails}
+                        className="shrink-0 font-mono text-label uppercase tracking-[0.18em] text-gold/70 border border-gold/25 px-3 py-1 hover:text-gold hover:border-gold/50 transition-colors whitespace-nowrap"
+                      >
+                        {copied ? 'Copied!' : 'Copy Emails'}
+                      </button>
                     )}
-                  </p>
+                  </div>
                 )}
               </div>
             )}

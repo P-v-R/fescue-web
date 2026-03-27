@@ -12,9 +12,10 @@ import type { Event, EventRsvp } from '@/lib/supabase/types'
 type Props = {
   initialEvents: Event[]
   initialUserRsvps: EventRsvp[]
+  isAdmin: boolean
 }
 
-export function CalendarClient({ initialEvents, initialUserRsvps }: Props) {
+export function CalendarClient({ initialEvents, initialUserRsvps, isAdmin }: Props) {
   const [events, setEvents] = useState<Event[]>(initialEvents)
   const [userRsvps, setUserRsvps] = useState<EventRsvp[]>(initialUserRsvps)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
@@ -103,6 +104,7 @@ export function CalendarClient({ initialEvents, initialUserRsvps }: Props) {
           onClose={() => setSelectedEvent(null)}
           userRsvpStatus={selectedRsvpStatus}
           onRsvpChange={handleRsvpChange}
+          isAdmin={isAdmin}
         />
       )}
     </div>

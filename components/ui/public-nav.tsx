@@ -28,7 +28,7 @@ export function PublicNav() {
         {/* Left: Logo */}
         <Link href='/' className='shrink-0 justify-self-start'>
           <Image
-            src='/logo-quail.png'
+            src='/quail-alt.png'
             alt='Fescue Golf Club'
             width={28}
             height={28}

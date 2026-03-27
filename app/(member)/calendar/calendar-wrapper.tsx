@@ -12,8 +12,9 @@ const CalendarClient = dynamic(
 type Props = {
   initialEvents: Event[]
   initialUserRsvps: EventRsvp[]
+  isAdmin: boolean
 }
 
-export function CalendarWrapper({ initialEvents, initialUserRsvps }: Props) {
-  return <CalendarClient initialEvents={initialEvents} initialUserRsvps={initialUserRsvps} />
+export function CalendarWrapper({ initialEvents, initialUserRsvps, isAdmin }: Props) {
+  return <CalendarClient initialEvents={initialEvents} initialUserRsvps={initialUserRsvps} isAdmin={isAdmin} />
 }
