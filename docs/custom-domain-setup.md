@@ -85,10 +85,27 @@ In Railway → service → Settings → Networking → `+ Custom Domain`:
 - Select port `8080`
 - Add the DNS records above, then wait for Railway to verify and provision SSL
 
+### 6. Supabase — Custom SMTP (Resend)
+
+Supabase's built-in email sender is limited to **2 emails/hour** on the free tier. Connecting Resend as a custom SMTP provider removes this limit. Do this for **both staging and production**.
+
+In Supabase dashboard → Authentication → SMTP Settings:
+
+- **Enable custom SMTP**: on
+- **Host**: `smtp.resend.com`
+- **Port**: `465`
+- **Username**: `resend`
+- **Password**: your Resend API key (from resend.com → API Keys)
+- **Sender name**: `Fescue Golf Club`
+- **Sender email**: `noreply@mail.fescuegolfclub.com`
+
+> The sender email must be from the verified `mail.fescuegolfclub.com` domain already set up in Resend. Using a different address will cause delivery failures.
+
+After saving, send a test email from the Supabase SMTP settings page to confirm it's working.
+
 ---
 
 ## No changes needed
 
-- **Resend** — from addresses use `mail.fescuegolfclub.com` which is already domain-verified. Emails send fine regardless of app URL.
 - **Shopify** — Storefront API is public; no origin restrictions.
 - **Google Maps** — API key may have HTTP referrer restrictions. If maps break on the new domain, add the new URL in Google Cloud Console → Credentials → your Maps API key → referrer restrictions.

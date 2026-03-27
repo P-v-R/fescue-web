@@ -11,7 +11,7 @@ import { urlFor } from '@/lib/sanity/client';
 import type { SanityImageAsset } from '@/lib/sanity/types';
 import { PortableTextHeading } from '@/components/ui/portable-text-heading';
 
-const hasContent = (v: unknown) => Array.isArray(v) && v.length > 0
+const hasContent = (v: unknown) => Array.isArray(v) && v.length > 0;
 
 export const metadata = {
   title: 'Fescue Golf Club — Private Golf Club',
@@ -58,7 +58,7 @@ export default async function HomePage() {
             <HeroReveal>
               <div className='relative z-10 max-w-2xl mx-auto flex flex-col items-center'>
                 <Image
-                  src='/logo-badge2.png'
+                  src='/logo-badge.png'
                   alt='Fescue Golf Club'
                   width={280}
                   height={280}
@@ -70,9 +70,11 @@ export default async function HomePage() {
                   className='hero-item font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'
                   style={{ transitionDelay: '200ms' }}
                 >
-                  {hasContent(cms?.heroHeading)
-                    ? <PortableTextHeading value={cms!.heroHeading!} />
-                    : 'Private. Not Exclusive.'}
+                  {hasContent(cms?.heroHeading) ? (
+                    <PortableTextHeading value={cms!.heroHeading!} />
+                  ) : (
+                    'Private. Not Exclusive.'
+                  )}
                 </h1>
                 <div
                   className='hero-item w-12 h-px bg-gold mx-auto mb-8'
@@ -395,7 +397,7 @@ export default async function HomePage() {
           <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
           <div className='relative z-10 max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4'>
             <Image
-              src='/logo-badge2.png'
+              src='/logo-badge.png'
               alt='Fescue Golf Club'
               width={36}
               height={36}
