@@ -29,11 +29,11 @@ async function requireAdmin(): Promise<string> {
 
   const { data: member } = await supabase
     .from('members')
-    .select('is_admin')
+    .select('is_admin, is_active')
     .eq('id', user.id)
     .single()
 
-  if (!member?.is_admin) throw new Error('Not authorized.')
+  if (!member?.is_admin || !member?.is_active) throw new Error('Not authorized.')
   return user.id
 }
 
@@ -196,7 +196,9 @@ export async function createBlackoutAction(
     const allBays = formData.get('all_bays') === 'true'
     const startTime = allDay ? null : (formData.get('start_time') as string | null) || null
     const endTime = allDay ? null : (formData.get('end_time') as string | null) || null
-    const bayIds = allBays ? [] : JSON.parse((formData.get('bay_ids') as string) || '[]') as string[]
+    const rawBayIds = allBays ? [] : JSON.parse((formData.get('bay_ids') as string) || '[]') as unknown[]
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const bayIds = rawBayIds.filter((id): id is string => typeof id === 'string' && uuidRegex.test(id))
     const reason = (formData.get('reason') as string | null)?.trim() || null
 
     if (!date) return { error: 'Please select a date.' }

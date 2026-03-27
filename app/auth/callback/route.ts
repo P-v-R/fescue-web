@@ -7,7 +7,9 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const rawNext = searchParams.get('next') ?? '/dashboard'
+  // Reject anything that isn't a plain path to prevent open redirect abuse
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard'
 
   // Use the public app URL as the origin so reverse-proxy setups (e.g. Railway)
   // don't redirect to the internal localhost address.

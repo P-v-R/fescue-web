@@ -30,6 +30,8 @@ export async function createBookingAction(input: NewBookingInput): Promise<Creat
 
   const startTime = new Date(start_time)
 
+  if (isNaN(startTime.getTime())) return { error: 'Invalid start time.' }
+
   // Must be in the future
   if (startTime <= new Date()) {
     return { error: 'Cannot book a slot in the past.' }
