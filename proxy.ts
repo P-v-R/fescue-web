@@ -73,7 +73,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Deactivated member — sign them out and redirect to login
+  // No active member row — sign them out and redirect to login.
+  // Catches deactivated members AND Google OAuth users who were never invited.
   if (user && (isMemberRoute || isAdminRoute)) {
     const { data: member } = await supabase
       .from('members')
@@ -81,10 +82,11 @@ export async function proxy(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (member && !member.is_active) {
+    if (!member || !member.is_active) {
       await supabase.auth.signOut()
       const url = request.nextUrl.clone()
       url.pathname = '/login'
+      url.searchParams.set('error', 'not_a_member')
       return NextResponse.redirect(url)
     }
   }
