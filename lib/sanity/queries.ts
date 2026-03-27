@@ -106,7 +106,7 @@ export async function getAllChampions(): Promise<ClubChampion[]> {
 
   try {
     return await sanityClient.fetch(
-      `*[_type == "clubChampion"] | order(year desc) { year, name, tagline }`,
+      `*[_type == "clubChampion"] | order(year desc, category asc) { year, category, name, tagline }`,
       {},
       { next: { revalidate: 300 } },
     )

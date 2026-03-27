@@ -14,8 +14,16 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 
 function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
-  const current = champions[0];
-  const past = champions.slice(1);
+  // Group by year, preserve order (already sorted year desc)
+  const byYear = champions.reduce<Record<number, ClubChampion[]>>((acc, c) => {
+    if (!acc[c.year]) acc[c.year] = []
+    acc[c.year].push(c)
+    return acc
+  }, {})
+  const years = Object.keys(byYear).map(Number).sort((a, b) => b - a)
+  const currentYear = years[0]
+  const currentChamps = byYear[currentYear]
+  const pastYears = years.slice(1)
 
   return (
     <div className='relative bg-navy overflow-hidden mb-14'>
@@ -34,65 +42,90 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
         <div className='flex items-center gap-4 mb-8'>
           <div className='flex-1 h-px bg-gold/20' />
           <p className='font-mono text-label uppercase tracking-[0.3em] text-gold'>
-            Fescue Club Champion
+            Fescue Club Champions
           </p>
           <div className='flex-1 h-px bg-gold/20' />
         </div>
 
-        {/* Current champion — hero */}
-        <div className='text-center mb-8'>
+        {/* Current year — hero, side by side */}
+        <div className='mb-8'>
           <p
-            className='font-mono text-lg uppercase tracking-[0.25em] text-gold mb-3'
-            style={{
-              fontFamily: 'var(--font-pinyon), cursive',
-              fontSize: '',
-            }}
+            className='text-center text-gold mb-6'
+            style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.4rem, 3vw, 1.8rem)' }}
           >
-            {current.year}
+            {currentYear}
           </p>
-          <h2
-            className='text-cream leading-none mb-3'
-            style={{
-              fontFamily: 'var(--font-pinyon), cursive',
-              fontSize: 'clamp(2.4rem, 6vw, 3.6rem)',
-            }}
-          >
-            {current.name}
-          </h2>
-          {current.tagline && (
-            <p className='font-serif text-lg italic text-cream/70 font-light mt-2'>
-              {current.tagline}
-            </p>
-          )}
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10'>
+            {(['gross', 'net'] as const).map((cat) => {
+              const champ = currentChamps.find((c) => c.category === cat)
+              return (
+                <div key={cat} className='text-center'>
+                  <p className='font-mono text-label uppercase tracking-[0.25em] text-gold/50 mb-3'>
+                    {cat} champion
+                  </p>
+                  {champ ? (
+                    <>
+                      <h2
+                        className='text-cream leading-none mb-2'
+                        style={{
+                          fontFamily: 'var(--font-pinyon), cursive',
+                          fontSize: 'clamp(2rem, 5vw, 3rem)',
+                        }}
+                      >
+                        {champ.name}
+                      </h2>
+                      {champ.tagline && (
+                        <p className='font-serif text-sm italic text-cream/60 font-light mt-1'>
+                          {champ.tagline}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className='font-serif italic text-cream/25 text-sm'>TBD</p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
 
-        {/* Past champions */}
-        {past.length > 0 && (
+        {/* Past years */}
+        {pastYears.length > 0 && (
           <>
             <div className='flex items-center gap-3 mb-5'>
               <div className='flex-1 h-px bg-gold/15' />
               <div className='w-1 h-1 rotate-45 bg-gold/30 shrink-0' />
               <div className='flex-1 h-px bg-gold/15' />
             </div>
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2 max-w-lg mx-auto'>
-              {past.map((c) => (
-                <div key={c.year} className='flex items-baseline gap-2.5'>
-                  <span
-                    className='font-mono text-gold/35 shrink-0'
-                    style={{ fontSize: '10px', letterSpacing: '0.08em' }}
-                  >
-                    {c.year}
-                  </span>
-                  <span className='font-serif text-cream/35 text-xs font-light truncate'>
-                    {c.name}
-                  </span>
-                </div>
-              ))}
+            <div className='space-y-2 max-w-lg mx-auto'>
+              {pastYears.map((year) => {
+                const gross = byYear[year].find((c) => c.category === 'gross')
+                const net = byYear[year].find((c) => c.category === 'net')
+                return (
+                  <div key={year} className='grid grid-cols-[3rem_1fr_1fr] gap-x-4 items-baseline'>
+                    <span className='font-mono text-gold/35 text-right' style={{ fontSize: '10px', letterSpacing: '0.08em' }}>
+                      {year}
+                    </span>
+                    <span className='font-serif text-cream/35 text-xs font-light truncate'>
+                      {gross?.name ?? '—'}
+                    </span>
+                    <span className='font-serif text-cream/35 text-xs font-light truncate'>
+                      {net?.name ?? '—'}
+                    </span>
+                  </div>
+                )
+              })}
+              {/* Column headers for past years */}
+              <div className='grid grid-cols-[3rem_1fr_1fr] gap-x-4 mt-1'>
+                <span />
+                <span className='font-mono text-gold/20 uppercase' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>Gross</span>
+                <span className='font-mono text-gold/20 uppercase' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>Net</span>
+              </div>
             </div>
           </>
         )}
 
-        {/* Footer label */}
+        {/* Footer */}
         <div className='flex items-center gap-4 mt-8'>
           <div className='flex-1 h-px bg-gold/20' />
           <div className='w-1.5 h-1.5 rotate-45 bg-gold/40 shrink-0' />

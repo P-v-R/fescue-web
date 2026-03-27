@@ -34,6 +34,7 @@ export type BulletinPost = {
 
 export type ClubChampion = {
   year: number
+  category: 'gross' | 'net'
   name: string
   tagline: string | null
 }
