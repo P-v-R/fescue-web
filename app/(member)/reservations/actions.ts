@@ -71,7 +71,7 @@ export async function createBookingAction(input: NewBookingInput): Promise<Creat
     if (isResendConfigured()) {
       const { data: member } = await supabase
         .from('members')
-        .select('full_name, email')
+        .select('full_name, email, email_booking_confirmation')
         .eq('id', user.id)
         .single()
 
@@ -81,7 +81,7 @@ export async function createBookingAction(input: NewBookingInput): Promise<Creat
         .eq('id', bay_id)
         .single()
 
-      if (member && bay) {
+      if (member && bay && member.email_booking_confirmation) {
         const resend = createResendClient()
         void resend.emails.send({
           from: FROM_ADDRESSES.bookings,

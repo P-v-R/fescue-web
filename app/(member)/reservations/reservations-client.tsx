@@ -7,7 +7,8 @@ import { BayGrid } from '@/components/reservations/bay-grid'
 import { MobileBayList } from '@/components/reservations/mobile-bay-list'
 import { BookingModal } from '@/components/reservations/booking-modal'
 import { BookingDetailModal } from '@/components/reservations/booking-detail-modal'
-import type { Bay, BookingWithMember } from '@/lib/supabase/types'
+import { UpcomingReservationsDesktop, UpcomingReservationsMobile } from '@/components/reservations/upcoming-reservations-panel'
+import type { Bay, Booking, BookingWithMember, BookingWithBay } from '@/lib/supabase/types'
 import type { BlackoutPeriod } from '@/lib/utils/blackout'
 
 type SelectedSlot = {
@@ -26,6 +27,7 @@ type Props = {
 export function ReservationsClient({ bays, initialBookings, userId, blackoutPeriods }: Props) {
   const [date, setDate] = useState<Date>(startOfDay(new Date()))
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
+  const [upcomingBookings, setUpcomingBookings] = useState<BookingWithBay[]>([])
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null)
   const [selectedBooking, setSelectedBooking] = useState<{ booking: BookingWithMember; bayName: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -39,6 +41,22 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
     }
   }, [])
+
+  const fetchUpcomingBookings = useCallback(async () => {
+    const supabase = supabaseRef.current
+    const { data } = await supabase
+      .from('bookings')
+      .select('*, bays(name)')
+      .eq('member_id', userId)
+      .gt('start_time', new Date().toISOString())
+      .is('cancelled_at', null)
+      .order('start_time', { ascending: true })
+    setUpcomingBookings((data as BookingWithBay[]) ?? [])
+  }, [userId])
+
+  useEffect(() => {
+    fetchUpcomingBookings()
+  }, [fetchUpcomingBookings])
 
   const fetchBookings = useCallback(async (d: Date) => {
     setIsLoading(true)
@@ -84,6 +102,13 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
     fetchBookings(date)
   }, [date, fetchBookings])
 
+  function handleUpcomingCancelled(id: string) {
+    setUpcomingBookings((prev) => prev.filter((b) => b.id !== id))
+    // Also remove from the grid if it's on the currently viewed date
+    setBookings((prev) => prev.filter((b) => b.id !== id))
+    showToast('Booking cancelled.')
+  }
+
   function showToast(message: string) {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
     setToast(message)
@@ -111,6 +136,10 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           onSlotClick={setSelectedSlot}
           onBookingClick={(booking, bayName) => setSelectedBooking({ booking, bayName })}
           blackoutPeriods={periodsForDate}
+        />
+        <UpcomingReservationsMobile
+          bookings={upcomingBookings}
+          onCancelled={handleUpcomingCancelled}
         />
       </div>
 
@@ -194,6 +223,11 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           onBookingClick={(booking, bayName) => setSelectedBooking({ booking, bayName })}
           blackoutPeriods={periodsForDate}
         />
+
+        <UpcomingReservationsDesktop
+          bookings={upcomingBookings}
+          onCancelled={handleUpcomingCancelled}
+        />
       </div>
 
       {/* Booking detail modal */}
@@ -204,6 +238,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           onClose={() => setSelectedBooking(null)}
           onCancelled={(id) => {
             setBookings((prev) => prev.filter((b) => b.id !== id))
+            setUpcomingBookings((prev) => prev.filter((b) => b.id !== id))
             showToast('Booking cancelled.')
           }}
         />
@@ -216,16 +251,22 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           userId={userId}
           onClose={() => setSelectedSlot(null)}
           onSuccess={(booking) => {
+            const slot = selectedSlot
             setSelectedSlot(null)
             setBookings((prev) => [...prev, { ...booking, members: null }])
-            showToast(`Booked — ${selectedSlot.bayName} at ${format(new Date(booking.start_time), 'h:mm a')}`)
+            setUpcomingBookings((prev) =>
+              [...prev, { ...booking, bays: { name: slot.bayName } }].sort(
+                (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+              )
+            )
+            showToast(`Booked — ${slot.bayName} at ${format(new Date(booking.start_time), 'h:mm a')}`)
           }}
         />
       )}
 
-      {/* Toast notification */}
+      {/* Toast notification — raised on mobile so it doesn't overlap the FAB */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-navy text-cream px-5 py-3 shadow-xl">
+        <div className="fixed bottom-20 right-6 z-50 sm:bottom-6 bg-navy text-cream px-5 py-3 shadow-xl">
           <span className="font-mono text-label uppercase tracking-[0.18em]">{toast}</span>
         </div>
       )}
