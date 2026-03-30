@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.2.0...fescue-web-v1.3.0) (2026-03-30)
+
+
+### Features
+
+* add temporary theme switcher to public nav for color preview ([d10c800](https://github.com/P-v-R/fescue-web/commit/d10c800249bae68b902bd1b6daf6397b09c009b4))
+* google oauth sign in on login page ([22df5f8](https://github.com/P-v-R/fescue-web/commit/22df5f823c8ef9cd5347138900c3dda661312610))
+
+
+### Bug Fixes
+
+* add bgcolor attribute to email CTA buttons for iPhone Mail compatibility ([52d8e46](https://github.com/P-v-R/fescue-web/commit/52d8e4636cca9504ff975dad455f740cc28c880d))
+* security audit — open redirect, is_active checks, RLS recursion, headers, input validation ([3a94050](https://github.com/P-v-R/fescue-web/commit/3a94050ba80fde5f5f21c0a7c7cb4ea3f590c61a))
+
 ## [1.2.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.1.0...fescue-web-v1.2.0) (2026-03-27)
 
 
