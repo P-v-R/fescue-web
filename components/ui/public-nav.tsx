@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { CartIcon } from '@/components/shop/cart-icon';
+import { ThemeSwitcher } from '@/components/ui/theme-switcher';
 
 const NAV_LINKS = [
   { href: '/about', label: 'About' },
@@ -53,6 +54,7 @@ export function PublicNav() {
         {/* Right: cart + member login + mobile hamburger */}
         <div className='flex items-center gap-4 justify-self-end'>
           <CartIcon />
+          <ThemeSwitcher />
           <Link
             href='/login'
             className='hidden sm:block font-mono text-label uppercase tracking-[0.22em] text-gold hover:text-cream transition-colors'
