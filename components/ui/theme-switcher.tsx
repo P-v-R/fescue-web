@@ -4,15 +4,25 @@ import { useEffect, useState } from 'react';
 
 const THEMES = [
   // Current — deep Masters green
-  { name: 'Augusta',   navy: '#004225', navyDark: '#002918', navyMid: '#1a5535' },
+  { name: 'Augusta',    navy: '#004225', navyDark: '#002918', navyMid: '#1a5535' },
   // Very dark, near-black forest green
-  { name: 'Pinehurst', navy: '#0D2818', navyDark: '#07160d', navyMid: '#1a3d27' },
+  { name: 'Pinehurst',  navy: '#0D2818', navyDark: '#07160d', navyMid: '#1a3d27' },
   // Classic hunter green — slightly warmer/brighter
-  { name: 'Hunter',    navy: '#355E3B', navyDark: '#1e3d24', navyMid: '#4a7a52' },
+  { name: 'Hunter',     navy: '#355E3B', navyDark: '#1e3d24', navyMid: '#4a7a52' },
   // Teal-leaning country club green
-  { name: 'Pebble',    navy: '#1B4D3E', navyDark: '#0e3029', navyMid: '#2d6655' },
+  { name: 'Pebble',     navy: '#1B4D3E', navyDark: '#0e3029', navyMid: '#2d6655' },
   // Olive-forward, old-money private club
-  { name: 'Cypress',   navy: '#3A5A2A', navyDark: '#233818', navyMid: '#4e763a' },
+  { name: 'Cypress',    navy: '#3A5A2A', navyDark: '#233818', navyMid: '#4e763a' },
+  // Shadowed deep blue-green — Torrey Pines coastal
+  { name: 'Torrey',     navy: '#0A3B35', navyDark: '#051f1b', navyMid: '#175249' },
+  // Rich bentgrass green — Muirfield Village
+  { name: 'Muirfield',  navy: '#1F4D2B', navyDark: '#0f2d18', navyMid: '#2e6b3e' },
+  // Warm tea-olive green — Seminole Golf Club
+  { name: 'Seminole',   navy: '#4A6741', navyDark: '#2e4228', navyMid: '#618558' },
+  // Cool pewter-green — Shinnecock Hills
+  { name: 'Shinnecock', navy: '#2D4A3E', navyDark: '#192d26', navyMid: '#3f6657' },
+  // Deep mossy green — Pacific Dunes links
+  { name: 'Pacific',    navy: '#2C4A1E', navyDark: '#192b10', navyMid: '#3e642c' },
 ] as const;
 
 const LS_KEY = 'fescue-theme';
