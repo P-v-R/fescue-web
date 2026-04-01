@@ -24,9 +24,10 @@ type Props = {
   blackoutPeriods: BlackoutPeriod[]
 }
 
-export function ReservationsClient({ bays, initialBookings, userId, blackoutPeriods }: Props) {
+export function ReservationsClient({ bays, initialBookings, userId, blackoutPeriods: initialBlackoutPeriods }: Props) {
   const [date, setDate] = useState<Date>(startOfDay(new Date()))
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
+  const [blackoutPeriods, setBlackoutPeriods] = useState<BlackoutPeriod[]>(initialBlackoutPeriods)
   const [upcomingBookings, setUpcomingBookings] = useState<BookingWithBay[]>([])
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null)
   const [selectedBooking, setSelectedBooking] = useState<{ booking: BookingWithMember; bayName: string } | null>(null)
@@ -40,6 +41,18 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
     return () => {
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
     }
+  }, [])
+
+  const fetchBlackoutPeriods = useCallback(async () => {
+    const supabase = supabaseRef.current
+    const today = new Date().toISOString().split('T')[0]
+    const { data } = await supabase
+      .from('blackout_periods')
+      .select('*')
+      .gte('date', today)
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true, nullsFirst: true })
+    setBlackoutPeriods((data as BlackoutPeriod[]) ?? [])
   }, [])
 
   const fetchUpcomingBookings = useCallback(async () => {
@@ -76,22 +89,25 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
     }
   }, [])
 
-  // Realtime subscription — refresh grid when any booking changes
-  // NOTE: Realtime must be enabled on the `bookings` table in Supabase dashboard
-  // (Database → Replication → Tables → enable bookings)
+  // Realtime subscriptions — refresh grid when bookings or blackout periods change
+  // NOTE: Realtime must be enabled in Supabase dashboard for both tables
+  // (Database → Replication → Tables → enable bookings + blackout_periods)
   useEffect(() => {
     const supabase = supabaseRef.current
     const channel = supabase
-      .channel('bookings-grid')
+      .channel('reservations-grid')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
         fetchBookings(date)
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'blackout_periods' }, () => {
+        fetchBlackoutPeriods()
       })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [date, fetchBookings])
+  }, [date, fetchBookings, fetchBlackoutPeriods])
 
   // Fetch when date changes (skip first render — we have initialBookings for today)
   useEffect(() => {
