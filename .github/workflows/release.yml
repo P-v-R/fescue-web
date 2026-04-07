@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - 'fescue-web-v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. fescue-web-v1.4.0)'
+        required: true
 
 jobs:
   release:
