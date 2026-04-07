@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.1...fescue-web-v1.4.2) (2026-04-07)
+
+
+### Bug Fixes
+
+* rewrite promote.yml to fix YAML heredoc parse error ([7a022c7](https://github.com/P-v-R/fescue-web/commit/7a022c742344ebbe26e93512539c91ca124441a5))
+
 ## [1.4.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.0...fescue-web-v1.4.1) (2026-04-07)
 
 
