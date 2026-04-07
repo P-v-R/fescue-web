@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.0...fescue-web-v1.4.1) (2026-04-07)
+
+
+### Bug Fixes
+
+* add workflow_dispatch to release and promote workflows ([1f7744d](https://github.com/P-v-R/fescue-web/commit/1f7744d6bcfa3c9e649f00b71a60cb64667342db))
+* align workflow tag triggers with release-please package prefix ([72e105d](https://github.com/P-v-R/fescue-web/commit/72e105d7c4f1de2fc663d837f65d0cb2a6cf5303))
+
 ## [1.4.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.3.0...fescue-web-v1.4.0) (2026-04-07)
 
 
