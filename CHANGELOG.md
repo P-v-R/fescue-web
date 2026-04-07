@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.3.0...fescue-web-v1.4.0) (2026-04-07)
+
+
+### Features
+
+* add 5 more golf-course green themes to theme switcher ([f505751](https://github.com/P-v-R/fescue-web/commit/f5057519682a1f3d06784f5ef7bf569062622693))
+* homepage feature strip updates, partner links, east side location ([a325522](https://github.com/P-v-R/fescue-web/commit/a325522ae4ad2f0fc286788a91711b1640d4bd22))
+* upcoming reservations panel + email notification preference ([2a3774e](https://github.com/P-v-R/fescue-web/commit/2a3774e0ce7f89ee4058516fd5c27ed8f0579007))
+
+
+### Bug Fixes
+
+* remove theme switcher from public nav ([7680a80](https://github.com/P-v-R/fescue-web/commit/7680a800a528b933389ddaa040e51dd0578e70d5))
+* sync blackout periods in realtime on reservations grid ([9f661a9](https://github.com/P-v-R/fescue-web/commit/9f661a9365bbc4379dd18e58c38367196b969b6b))
+
 ## [1.3.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.2.0...fescue-web-v1.3.0) (2026-03-30)
 
 
