@@ -3,7 +3,7 @@ name: Promote to Production
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'fescue-web-v*.*.*'
 
 permissions:
   contents: write
