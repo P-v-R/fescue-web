@@ -43,6 +43,7 @@ export type SanityPartner = {
   _key: string
   name: string | null
   logo: SanityImageAsset | null
+  url: string | null
 }
 
 export type SanityFeature = {

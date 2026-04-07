@@ -157,6 +157,12 @@ export const homePage = defineType({
               type: 'image',
               options: { hotspot: true },
             }),
+            defineField({
+              name: 'url',
+              title: 'Website URL',
+              type: 'url',
+              description: 'Optional link — clicking the logo will open this URL in a new tab.',
+            }),
           ],
           preview: {
             select: { title: 'name' },

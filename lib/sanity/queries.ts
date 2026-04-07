@@ -44,7 +44,7 @@ export async function getHomePage(): Promise<HomePage | null> {
         clubhousePhotos,
         clubhouseBody,
         partnersHeading,
-        partners[] { _key, name, logo },
+        partners[] { _key, name, logo, url },
         ctaHeading,
         ctaSubtext,
       }`,

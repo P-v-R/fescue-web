@@ -126,16 +126,13 @@ export default async function HomePage() {
             ) : (
               <div className='absolute inset-0 bg-navy-dark' />
             )}
-            {/* Dark overlay for legibility */}
-            <div className='absolute inset-0 bg-navy-dark/55' />
-
             <div className='relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-14 text-center'>
               {FEATURE_PLACEHOLDERS.map((placeholder, i) => {
                 const feature = cms?.features?.[i];
                 return (
-                  <div key={i} className='flex flex-col items-center gap-4'>
+                  <div key={i} className='flex flex-col items-center gap-4 bg-navy-dark/50 px-6 py-8'>
                     <div className='w-8 h-px bg-gold' />
-                    <p className='font-mono text-label uppercase tracking-[0.25em] text-cream'>
+                    <p className='font-mono text-base uppercase tracking-[0.25em] text-cream'>
                       {feature?.label ?? placeholder}
                     </p>
                     {feature?.body ? (
@@ -322,27 +319,42 @@ export default async function HomePage() {
 
               {cms?.partners && cms.partners.length > 0 ? (
                 <div className='grid grid-cols-2 sm:grid-cols-4 gap-6'>
-                  {cms.partners.map((partner) => (
-                    <div
-                      key={partner._key}
-                      className='h-20 bg-cream/[0.04] border border-cream/[0.08] flex items-center justify-center px-4'
-                    >
-                      {partner.logo ? (
-                        <div className='relative w-full h-10'>
-                          <SanityImage
-                            image={partner.logo}
-                            alt={partner.name ?? 'Partner logo'}
-                            className='object-contain'
-                            sizes='(max-width: 640px) 50vw, 25vw'
-                          />
-                        </div>
-                      ) : (
-                        <p className='font-mono text-label uppercase tracking-[0.15em] text-cream/40 text-center'>
-                          {partner.name ?? ''}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                  {cms.partners.map((partner) => {
+                    const inner = (
+                      <>
+                        {partner.logo ? (
+                          <div className='relative w-full h-10'>
+                            <SanityImage
+                              image={partner.logo}
+                              alt={partner.name ?? 'Partner logo'}
+                              className='object-contain'
+                              sizes='(max-width: 640px) 50vw, 25vw'
+                            />
+                          </div>
+                        ) : (
+                          <p className='font-mono text-label uppercase tracking-[0.15em] text-cream/40 text-center'>
+                            {partner.name ?? ''}
+                          </p>
+                        )}
+                      </>
+                    )
+                    const sharedClass = 'h-20 bg-cream/[0.04] border border-cream/[0.08] flex items-center justify-center px-4'
+                    return partner.url ? (
+                      <a
+                        key={partner._key}
+                        href={partner.url}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className={`${sharedClass} hover:bg-cream/[0.08] transition-colors`}
+                      >
+                        {inner}
+                      </a>
+                    ) : (
+                      <div key={partner._key} className={sharedClass}>
+                        {inner}
+                      </div>
+                    )
+                  })}
                 </div>
               ) : (
                 <div className='grid grid-cols-2 sm:grid-cols-4 gap-6'>
