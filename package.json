@@ -1,6 +1,6 @@
 {
   "name": "fescue-web",
-  "version": "1.1.1",
+  "version": "1.4.2",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepare": "husky"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",
@@ -43,6 +44,7 @@
     "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "husky": "^9.1.7",
     "jsdom": "^25.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",

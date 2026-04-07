@@ -14,8 +14,17 @@ export async function submitMembershipRequestAction(
     return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
   }
 
-  const { first_name, last_name, email, phone, referral_source, message } = parsed.data
-  const full_name = `${first_name.trim()} ${last_name.trim()}`
+  const {
+    full_name,
+    email,
+    phone,
+    zip_code,
+    profession,
+    referral_source,
+    has_membership_org,
+    membership_org_names,
+    message,
+  } = parsed.data
   const normalizedEmail = email.toLowerCase().trim()
 
   try {
@@ -28,13 +37,17 @@ export async function submitMembershipRequestAction(
     }
 
     await createMembershipRequest({
-      full_name,
+      full_name: full_name.trim(),
       email: normalizedEmail,
-      phone: phone?.trim() || undefined,
-      referral_source: referral_source?.trim() || undefined,
+      phone: phone.trim(),
+      zip_code: zip_code?.trim() || undefined,
+      profession: profession.trim(),
+      referral_source: referral_source.trim(),
+      has_membership_org,
+      membership_org_names: membership_org_names?.trim() || undefined,
       message: message?.trim() || undefined,
     })
-    return { success: "Thank you — we'll be in touch soon to schedule your tour." }
+    return { success: "Thank you — we'll be in touch soon." }
   } catch (err) {
     console.error('[submitMembershipRequestAction]', err)
     return {

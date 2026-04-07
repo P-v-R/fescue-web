@@ -12,6 +12,19 @@ export const clubChampion = defineType({
       validation: (Rule) => Rule.required().min(2000).max(2100),
     }),
     defineField({
+      name: 'category',
+      title: 'Category',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Gross', value: 'gross' },
+          { title: 'Net', value: 'net' },
+        ],
+        layout: 'radio',
+      },
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'name',
       title: 'Full Name',
       type: 'string',
@@ -25,9 +38,9 @@ export const clubChampion = defineType({
     }),
   ],
   preview: {
-    select: { title: 'name', subtitle: 'year' },
-    prepare({ title, subtitle }) {
-      return { title, subtitle: String(subtitle) }
+    select: { title: 'name', subtitle: 'year', category: 'category' },
+    prepare({ title, subtitle, category }) {
+      return { title, subtitle: `${subtitle} — ${category ?? ''}` }
     },
   },
 })

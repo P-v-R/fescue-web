@@ -8,8 +8,8 @@ async function requireAdmin() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated.')
-  const { data: member } = await supabase.from('members').select('is_admin').eq('id', user.id).single()
-  if (!member?.is_admin) throw new Error('Not authorized.')
+  const { data: member } = await supabase.from('members').select('is_admin, is_active').eq('id', user.id).single()
+  if (!member?.is_admin || !member?.is_active) throw new Error('Not authorized.')
 }
 
 export async function updateMemberSinceAction(

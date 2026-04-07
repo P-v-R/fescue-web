@@ -26,7 +26,7 @@ export function AuthCard({
           alt="Fescue Golf Club"
           width={110}
           height={110}
-          className="object-contain"
+          className="object-contain mix-blend-multiply"
           priority
         />
       </div>

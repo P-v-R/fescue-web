@@ -35,7 +35,7 @@ export default function CalendarLoading() {
                 className="h-20 bg-cream-light border border-cream-mid p-1.5"
               >
                 <div className="h-2.5 w-4 bg-cream-mid rounded mb-2" />
-                {Math.random() > 0.8 && (
+                {(day === 3 || day === 5) && week !== 5 && (
                   <div className="h-4 bg-navy/10 rounded" />
                 )}
               </div>

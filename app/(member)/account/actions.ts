@@ -32,3 +32,21 @@ export async function updateProfileAction(input: {
   revalidatePath('/members')
   return {}
 }
+
+export async function updateEmailPreferencesAction(input: {
+  email_booking_confirmation: boolean
+}): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not signed in.' }
+
+  const { error } = await supabase
+    .from('members')
+    .update({ email_booking_confirmation: input.email_booking_confirmation })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/account')
+  return {}
+}

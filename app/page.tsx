@@ -9,6 +9,9 @@ import { ClubhouseCarousel } from '@/components/ui/clubhouse-carousel';
 import { getHomePage } from '@/lib/sanity/queries';
 import { urlFor } from '@/lib/sanity/client';
 import type { SanityImageAsset } from '@/lib/sanity/types';
+import { PortableTextHeading } from '@/components/ui/portable-text-heading';
+
+const hasContent = (v: unknown) => Array.isArray(v) && v.length > 0;
 
 export const metadata = {
   title: 'Fescue Golf Club — Private Golf Club',
@@ -55,7 +58,7 @@ export default async function HomePage() {
             <HeroReveal>
               <div className='relative z-10 max-w-2xl mx-auto flex flex-col items-center'>
                 <Image
-                  src='/logo-badge2.png'
+                  src='/logo-badge.png'
                   alt='Fescue Golf Club'
                   width={280}
                   height={280}
@@ -67,9 +70,11 @@ export default async function HomePage() {
                   className='hero-item font-serif text-4xl sm:text-5xl font-light text-cream mb-6 leading-tight'
                   style={{ transitionDelay: '200ms' }}
                 >
-                  The membership golf club.
-                  <br />
-                  <em>reinvented</em>
+                  {hasContent(cms?.heroHeading) ? (
+                    <PortableTextHeading value={cms!.heroHeading!} />
+                  ) : (
+                    'Private. Not Exclusive.'
+                  )}
                 </h1>
                 <div
                   className='hero-item w-12 h-px bg-gold mx-auto mb-8'
@@ -79,9 +84,17 @@ export default async function HomePage() {
                   className='hero-item max-w-sm mx-auto mb-2 space-y-2.5'
                   style={{ transitionDelay: '500ms' }}
                 >
-                  <div className='h-3.5 bg-cream/10 rounded w-full' />
-                  <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
-                  <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
+                  {cms?.heroSubtext ? (
+                    <p className='font-sans text-sm text-cream/75 leading-relaxed'>
+                      {cms.heroSubtext}
+                    </p>
+                  ) : (
+                    <>
+                      <div className='h-3.5 bg-cream/10 rounded w-full' />
+                      <div className='h-3.5 bg-cream/10 rounded w-5/6 mx-auto' />
+                      <div className='h-3.5 bg-cream/10 rounded w-4/6 mx-auto' />
+                    </>
+                  )}
                 </div>
                 <div
                   className='hero-item flex flex-col sm:flex-row gap-4 justify-center'
@@ -113,16 +126,13 @@ export default async function HomePage() {
             ) : (
               <div className='absolute inset-0 bg-navy-dark' />
             )}
-            {/* Dark overlay for legibility */}
-            <div className='absolute inset-0 bg-navy-dark/55' />
-
             <div className='relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-14 text-center'>
               {FEATURE_PLACEHOLDERS.map((placeholder, i) => {
                 const feature = cms?.features?.[i];
                 return (
-                  <div key={i} className='flex flex-col items-center gap-4'>
+                  <div key={i} className='flex flex-col items-center gap-4 bg-navy-dark/50 px-6 py-8'>
                     <div className='w-8 h-px bg-gold' />
-                    <p className='font-mono text-label uppercase tracking-[0.25em] text-cream'>
+                    <p className='font-mono text-base uppercase tracking-[0.25em] text-cream'>
                       {feature?.label ?? placeholder}
                     </p>
                     {feature?.body ? (
@@ -165,15 +175,24 @@ export default async function HomePage() {
                   Our Story
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-cream mb-6 leading-snug'>
-                  <em>The country club</em>
-                  <br />
-                  for the <em>not</em> country club set.
+                  {hasContent(cms?.storyHeading) ? (
+                    <PortableTextHeading value={cms!.storyHeading!} />
+                  ) : (
+                    <>
+                      <em>The country club</em>
+                      <br />
+                      for the <em>not</em> country club set.
+                    </>
+                  )}
                 </h2>
                 <div className='w-10 h-px bg-gold mb-8' />
                 {cms?.storyBody ? (
                   <div className='space-y-4'>
                     {cms.storyBody.split('\n\n').map((para, i) => (
-                      <p key={i} className='font-sans text-sm text-cream/75 leading-relaxed'>
+                      <p
+                        key={i}
+                        className='font-sans text-sm text-cream/75 leading-relaxed'
+                      >
                         {para}
                       </p>
                     ))}
@@ -218,9 +237,15 @@ export default async function HomePage() {
                   Clubhouse
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-navy leading-snug'>
-                  Not for everyone.
-                  <br />
-                  <em>For us.</em>
+                  {hasContent(cms?.clubhouseHeading) ? (
+                    <PortableTextHeading value={cms!.clubhouseHeading!} />
+                  ) : (
+                    <>
+                      Not for everyone.
+                      <br />
+                      <em>For us.</em>
+                    </>
+                  )}
                 </h2>
                 <div className='w-10 h-px bg-gold mx-auto mt-6' />
               </div>
@@ -279,36 +304,57 @@ export default async function HomePage() {
                   Our Partners
                 </p>
                 <h2 className='font-serif text-3xl sm:text-4xl font-light text-cream leading-snug'>
-                  <em>Supported by brands</em>
-                  <br />
-                  that share our standards.
+                  {hasContent(cms?.partnersHeading) ? (
+                    <PortableTextHeading value={cms!.partnersHeading!} />
+                  ) : (
+                    <>
+                      <em>Supported by brands</em>
+                      <br />
+                      that share our standards.
+                    </>
+                  )}
                 </h2>
                 <div className='w-10 h-px bg-gold mx-auto mt-6' />
               </div>
 
               {cms?.partners && cms.partners.length > 0 ? (
                 <div className='grid grid-cols-2 sm:grid-cols-4 gap-6'>
-                  {cms.partners.map((partner) => (
-                    <div
-                      key={partner._key}
-                      className='h-20 bg-cream/[0.04] border border-cream/[0.08] flex items-center justify-center px-4'
-                    >
-                      {partner.logo ? (
-                        <div className='relative w-full h-10'>
-                          <SanityImage
-                            image={partner.logo}
-                            alt={partner.name ?? 'Partner logo'}
-                            className='object-contain'
-                            sizes='(max-width: 640px) 50vw, 25vw'
-                          />
-                        </div>
-                      ) : (
-                        <p className='font-mono text-label uppercase tracking-[0.15em] text-cream/40 text-center'>
-                          {partner.name ?? ''}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                  {cms.partners.map((partner) => {
+                    const inner = (
+                      <>
+                        {partner.logo ? (
+                          <div className='relative w-full h-10'>
+                            <SanityImage
+                              image={partner.logo}
+                              alt={partner.name ?? 'Partner logo'}
+                              className='object-contain'
+                              sizes='(max-width: 640px) 50vw, 25vw'
+                            />
+                          </div>
+                        ) : (
+                          <p className='font-mono text-label uppercase tracking-[0.15em] text-cream/40 text-center'>
+                            {partner.name ?? ''}
+                          </p>
+                        )}
+                      </>
+                    )
+                    const sharedClass = 'h-20 bg-cream/[0.04] border border-cream/[0.08] flex items-center justify-center px-4'
+                    return partner.url ? (
+                      <a
+                        key={partner._key}
+                        href={partner.url}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className={`${sharedClass} hover:bg-cream/[0.08] transition-colors`}
+                      >
+                        {inner}
+                      </a>
+                    ) : (
+                      <div key={partner._key} className={sharedClass}>
+                        {inner}
+                      </div>
+                    )
+                  })}
                 </div>
               ) : (
                 <div className='grid grid-cols-2 sm:grid-cols-4 gap-6'>
@@ -333,12 +379,22 @@ export default async function HomePage() {
                 Interested?
               </p>
               <h2 className='font-serif text-2xl sm:text-3xl font-light text-navy mb-5'>
-                Come see it for yourself.
+                {hasContent(cms?.ctaHeading) ? (
+                  <PortableTextHeading value={cms!.ctaHeading!} />
+                ) : (
+                  'Come see it for yourself.'
+                )}
               </h2>
-              <div className='max-w-xs mx-auto space-y-2 mb-8'>
-                <div className='h-3 bg-navy/10 rounded w-full' />
-                <div className='h-3 bg-navy/10 rounded w-4/5 mx-auto' />
-              </div>
+              {cms?.ctaSubtext ? (
+                <p className='max-w-xs mx-auto font-sans text-sm text-navy/70 leading-relaxed mb-8'>
+                  {cms.ctaSubtext}
+                </p>
+              ) : (
+                <div className='max-w-xs mx-auto space-y-2 mb-8'>
+                  <div className='h-3 bg-navy/10 rounded w-full' />
+                  <div className='h-3 bg-navy/10 rounded w-4/5 mx-auto' />
+                </div>
+              )}
               <Link
                 href='/contact'
                 className='inline-block bg-navy text-cream font-mono text-label uppercase tracking-[0.25em] px-8 py-3 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-80 transition-opacity'
@@ -353,14 +409,15 @@ export default async function HomePage() {
           <div className='absolute inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none' />
           <div className='relative z-10 max-w-6xl mx-auto px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4'>
             <Image
-              src='/logo-badge2.png'
+              src='/logo-badge.png'
               alt='Fescue Golf Club'
               width={36}
               height={36}
               className='object-contain opacity-60'
             />
             <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/30'>
-              © {new Date().getFullYear()} Fescue Golf Club. All rights reserved.
+              © {new Date().getFullYear()} Fescue Golf Club. All rights
+              reserved.
             </p>
           </div>
         </footer>

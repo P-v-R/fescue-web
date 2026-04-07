@@ -107,6 +107,7 @@ export async function acceptInvite(
       full_name: memberData.full_name,
       phone: memberData.phone?.trim() || null,
       discord: memberData.discord?.trim() || null,
+      member_since: new Date().getFullYear(),
     })
     .select()
     .single()

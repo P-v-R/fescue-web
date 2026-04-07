@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { updateProfileAction } from './actions'
+import { updateProfileAction, updateEmailPreferencesAction } from './actions'
 import { formatPhone } from '@/lib/utils/phone'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,67 @@ function PencilIcon() {
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
+  )
+}
+
+export function EmailPreferencesSection({
+  emailBookingConfirmation,
+}: {
+  emailBookingConfirmation: boolean
+}) {
+  const [checked, setChecked] = useState(emailBookingConfirmation)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleToggle() {
+    const next = !checked
+    setChecked(next)
+    setSaving(true)
+    setError(null)
+    const result = await updateEmailPreferencesAction({ email_booking_confirmation: next })
+    setSaving(false)
+    if (result.error) {
+      setChecked(!next) // revert
+      setError(result.error)
+    }
+  }
+
+  return (
+    <section className="mb-10 pb-10 border-b border-cream-mid">
+      <p className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-5">
+        Email Preferences
+      </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="font-sans text-sm font-light text-navy-dark">Booking confirmations</p>
+          <p className="font-sans text-xs font-light text-navy/40 mt-0.5">
+            Receive an email when you book a bay.
+          </p>
+        </div>
+        <button
+          role="switch"
+          aria-checked={checked}
+          onClick={handleToggle}
+          disabled={saving}
+          className={[
+            'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2',
+            'disabled:opacity-50 disabled:cursor-not-allowed',
+            checked ? 'bg-navy' : 'bg-cream-mid',
+          ].join(' ')}
+        >
+          <span
+            className={[
+              'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200',
+              checked ? 'translate-x-5' : 'translate-x-0',
+            ].join(' ')}
+          />
+        </button>
+      </div>
+      {error && (
+        <p className="font-mono text-label text-red-500 mt-3">{error}</p>
+      )}
+    </section>
   )
 }
 

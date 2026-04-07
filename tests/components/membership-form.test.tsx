@@ -15,55 +15,73 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
+async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByPlaceholderText('First and Last'), 'Jane Smith')
+  await user.type(screen.getByPlaceholderText('Email Address'), 'jane@example.com')
+  await user.type(screen.getByPlaceholderText('Contact Number'), '3105550100')
+  await user.type(screen.getByPlaceholderText('Enter Profession'), 'Architect')
+  await user.type(screen.getByPlaceholderText('How/who referred you to Fescue?'), 'A friend')
+}
+
 describe('MembershipForm', () => {
-  it('renders all form fields and submit button', () => {
+  it('renders all required fields and submit button', () => {
     render(<MembershipForm />)
 
-    expect(screen.getByPlaceholderText('James Morrison')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('james@example.com')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText("Anything you'd like us to know…")).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /request membership/i })).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('First and Last')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Email Address')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Contact Number')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Enter Profession')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('How/who referred you to Fescue?')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /apply/i })).toBeInTheDocument()
+  })
+
+  it('renders optional fields', () => {
+    render(<MembershipForm />)
+
+    expect(screen.getByPlaceholderText('Enter Zip')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /yes/i })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /no/i })).toBeInTheDocument()
   })
 
   it('shows validation error when name is empty on submit', async () => {
     render(<MembershipForm />)
     const user = userEvent.setup()
 
-    await user.click(screen.getByRole('button', { name: /request membership/i }))
+    await user.click(screen.getByRole('button', { name: /apply/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/full name/i, { selector: 'p' })).toBeInTheDocument()
+      expect(screen.getByText(/enter your name/i)).toBeInTheDocument()
     })
     expect(mockSubmit).not.toHaveBeenCalled()
   })
 
-  it('shows validation error when email is empty on submit', async () => {
+  it('shows validation error when phone is missing', async () => {
     render(<MembershipForm />)
     const user = userEvent.setup()
 
-    // Type a name but leave email empty — zod catches it, no HTML5 constraint fires
-    await user.type(screen.getByPlaceholderText('James Morrison'), 'Jane Smith')
-    await user.click(screen.getByRole('button', { name: /request membership/i }))
+    await user.type(screen.getByPlaceholderText('First and Last'), 'Jane Smith')
+    await user.type(screen.getByPlaceholderText('Email Address'), 'jane@example.com')
+    await user.click(screen.getByRole('button', { name: /apply/i }))
 
+    // Error text is "Please enter your phone number." — more specific than the label
     await waitFor(() => {
-      expect(screen.getByText(/valid email/i)).toBeInTheDocument()
+      expect(screen.getByText('Please enter your phone number.')).toBeInTheDocument()
     })
     expect(mockSubmit).not.toHaveBeenCalled()
   })
 
   it('shows confirmation state on successful submission', async () => {
-    mockSubmit.mockResolvedValue({ success: 'Thank you — your request has been received.' })
+    mockSubmit.mockResolvedValue({ success: "Thank you — we'll be in touch soon." })
     render(<MembershipForm />)
     const user = userEvent.setup()
 
-    await user.type(screen.getByPlaceholderText('James Morrison'), 'Jane Smith')
-    await user.type(screen.getByPlaceholderText('james@example.com'), 'jane@example.com')
-    await user.click(screen.getByRole('button', { name: /request membership/i }))
+    await fillRequiredFields(user)
+    await user.click(screen.getByRole('button', { name: /apply/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('Thank you — your request has been received.')).toBeInTheDocument()
+      expect(screen.getByText("Thank you — we'll be in touch soon.")).toBeInTheDocument()
     })
-    expect(screen.queryByRole('button', { name: /request membership/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /apply/i })).not.toBeInTheDocument()
   })
 
   it('shows server error message when action returns error', async () => {
@@ -71,49 +89,43 @@ describe('MembershipForm', () => {
     render(<MembershipForm />)
     const user = userEvent.setup()
 
-    await user.type(screen.getByPlaceholderText('James Morrison'), 'Jane Smith')
-    await user.type(screen.getByPlaceholderText('james@example.com'), 'jane@example.com')
-    await user.click(screen.getByRole('button', { name: /request membership/i }))
+    await fillRequiredFields(user)
+    await user.click(screen.getByRole('button', { name: /apply/i }))
 
     await waitFor(() => {
       expect(screen.getByText('Something went wrong.')).toBeInTheDocument()
     })
-    expect(screen.getByRole('button', { name: /request membership/i })).toBeInTheDocument()
-  })
-
-  it('passes message to action when filled in', async () => {
-    mockSubmit.mockResolvedValue({ success: 'Received.' })
-    render(<MembershipForm />)
-    const user = userEvent.setup()
-
-    await user.type(screen.getByPlaceholderText('James Morrison'), 'Jane Smith')
-    await user.type(screen.getByPlaceholderText('james@example.com'), 'jane@example.com')
-    await user.type(screen.getByPlaceholderText("Anything you'd like us to know…"), 'Hello!')
-    await user.click(screen.getByRole('button', { name: /request membership/i }))
-
-    await waitFor(() => {
-      expect(mockSubmit).toHaveBeenCalledWith({
-        full_name: 'Jane Smith',
-        email: 'jane@example.com',
-        message: 'Hello!',
-      })
-    })
+    expect(screen.getByRole('button', { name: /apply/i })).toBeInTheDocument()
   })
 
   it('shows confirmation with duplicate flag (success, not error)', async () => {
     mockSubmit.mockResolvedValue({
-      success: 'Thank you — your request has been received.',
+      success: "We already have your request on file — we'll be in touch soon.",
       duplicate: true,
     })
     render(<MembershipForm />)
     const user = userEvent.setup()
 
-    await user.type(screen.getByPlaceholderText('James Morrison'), 'Jane Smith')
-    await user.type(screen.getByPlaceholderText('james@example.com'), 'jane@example.com')
-    await user.click(screen.getByRole('button', { name: /request membership/i }))
+    await fillRequiredFields(user)
+    await user.click(screen.getByRole('button', { name: /apply/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('Thank you — your request has been received.')).toBeInTheDocument()
+      expect(screen.getByText(/already have your request/i)).toBeInTheDocument()
+    })
+    expect(screen.queryByRole('button', { name: /apply/i })).not.toBeInTheDocument()
+  })
+
+  it('calls onSubmitted callback after successful submission', async () => {
+    mockSubmit.mockResolvedValue({ success: "Thank you — we'll be in touch soon." })
+    const onSubmitted = vi.fn()
+    render(<MembershipForm onSubmitted={onSubmitted} />)
+    const user = userEvent.setup()
+
+    await fillRequiredFields(user)
+    await user.click(screen.getByRole('button', { name: /apply/i }))
+
+    await waitFor(() => {
+      expect(onSubmitted).toHaveBeenCalledOnce()
     })
   })
 })

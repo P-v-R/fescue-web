@@ -22,6 +22,7 @@ type Props = {
   setDate: (d: Date) => void
   userId: string
   onSlotClick: (slot: SelectedSlot) => void
+  onBookingClick?: (booking: BookingWithMember, bayName: string) => void
   blackoutPeriods: BlackoutPeriod[]
 }
 
@@ -137,6 +138,7 @@ function BaySlotList({
   userId,
   blackoutPeriods,
   onSlotClick,
+  onBookingClick,
 }: {
   bay: Bay
   bookings: BookingWithMember[]
@@ -144,6 +146,7 @@ function BaySlotList({
   userId: string
   blackoutPeriods: BlackoutPeriod[]
   onSlotClick: (slot: SelectedSlot) => void
+  onBookingClick?: (booking: BookingWithMember, bayName: string) => void
 }) {
   const cells = useBayCells(bay.id, bookings, date, userId, blackoutPeriods)
 
@@ -183,17 +186,21 @@ function BaySlotList({
 
         if (cell.kind === 'mine') {
           return (
-            <div key={i} className='flex items-center gap-4 px-4 h-14 bg-navy'>
+            <button
+              key={i}
+              onClick={() => onBookingClick?.(cell.booking, bay.name)}
+              className='w-full flex items-center gap-4 px-4 h-14 bg-navy active:bg-navy-mid transition-colors'
+            >
               <span className='font-mono text-label tracking-[0.12em] text-cream/70 w-16'>
                 {formatSlotShort(cell.slotTime)}
               </span>
-              <span className='flex-1 font-mono text-label uppercase tracking-[0.18em] text-cream/90'>
+              <span className='flex-1 text-left font-mono text-label uppercase tracking-[0.18em] text-cream/90'>
                 Your Booking
               </span>
-              <span className='font-mono text-label text-gold/70'>
-                {cell.booking.duration_minutes}m
-              </span>
-            </div>
+              <svg width='14' height='14' viewBox='0 0 16 16' fill='none' className='text-gold/60'>
+                <path d='M6 3l5 5-5 5' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round' />
+              </svg>
+            </button>
           )
         }
 
@@ -238,6 +245,7 @@ export function MobileBayList({
   setDate,
   userId,
   onSlotClick,
+  onBookingClick,
   blackoutPeriods,
 }: Props) {
   const [selectedBayId, setSelectedBayId] = useState(bays[0]?.id ?? '')
@@ -377,6 +385,7 @@ export function MobileBayList({
             userId={userId}
             blackoutPeriods={blackoutPeriods}
             onSlotClick={onSlotClick}
+            onBookingClick={onBookingClick}
           />
         </>
       ) : (

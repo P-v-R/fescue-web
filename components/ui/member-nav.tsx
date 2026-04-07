@@ -40,7 +40,7 @@ export function MemberNav({ memberName, isAdmin }: Props) {
         <Link href='/dashboard' className='shrink-0'>
           <span className='flex items-center justify-center overflow-hidden'>
             <Image
-              src='/logo-quail.png'
+              src='/quail-alt.png'
               alt='Fescue Golf Club'
               width={28}
               height={28}

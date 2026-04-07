@@ -9,6 +9,7 @@ import { formatPhone } from '@/lib/utils/phone'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
+
 type Props = {
   token: string
   inviteEmail: string

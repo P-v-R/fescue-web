@@ -34,7 +34,7 @@ export function AnnouncementBanner({ announcement }: { announcement: SanityAnnou
         'relative flex items-stretch overflow-hidden border-b',
         isAlert
           ? 'bg-[#7a1a10] border-[#9b2a1a]'
-          : 'bg-[#0d2347] border-[#1a3560]',
+          : 'bg-[#0d2318] border-[#1a3525]',
       ].join(' ')}
       style={{ height: '36px' }}
     >
@@ -44,7 +44,7 @@ export function AnnouncementBanner({ announcement }: { announcement: SanityAnnou
           'flex-shrink-0 flex items-center px-4 border-r z-10',
           isAlert
             ? 'bg-[#9b2a1a] border-[#b83828]'
-            : 'bg-[#162d5a] border-[#243f78]',
+            : 'bg-[#162d1e] border-[#243f2a]',
         ].join(' ')}
       >
         <span
@@ -65,7 +65,7 @@ export function AnnouncementBanner({ announcement }: { announcement: SanityAnnou
             'absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none',
             isAlert
               ? 'bg-gradient-to-r from-[#7a1a10] to-transparent'
-              : 'bg-gradient-to-r from-[#0d2347] to-transparent',
+              : 'bg-gradient-to-r from-[#0d2318] to-transparent',
           ].join(' ')}
         />
         <div
@@ -73,7 +73,7 @@ export function AnnouncementBanner({ announcement }: { announcement: SanityAnnou
             'absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none',
             isAlert
               ? 'bg-gradient-to-l from-[#7a1a10] to-transparent'
-              : 'bg-gradient-to-l from-[#0d2347] to-transparent',
+              : 'bg-gradient-to-l from-[#0d2318] to-transparent',
           ].join(' ')}
         />
 
@@ -100,7 +100,7 @@ export function AnnouncementBanner({ announcement }: { announcement: SanityAnnou
           'flex-shrink-0 flex items-center px-4 border-l transition-opacity hover:opacity-60 z-10',
           isAlert
             ? 'border-[#9b2a1a] text-red-200'
-            : 'border-[#243f78] text-cream/50',
+            : 'border-[#243f2a] text-cream/50',
         ].join(' ')}
       >
         <svg width='12' height='12' viewBox='0 0 12 12' fill='none'>
