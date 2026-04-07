@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to promote (e.g. fescue-web-v1.4.0)'
+        description: 'Tag to promote (e.g. fescue-web-v1.4.1)'
         required: true
 
 permissions:
@@ -19,33 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Open staging → main PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ github.event.inputs.tag || github.ref_name }}"
-
-          # Check if a PR already exists
           EXISTING=$(gh pr list --base main --head staging --state open --json number --jq '.[0].number')
           if [ -n "$EXISTING" ]; then
-            echo "PR #$EXISTING already exists — skipping."
+            echo "PR #$EXISTING already exists, skipping."
             exit 0
           fi
-
-          gh pr create \
-            --base main \
-            --head staging \
-            --title "Deploy ${VERSION} to production" \
-            --body "$(cat <<EOF
-## Deploy ${VERSION} to production
-
-This PR was automatically created by the [Promote to Production](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) workflow after the ${VERSION} release tag was created on staging.
-
-Merging this PR will deploy to production via Railway.
-
-**Do not push directly to main — merge this PR to release.**
-EOF
-)"
+          BODY="Merging this PR deploys ${VERSION} to production via Railway."
+          gh pr create --base main --head staging --title "Deploy ${VERSION} to production" --body "$BODY"
