@@ -167,7 +167,7 @@ export default async function HomePage() {
                 alt=''
                 width={400}
                 height={476}
-                className='opacity-[0.07] -scale-x-100'
+                className='opacity-[0.07] -scale-x-100 brightness-0 invert'
                 aria-hidden={true}
               />
             </ParallaxDecor>
@@ -296,7 +296,7 @@ export default async function HomePage() {
                 alt=''
                 width={380}
                 height={452}
-                className='opacity-[0.07]'
+                className='opacity-[0.07] brightness-0 invert'
                 aria-hidden={true}
               />
             </ParallaxDecor>

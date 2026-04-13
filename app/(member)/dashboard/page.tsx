@@ -39,7 +39,7 @@ export default async function DashboardPage() {
           alt=''
           width={320}
           height={380}
-          className='object-contain'
+          className='object-contain brightness-0 invert'
         />
       </div>
 

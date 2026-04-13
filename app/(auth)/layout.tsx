@@ -13,7 +13,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           alt=""
           width={340}
           height={400}
-          className="object-contain"
+          className="object-contain brightness-0 invert"
           priority
         />
       </div>
