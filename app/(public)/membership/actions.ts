@@ -5,6 +5,10 @@ import {
   createMembershipRequest,
   getMembershipRequestByEmailAdmin,
 } from '@/lib/supabase/queries/membership-requests'
+import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/resend/client'
+import { membershipNotificationEmail } from '@/lib/resend/templates/membership-notification'
+
+const OWNER_EMAIL = 'sean@fescuegolfclub.com'
 
 export async function submitMembershipRequestAction(
   input: unknown,
@@ -47,6 +51,26 @@ export async function submitMembershipRequestAction(
       membership_org_names: membership_org_names?.trim() || undefined,
       message: message?.trim() || undefined,
     })
+
+    // Notify Sean of the new inquiry — fire and forget, don't block the response
+    if (isResendConfigured()) {
+      const resend = createResendClient()
+      const { subject, html } = membershipNotificationEmail({
+        full_name: full_name.trim(),
+        email: normalizedEmail,
+        phone: phone.trim(),
+        profession: profession.trim(),
+        referral_source: referral_source.trim(),
+        message: message?.trim(),
+      })
+      resend.emails.send({
+        from: FROM_ADDRESSES.noreply,
+        to: OWNER_EMAIL,
+        subject,
+        html,
+      }).catch((err) => console.error('[membership notification]', err))
+    }
+
     return { success: "Thank you — we'll be in touch soon." }
   } catch (err) {
     console.error('[submitMembershipRequestAction]', err)

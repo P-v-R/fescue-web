@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { CartIcon } from '@/components/shop/cart-icon';
 
 const NAV_LINKS = [
+  { href: '/about', label: 'About' },
   { href: '/location', label: 'Locations' },
   { href: '/contact', label: 'Membership' },
   { href: '/shop', label: 'Shop' },

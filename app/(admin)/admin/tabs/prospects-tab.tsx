@@ -12,11 +12,27 @@ import { StatusBadge } from '../components/status-badge';
 import {
   inviteFromRequestAction,
   declineRequestAction,
-  sendIntroEmailAction,
-  sendGuestIntroEmailAction,
+  // sendIntroEmailAction,
+  // sendGuestIntroEmailAction,
   markContactedAction,
   markPendingAction,
 } from '../actions';
+
+function CopyEmailButton({ email }: { email: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(email);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className='font-mono text-label uppercase tracking-[0.15em] text-navy/60 border border-cream-mid hover:border-navy hover:text-navy px-3 py-1.5 transition-colors whitespace-nowrap'
+    >
+      {copied ? 'Copied!' : 'Copy Email'}
+    </button>
+  );
+}
 
 export function ProspectsTab({
   requests,
@@ -100,6 +116,8 @@ export function ProspectsTab({
                       {format(new Date(lead.start_time), 'MMM d, yyyy')}
                     </td>
                     <td className='py-3'>
+                      <CopyEmailButton email={lead.guest_email} />
+                      {/* TODO: re-enable intro email flow when ready
                       <button
                         disabled={isPending}
                         onClick={() => {
@@ -110,6 +128,7 @@ export function ProspectsTab({
                       >
                         {isPending ? 'Sending…' : 'Send intro email'}
                       </button>
+                      */}
                     </td>
                   </tr>
                 ))}
@@ -254,14 +273,13 @@ function RequestCard({
           )}
         </div>
         <div className='flex gap-3 sm:flex-shrink-0 flex-wrap'>
+          {/* TODO: re-enable intro email flow when ready
           {request.status === 'pending' ? (
             <button
               disabled={isPending}
               onClick={() => {
                 if (!confirm(`Send intro email to ${request.email}?`)) return;
-                run(() =>
-                  sendIntroEmailAction(request.id, request.email, request.full_name),
-                );
+                run(() => sendIntroEmailAction(request.id, request.email, request.full_name));
               }}
               className='flex-1 sm:flex-none border border-cream-mid text-navy/60 font-mono text-label uppercase tracking-[0.15em] px-4 py-2.5 hover:border-navy hover:text-navy transition-colors disabled:opacity-50'
             >
@@ -276,6 +294,8 @@ function RequestCard({
               Remark as Pending
             </button>
           )}
+          */}
+          <CopyEmailButton email={request.email} />
           <button
             disabled={isPending}
             onClick={() => {

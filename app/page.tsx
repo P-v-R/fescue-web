@@ -130,7 +130,10 @@ export default async function HomePage() {
               {FEATURE_PLACEHOLDERS.map((placeholder, i) => {
                 const feature = cms?.features?.[i];
                 return (
-                  <div key={i} className='flex flex-col items-center gap-4 bg-navy-dark/50 px-6 py-8'>
+                  <div
+                    key={i}
+                    className='flex flex-col items-center gap-4 bg-navy-dark/50 px-6 py-8'
+                  >
                     <div className='w-8 h-px bg-gold' />
                     <p className='font-mono text-base uppercase tracking-[0.25em] text-cream'>
                       {feature?.label ?? placeholder}
@@ -337,8 +340,9 @@ export default async function HomePage() {
                           </p>
                         )}
                       </>
-                    )
-                    const sharedClass = 'h-20 bg-cream/[0.04] border border-cream/[0.08] flex items-center justify-center px-4'
+                    );
+                    const sharedClass =
+                      'h-20 bg-cream/[0.04] border border-cream/[0.08] flex items-center justify-center px-4';
                     return partner.url ? (
                       <a
                         key={partner._key}
@@ -353,7 +357,7 @@ export default async function HomePage() {
                       <div key={partner._key} className={sharedClass}>
                         {inner}
                       </div>
-                    )
+                    );
                   })}
                 </div>
               ) : (

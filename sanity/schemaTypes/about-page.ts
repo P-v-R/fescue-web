@@ -1,4 +1,4 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType } from 'sanity';
 
 const headingField = (name: string, title: string, description: string) =>
   defineField({
@@ -17,7 +17,7 @@ const headingField = (name: string, title: string, description: string) =>
       },
     ],
     description,
-  })
+  });
 
 export const aboutPage = defineType({
   name: 'aboutPage',
@@ -88,7 +88,7 @@ export const aboutPage = defineType({
           preview: {
             select: { title: 'title' },
             prepare({ title }) {
-              return { title: title || 'Untitled Value' }
+              return { title: title || 'Untitled Value' };
             },
           },
         },
@@ -103,7 +103,7 @@ export const aboutPage = defineType({
       ...headingField(
         'ctaHeading',
         'Heading',
-        'CTA heading. Use italic for emphasis. Default: "Ready to see it in person?"',
+        'CTA heading. Use italic for emphasis. Default: "Interested In Joining?"',
       ),
       group: 'cta',
     },
@@ -112,12 +112,13 @@ export const aboutPage = defineType({
       title: 'Subtext',
       type: 'string',
       group: 'cta',
-      description: 'Small line below heading. Default: "Tours are available by appointment."',
+      description:
+        'Small line below heading. Default: "Tours are available by appointment."',
     }),
   ],
   preview: {
     prepare() {
-      return { title: 'About Page' }
+      return { title: 'About Page' };
     },
   },
-})
+});
