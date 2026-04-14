@@ -21,6 +21,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@sanity/image-url": "^2.0.3",
     "@sanity/vision": "^5.14.1",
+    "@sentry/nextjs": "^10.48.0",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.99.1",
     "date-fns": "^4.1.0",
