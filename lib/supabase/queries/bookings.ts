@@ -212,21 +212,17 @@ export async function getGuestLeads(): Promise<GuestLead[]> {
 
   if (error) throw new Error(`getGuestLeads: ${error.message}`)
 
-  type GuestLeadRow = {
-    id: string
-    start_time: string
-    guests: { name: string; email: string }[]
-    members: { full_name: string; email: string } | null
-  }
-  return (data ?? []).flatMap((row: GuestLeadRow) =>
-    row.guests.map((g) => ({
+  return (data ?? []).flatMap((row) => {
+    const guests = row.guests as { name: string; email: string }[]
+    const member = Array.isArray(row.members) ? (row.members[0] ?? null) : (row.members ?? null)
+    return guests.map((g) => ({
       booking_id: row.id,
       start_time: row.start_time,
       guest_name: g.name,
       guest_email: g.email,
-      member: row.members ?? null,
+      member,
     }))
-  )
+  })
 }
 
 // Soft-cancel a booking by setting cancelled_at.
