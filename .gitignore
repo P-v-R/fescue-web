@@ -29,6 +29,7 @@
 fescue-build-guide.md
 fescue-style-guide*.html
 CLAUDE.md
+compound-engineering.local.md
 
 # local scripts (contain project IDs / credentials)
 /scripts/
@@ -53,3 +54,6 @@ supabase/.temp
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Sentry Config File
+.env.sentry-build-plugin

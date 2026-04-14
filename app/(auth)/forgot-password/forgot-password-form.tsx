@@ -44,7 +44,7 @@ export function ForgotPasswordForm() {
         </p>
         <p className="font-sans text-sm font-light text-sand leading-relaxed">
           If <span className="text-navy">{getValues('email')}</span> is registered,
-          you'll receive a reset link shortly. Check your spam folder if you don't see it.
+          you&apos;ll receive a reset link shortly. Check your spam folder if you don&apos;t see it.
         </p>
         <div className="pt-4">
           <Link

@@ -37,11 +37,11 @@ export async function createBookingAction(input: NewBookingInput): Promise<Creat
     return { error: 'Cannot book a slot in the past.' }
   }
 
-  // Max 1 month in advance
+  // Max 3 months in advance
   const maxDate = new Date()
-  maxDate.setMonth(maxDate.getMonth() + 1)
+  maxDate.setMonth(maxDate.getMonth() + 3)
   if (startTime > maxDate) {
-    return { error: 'Bookings can only be made up to one month in advance.' }
+    return { error: 'Bookings can only be made up to 3 months in advance.' }
   }
 
   // End time must not exceed 10pm

@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.6.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.0...fescue-web-v1.6.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* resolve lint errors blocking CI ([052aedb](https://github.com/P-v-R/fescue-web/commit/052aedbddafc6d9aee9290f615dc6e471f08996f))
+* use PAT for release-please so tag pushes trigger downstream workflows ([d23d5b5](https://github.com/P-v-R/fescue-web/commit/d23d5b5a6856374a1b092ab4dd6792480ceb358d))
+
+## [1.6.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.5.0...fescue-web-v1.6.0) (2026-04-14)
+
+
+### Features
+
+* add Sentry error monitoring, tracing, and session replay ([c37ec80](https://github.com/P-v-R/fescue-web/commit/c37ec809d14167d825850b73a5f8b078ce4ce351))
+
+## [1.5.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.2...fescue-web-v1.5.0) (2026-04-14)
+
+
+### Features
+
+* booking window, lead notifications, admin clipboard, contact logo ([1876d1e](https://github.com/P-v-R/fescue-web/commit/1876d1ea3bf31d29e429e2b3ecf4794c7303d3d7))
+* cache calendar month fetches to avoid redundant requests ([3eb6e97](https://github.com/P-v-R/fescue-web/commit/3eb6e977b281e263f4d613505b1ccf761c6b0499))
+* dashboard layout, hide about, expand club champions schema ([523ad78](https://github.com/P-v-R/fescue-web/commit/523ad78097047320d20213facc19183b3d65c08c))
+
+
+### Bug Fixes
+
+* frame upcoming events sidebar in navy green box ([b1ceaee](https://github.com/P-v-R/fescue-web/commit/b1ceaeec955e077517cde658cb15b110c33b240f))
+* invert quail watermark so full silhouette is visible on dark bg ([cd60312](https://github.com/P-v-R/fescue-web/commit/cd603125c0ac2059c332f1faca998d25e3250157))
+
 ## [1.4.2](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.1...fescue-web-v1.4.2) (2026-04-07)
 
 

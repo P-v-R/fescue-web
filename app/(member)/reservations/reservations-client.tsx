@@ -132,7 +132,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
   }
 
   const today = startOfDay(new Date())
-  const maxDate = addDays(today, 30)
+  const maxDate = addDays(today, 90)
 
   const selectedDateStr = format(date, 'yyyy-MM-dd')
   const periodsForDate = blackoutPeriods.filter((p) => p.date === selectedDateStr)

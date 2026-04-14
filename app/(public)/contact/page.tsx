@@ -13,10 +13,10 @@ export default function ContactPage() {
         <div className='mb-12'>
           <div className='mb-8 flex justify-center'>
             <Image
-              src='/arch-text-logo.png'
+              src='/logo-quail.png'
               alt='Fescue Golf Club'
-              width={220}
-              height={144}
+              width={120}
+              height={143}
               className='object-contain opacity-90'
             />
           </div>

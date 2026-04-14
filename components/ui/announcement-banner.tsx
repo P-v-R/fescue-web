@@ -11,6 +11,7 @@ export function AnnouncementBanner({ announcement }: { announcement: SanityAnnou
 
   // sessionStorage: dismissed for this tab session only — reappears on hard refresh
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!sessionStorage.getItem(dismissKey)) setVisible(true);
   }, [dismissKey]);
 

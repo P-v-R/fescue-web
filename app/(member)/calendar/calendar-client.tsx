@@ -21,11 +21,21 @@ export function CalendarClient({ initialEvents, initialUserRsvps, isAdmin }: Pro
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  const fetchedMonths = useRef<Map<string, Event[]>>(new Map())
+
   const handleDatesSet = useCallback(async (arg: DatesSetArg) => {
+    const key = arg.view.currentStart.toISOString()
+    if (fetchedMonths.current.has(key)) {
+      setEvents(fetchedMonths.current.get(key)!)
+      return
+    }
     setIsLoading(true)
     try {
-      const result = await fetchEventsForMonthAction(arg.view.currentStart.toISOString())
-      if (result.data) setEvents(result.data)
+      const result = await fetchEventsForMonthAction(key)
+      if (result.data) {
+        fetchedMonths.current.set(key, result.data)
+        setEvents(result.data)
+      }
     } finally {
       setIsLoading(false)
     }

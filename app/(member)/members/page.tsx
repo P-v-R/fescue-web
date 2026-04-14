@@ -13,18 +13,36 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic';
 
+const CHAMPIONSHIP_ORDER = ['club', 'member_guest', 'member_member']
+const CHAMPIONSHIP_LABELS: Record<string, string> = {
+  club: 'Club Championship',
+  member_guest: 'Member Guest',
+  member_member: 'Member Member',
+}
+
 function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
-  // Group by year, preserve order (already sorted year desc)
-  const byYear = champions.reduce<Record<number, ClubChampion[]>>((acc, c) => {
+  // Normalize: old records without championship default to 'club'
+  const normalized = champions.map((c) => ({ ...c, championship: c.championship ?? 'club' }))
+
+  // Group by year
+  const byYear = normalized.reduce<Record<number, typeof normalized>>((acc, c) => {
     if (!acc[c.year]) acc[c.year] = []
     acc[c.year].push(c)
     return acc
   }, {})
   const years = Object.keys(byYear).map(Number).sort((a, b) => b - a)
-  // Use the most recent year that has at least one named winner
-  const currentYear = years.find((y) => byYear[y].some((c) => c.name?.trim())) ?? years[0]
+  const currentYear = years[0]
   const currentChamps = byYear[currentYear]
-  const pastYears = years.filter((y) => y !== currentYear)
+  const pastYears = years.slice(1)
+
+  // Group current year by championship
+  const byChampionship = currentChamps.reduce<Record<string, typeof normalized>>((acc, c) => {
+    const key = c.championship ?? 'club'
+    if (!acc[key]) acc[key] = []
+    acc[key].push(c)
+    return acc
+  }, {})
+  const presentChampionships = CHAMPIONSHIP_ORDER.filter((k) => byChampionship[k])
 
   return (
     <div className='relative bg-navy overflow-hidden mb-14'>
@@ -39,7 +57,7 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
       <div className='frame-scalloped absolute inset-[10px] pointer-events-none' />
 
       <div className='relative px-10 py-10'>
-        {/* Header label */}
+        {/* Header */}
         <div className='flex items-center gap-4 mb-8'>
           <div className='flex-1 h-px bg-gold/20' />
           <p className='font-mono text-label uppercase tracking-[0.3em] text-gold'>
@@ -48,80 +66,118 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
           <div className='flex-1 h-px bg-gold/20' />
         </div>
 
-        {/* Current year — hero, side by side */}
-        <div className='mb-8'>
-          <p
-            className='text-center text-gold mb-6'
-            style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.4rem, 3vw, 1.8rem)' }}
-          >
-            {currentYear}
-          </p>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10'>
-            {(['gross', 'net'] as const).map((cat) => {
-              const champ = currentChamps.find((c) => c.category === cat)
-              return (
-                <div key={cat} className='text-center'>
-                  <p className='font-mono text-label uppercase tracking-[0.25em] text-gold/75 mb-3'>
-                    {cat} champion
+        {/* Current year */}
+        <p
+          className='text-center text-gold mb-8'
+          style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.4rem, 3vw, 1.8rem)' }}
+        >
+          {currentYear}
+        </p>
+
+        <div className='space-y-8'>
+          {presentChampionships.map((champKey, i) => {
+            const entries = byChampionship[champKey]
+            const isClub = champKey === 'club'
+            return (
+              <div key={champKey}>
+                {/* Championship name divider (skip for club if it's the only one) */}
+                {(presentChampionships.length > 1) && (
+                  <p className='text-center font-mono text-[9px] uppercase tracking-[0.3em] text-gold/50 mb-5'>
+                    {CHAMPIONSHIP_LABELS[champKey]}
                   </p>
-                  {champ ? (
-                    <>
-                      <h2
-                        className='text-cream leading-none mb-2'
-                        style={{
-                          fontFamily: 'var(--font-pinyon), cursive',
-                          fontSize: 'clamp(2rem, 5vw, 3rem)',
-                        }}
-                      >
-                        {champ.name}
-                      </h2>
-                      {champ.tagline && (
-                        <p className='font-serif text-sm italic text-cream/60 font-light mt-1'>
-                          {champ.tagline}
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <p className='font-serif italic text-cream/25 text-sm'>TBD</p>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                )}
+
+                {isClub ? (
+                  // Club Championship: Gross + Net side by side
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10'>
+                    {(['gross', 'net'] as const).map((cat) => {
+                      const champ = entries.find((c) => c.category === cat)
+                      return (
+                        <div key={cat} className='text-center'>
+                          <p className='font-mono text-label uppercase tracking-[0.25em] text-gold/75 mb-3'>
+                            {cat} champion
+                          </p>
+                          {champ ? (
+                            <>
+                              <h2
+                                className='text-cream leading-none mb-2'
+                                style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(2rem, 5vw, 3rem)' }}
+                              >
+                                {champ.name}
+                              </h2>
+                              {champ.tagline && (
+                                <p className='font-serif text-sm italic text-cream/60 font-light mt-1'>{champ.tagline}</p>
+                              )}
+                            </>
+                          ) : (
+                            <p className='font-serif italic text-cream/25 text-sm'>TBD</p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  // Team events: centered winner name
+                  <div className='text-center'>
+                    {entries.map((champ) => (
+                      <div key={champ.name}>
+                        <h2
+                          className='text-cream leading-none mb-2'
+                          style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)' }}
+                        >
+                          {champ.name}
+                        </h2>
+                        {champ.tagline && (
+                          <p className='font-serif text-sm italic text-cream/60 font-light mt-1'>{champ.tagline}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Divider between championships */}
+                {i < presentChampionships.length - 1 && (
+                  <div className='flex items-center gap-3 mt-8'>
+                    <div className='flex-1 h-px bg-gold/15' />
+                    <div className='w-1 h-1 rotate-45 bg-gold/30 shrink-0' />
+                    <div className='flex-1 h-px bg-gold/15' />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
 
         {/* Past years */}
         {pastYears.length > 0 && (
           <>
-            <div className='flex items-center gap-3 mb-5'>
+            <div className='flex items-center gap-3 my-8'>
               <div className='flex-1 h-px bg-gold/15' />
               <div className='w-1 h-1 rotate-45 bg-gold/30 shrink-0' />
               <div className='flex-1 h-px bg-gold/15' />
             </div>
             <div className='space-y-2 max-w-lg mx-auto'>
+              <div className='grid grid-cols-[3rem_1fr_1fr_1fr] gap-x-4 mb-1'>
+                <span />
+                {(['club', 'member_guest', 'member_member'] as const).map((k) => (
+                  <span key={k} className='font-mono text-gold/40 uppercase truncate' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>
+                    {k === 'club' ? 'Club' : k === 'member_guest' ? 'Mbr Guest' : 'Mbr Member'}
+                  </span>
+                ))}
+              </div>
               {pastYears.map((year) => {
-                const gross = byYear[year].find((c) => c.category === 'gross')
-                const net = byYear[year].find((c) => c.category === 'net')
+                const gross = byYear[year].find((c) => (c.championship ?? 'club') === 'club' && c.category === 'gross')
+                const mg = byYear[year].find((c) => c.championship === 'member_guest')
+                const mm = byYear[year].find((c) => c.championship === 'member_member')
                 return (
-                  <div key={year} className='grid grid-cols-[3rem_1fr_1fr] gap-x-4 items-baseline'>
-                    <span className='font-mono text-gold/60 text-right' style={{ fontSize: '10px', letterSpacing: '0.08em' }}>
-                      {year}
-                    </span>
-                    <span className='font-serif text-cream/60 text-xs font-light truncate'>
-                      {gross?.name ?? '—'}
-                    </span>
-                    <span className='font-serif text-cream/60 text-xs font-light truncate'>
-                      {net?.name ?? '—'}
-                    </span>
+                  <div key={year} className='grid grid-cols-[3rem_1fr_1fr_1fr] gap-x-4 items-baseline'>
+                    <span className='font-mono text-gold/60 text-right' style={{ fontSize: '10px', letterSpacing: '0.08em' }}>{year}</span>
+                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{gross?.name ?? '—'}</span>
+                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{mg?.name ?? '—'}</span>
+                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{mm?.name ?? '—'}</span>
                   </div>
                 )
               })}
-              {/* Column headers for past years */}
-              <div className='grid grid-cols-[3rem_1fr_1fr] gap-x-4 mt-1'>
-                <span />
-                <span className='font-mono text-gold/40 uppercase' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>Gross</span>
-                <span className='font-mono text-gold/40 uppercase' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>Net</span>
-              </div>
             </div>
           </>
         )}

@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - staging
+      - 'feat/**'
+      - 'fix/**'
 
 jobs:
-  typecheck:
-    name: Type check
+  ci:
+    name: Type check, lint, test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,3 +28,9 @@ jobs:
 
       - name: TypeScript type check
         run: pnpm tsc --noEmit
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test

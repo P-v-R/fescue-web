@@ -39,7 +39,7 @@ export default async function DashboardPage() {
           alt=''
           width={320}
           height={380}
-          className='object-contain'
+          className='object-contain brightness-0 invert'
         />
       </div>
 
@@ -59,18 +59,18 @@ export default async function DashboardPage() {
       {/* Quick actions */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch mb-10'>
         <QuickAction
-          href='/reservations'
+          href='/calendar'
           variant='primary'
+          label='Upcoming Events'
+          description='Browse upcoming club events and social gatherings'
+          cta='View Calendar'
+        />
+        <QuickAction
+          href='/reservations'
+          variant='outline'
           label='Book a Bay'
           description='Reserve a simulator slot for yourself or a guest'
           cta='Reserve Now'
-        />
-        <QuickAction
-          href='/calendar'
-          variant='outline'
-          label='Social Calendar'
-          description='Browse upcoming club events and social gatherings'
-          cta='View Calendar'
         />
       </div>
 
@@ -102,8 +102,8 @@ export default async function DashboardPage() {
 
         {/* Sidebar */}
         <div className='lg:border-l lg:border-cream-mid lg:pl-8 flex flex-col gap-8 lg:self-start lg:sticky lg:top-8'>
-          <UpcomingReservations bookings={upcomingBookings} />
           <UpcomingEvents events={upcomingEvents.slice(0, 3)} />
+          <UpcomingReservations bookings={upcomingBookings} />
         </div>
       </div>
     </div>
