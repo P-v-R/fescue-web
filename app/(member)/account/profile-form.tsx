@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 type Props = {
   phone: string | null
   discord: string | null
+  sgtUsername: string | null
 }
 
 // Pencil icon
@@ -82,17 +83,18 @@ export function EmailPreferencesSection({
   )
 }
 
-export function ContactInfoSection({ phone, discord }: Props) {
+export function ContactInfoSection({ phone, discord, sgtUsername }: Props) {
   const [editing, setEditing] = useState(false)
   const [phoneVal, setPhoneVal] = useState(phone ?? '')
   const [discordVal, setDiscordVal] = useState(discord ?? '')
+  const [sgtVal, setSgtVal] = useState(sgtUsername ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleSave() {
     setSaving(true)
     setError(null)
-    const result = await updateProfileAction({ phone: phoneVal, discord: discordVal })
+    const result = await updateProfileAction({ phone: phoneVal, discord: discordVal, sgt_username: sgtVal })
     setSaving(false)
     if (result.error) {
       setError(result.error)
@@ -134,6 +136,12 @@ export function ContactInfoSection({ phone, discord }: Props) {
                 {discord ?? <span className="text-navy/30 italic">Not set</span>}
               </p>
             </div>
+            <div>
+              <p className="font-mono text-label uppercase tracking-[0.2em] text-sand mb-0.5">SGT Username</p>
+              <p className="font-sans text-sm font-light text-navy-dark">
+                {sgtUsername ?? <span className="text-navy/30 italic">Not set</span>}
+              </p>
+            </div>
           </div>
         </>
       ) : (
@@ -151,6 +159,13 @@ export function ContactInfoSection({ phone, discord }: Props) {
             value={discordVal}
             onChange={(e) => setDiscordVal(e.target.value)}
             placeholder="username or username#1234"
+          />
+          <Input
+            label="SGT Username"
+            type="text"
+            value={sgtVal}
+            onChange={(e) => setSgtVal(e.target.value)}
+            placeholder="Your Simulator Golf Tour username"
           />
           {error && (
             <p className="font-mono text-label text-red-500">{error}</p>

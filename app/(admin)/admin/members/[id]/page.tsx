@@ -6,6 +6,7 @@ import { getAdminMemberBookings } from '@/lib/supabase/queries/bookings'
 import { getActiveBays } from '@/lib/supabase/queries/bays'
 import { BookForMemberModal } from './book-for-member-modal'
 import { MemberSinceField } from './member-since-field'
+import { SgtUsernameField } from './sgt-username-field'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -76,6 +77,7 @@ export default async function MemberProfilePage({ params }: Props) {
             memberSince={member.member_since}
             createdAt={member.created_at}
           />
+          <SgtUsernameField memberId={member.id} sgtUsername={member.sgt_username ?? null} />
           <InfoField label="Status" value={member.is_active ? (member.is_admin ? 'Admin' : 'Active') : 'Inactive'} />
         </div>
       </section>

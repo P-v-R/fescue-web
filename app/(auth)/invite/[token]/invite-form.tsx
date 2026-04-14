@@ -77,6 +77,19 @@ export function InviteForm({ token, inviteEmail }: Props) {
         </p>
       </div>
 
+      <div className="flex flex-col gap-2">
+        <Input
+          label="SGT Username"
+          type="text"
+          placeholder="Your Simulator Golf Tour username"
+          error={errors.sgt_username?.message}
+          {...register('sgt_username')}
+        />
+        <p className="font-mono text-label text-navy/40 tracking-[0.1em]">
+          Optional — links your SGT account to display your name on club leaderboards.
+        </p>
+      </div>
+
       <Input
         label="Password"
         type="password"

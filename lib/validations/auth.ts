@@ -30,6 +30,7 @@ export const acceptInviteSchema = z
     full_name: z.string().min(2, 'Please enter your full name'),
     phone: z.string().optional(),
     discord: z.string().optional(),
+    sgt_username: z.string().max(100).optional(),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirm_password: z.string(),
   })

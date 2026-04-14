@@ -28,6 +28,7 @@ export async function submitMembershipRequestAction(
     has_membership_org,
     membership_org_names,
     message,
+    sgt_username,
   } = parsed.data
   const normalizedEmail = email.toLowerCase().trim()
 
@@ -50,6 +51,7 @@ export async function submitMembershipRequestAction(
       has_membership_org,
       membership_org_names: membership_org_names?.trim() || undefined,
       message: message?.trim() || undefined,
+      sgt_username: sgt_username?.trim() || undefined,
     })
 
     // Notify Sean of the new inquiry — fire and forget, don't block the response

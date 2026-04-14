@@ -27,6 +27,7 @@ export async function createMembershipRequest(params: {
   has_membership_org?: boolean
   membership_org_names?: string
   message?: string
+  sgt_username?: string
 }): Promise<MembershipRequest> {
   const supabase = createAdminClient()
 
@@ -42,6 +43,7 @@ export async function createMembershipRequest(params: {
       has_membership_org: params.has_membership_org ?? null,
       membership_org_names: params.membership_org_names ?? null,
       message: params.message ?? null,
+      sgt_username: params.sgt_username ?? null,
     })
     .select()
     .single()

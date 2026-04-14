@@ -17,7 +17,7 @@ export default async function AccountPage() {
   const [{ data: member }, { data: bookingsRaw }] = await Promise.all([
     supabase
       .from('members')
-      .select('full_name, email, phone, discord, created_at, email_booking_confirmation')
+      .select('full_name, email, phone, discord, sgt_username, created_at, email_booking_confirmation')
       .eq('id', user!.id)
       .single(),
     supabase
@@ -74,7 +74,7 @@ export default async function AccountPage() {
         </div>
       </section>
 
-      <ContactInfoSection phone={member?.phone ?? null} discord={member?.discord ?? null} />
+      <ContactInfoSection phone={member?.phone ?? null} discord={member?.discord ?? null} sgtUsername={member?.sgt_username ?? null} />
 
       <EmailPreferencesSection emailBookingConfirmation={member?.email_booking_confirmation ?? true} />
 

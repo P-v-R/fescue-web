@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/reservations', label: 'Reservations' },
   { href: '/calendar', label: 'Calendar' },
+  { href: '/tournaments', label: 'Tournaments' },
   { href: '/members', label: 'Members' },
   { href: '/account', label: 'Account' },
 ];
