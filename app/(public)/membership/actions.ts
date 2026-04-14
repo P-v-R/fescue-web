@@ -8,7 +8,7 @@ import {
 import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/resend/client'
 import { membershipNotificationEmail } from '@/lib/resend/templates/membership-notification'
 
-const OWNER_EMAIL = 'sean@fescuegolfclub.com'
+const OWNER_EMAIL = process.env.OWNER_EMAIL ?? 'sean@fescuegolfclub.com'
 
 export async function submitMembershipRequestAction(
   input: unknown,
