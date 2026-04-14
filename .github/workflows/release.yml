@@ -33,7 +33,7 @@ jobs:
       - name: Build changelog
         id: changelog
         run: |
-          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^fescue-web-v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
           if [ -n "$PREV_TAG" ]; then
             COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)")
           else
@@ -47,7 +47,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.releases.create({
+            await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: '${{ github.ref_name }}',
