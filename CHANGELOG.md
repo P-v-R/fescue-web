@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.0...fescue-web-v1.6.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* resolve lint errors blocking CI ([052aedb](https://github.com/P-v-R/fescue-web/commit/052aedbddafc6d9aee9290f615dc6e471f08996f))
+* use PAT for release-please so tag pushes trigger downstream workflows ([d23d5b5](https://github.com/P-v-R/fescue-web/commit/d23d5b5a6856374a1b092ab4dd6792480ceb358d))
+
 ## [1.6.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.5.0...fescue-web-v1.6.0) (2026-04-14)
 
 
