@@ -83,7 +83,7 @@ export function InvitesTab({
         help='This sends a private email invitation. The person will set their own password when they accept.'
       >
         <p className='font-sans text-sm text-navy/50 font-light mb-4'>
-          Enter the new member's name and email address. They'll receive an email with a link to create their account.
+          Enter the new member&apos;s name and email address. They&apos;ll receive an email with a link to create their account.
         </p>
         <form onSubmit={handleSendInvite} className='flex flex-col sm:flex-row gap-3'>
           <div className='flex flex-col gap-1'>
@@ -136,7 +136,7 @@ export function InvitesTab({
           help="These people have been invited but haven't created their account yet. You can resend the email or cancel the invite."
         >
           <p className='font-sans text-sm text-navy/50 font-light mb-4'>
-            Invitations expire after 7 days. If someone says they didn't receive their invite, use "Resend Email".
+            Invitations expire after 7 days. If someone says they didn&apos;t receive their invite, use &quot;Resend Email&quot;.
           </p>
           <div className='flex flex-col gap-2'>
             {pendingInvites.map((inv) => (
@@ -240,7 +240,7 @@ function MemberSearch({ members }: { members: Member[] }) {
 
       {query.trim() && results.length === 0 && (
         <p className='mt-3 font-sans text-sm text-navy/40 italic'>
-          No members found matching "{query}".
+          No members found matching &quot;{query}&quot;.
         </p>
       )}
 
