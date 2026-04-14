@@ -29,6 +29,7 @@
 fescue-build-guide.md
 fescue-style-guide*.html
 CLAUDE.md
+compound-engineering.local.md
 
 # local scripts (contain project IDs / credentials)
 /scripts/
