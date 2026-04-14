@@ -212,7 +212,7 @@ export async function getGuestLeads(): Promise<GuestLead[]> {
 
   if (error) throw new Error(`getGuestLeads: ${error.message}`)
 
-  return (data ?? []).flatMap((row: any) =>
+  return (data ?? []).flatMap((row: { id: string; guests: { name: string; email: string }[] }) =>
     (row.guests as { name: string; email: string }[]).map((g) => ({
       booking_id: row.id,
       start_time: row.start_time,

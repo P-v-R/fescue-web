@@ -268,7 +268,7 @@ function RequestCard({
           </p>
           {request.message && (
             <p className='font-serif text-sm text-navy/70 mt-3 font-light italic leading-relaxed'>
-              "{request.message}"
+              &quot;{request.message}&quot;
             </p>
           )}
         </div>
