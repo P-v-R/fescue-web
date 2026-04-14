@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.7.0...fescue-web-v1.7.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* escape JSX entities in invites-tab to pass lint ([bba5a2e](https://github.com/P-v-R/fescue-web/commit/bba5a2e62d6191c9c86f5c17d775b4e848506308))
+
 ## [1.7.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.4...fescue-web-v1.7.0) (2026-04-14)
 
 
