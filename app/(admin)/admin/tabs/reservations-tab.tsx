@@ -4,7 +4,12 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { format, startOfDay } from 'date-fns';
 import type { AdminBooking } from '@/lib/supabase/queries/bookings';
 import { useActionState } from '../hooks/use-action-state';
-import { EmptyState } from '../components/empty-state';
+import {
+  AdminSection,
+  StatusMessage,
+  ConfirmButton,
+  AdminEmpty,
+} from '../components/admin-ui';
 import { cancelBookingAdminAction, getBookingsForDateAction } from '../actions';
 
 export function ReservationsTab({
@@ -42,64 +47,78 @@ export function ReservationsTab({
   const isToday = dateStr === todayStr;
 
   return (
-    <div>
-      <div className='flex items-end gap-6 mb-8 flex-wrap'>
-        <div>
-          <p className='font-mono text-label uppercase tracking-[0.28em] text-gold mb-2'>
-            Date
-          </p>
-          <input
-            type='date'
-            value={dateStr}
-            onChange={(e) => {
-              if (e.target.value) setDateStr(e.target.value);
-            }}
-            className='border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy focus:outline-none focus:border-navy'
-          />
-        </div>
-        <span className='font-serif italic text-base text-navy/50 pb-2'>
-          {isToday ? 'Today — ' : ''}
-          {format(new Date(dateStr + 'T12:00:00'), 'EEEE, MMMM d, yyyy')}
-        </span>
-        {isLoading && (
-          <span className='font-mono text-label uppercase tracking-[0.2em] text-sand pb-2 animate-pulse'>
-            Loading…
-          </span>
-        )}
-      </div>
+    <div className='space-y-6'>
+      <StatusMessage message={message} />
 
-      {message && (
-        <div
-          className={[
-            'mb-6 px-4 py-3 font-mono text-label uppercase tracking-[0.15em]',
-            message.isError
-              ? 'bg-red-50 text-red-700 border border-red-200'
-              : 'bg-sage/10 text-sage border border-sage/30',
-          ].join(' ')}
-        >
-          {message.text}
-        </div>
-      )}
-
-      <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-4'>
-        {bookings.length} {bookings.length === 1 ? 'booking' : 'bookings'}
-      </p>
-
-      {bookings.length === 0 ? (
-        <EmptyState text='No bookings on this date.' />
-      ) : (
-        <div className='space-y-2'>
-          {bookings.map((booking) => (
-            <ReservationRow
-              key={booking.id}
-              booking={booking}
-              run={run}
-              isPending={isPending}
-              showCancel={isToday}
+      <AdminSection
+        icon='📅'
+        title='Reservations by Date'
+        help="View all bookings for any day. You can cancel a booking on today's date if needed."
+      >
+        {/* Date picker row */}
+        <div className='flex items-end gap-3 mb-6 flex-wrap'>
+          <div>
+            <p className='font-mono text-[10px] uppercase tracking-[0.2em] text-navy/40 mb-1.5'>
+              Select Date
+            </p>
+            <input
+              type='date'
+              value={dateStr}
+              onChange={(e) => {
+                if (e.target.value) setDateStr(e.target.value);
+              }}
+              className='border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
             />
-          ))}
+          </div>
+          <button
+            type='button'
+            onClick={() => setDateStr(todayStr)}
+            className='bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.2em] px-4 py-2 hover:opacity-90 transition-opacity'
+          >
+            Today
+          </button>
+          {isLoading && (
+            <span className='font-mono text-[10px] uppercase tracking-[0.2em] text-sand animate-pulse pb-1'>
+              Loading…
+            </span>
+          )}
         </div>
-      )}
+
+        {/* Formatted date heading */}
+        <div className='mb-4'>
+          <p className='font-serif text-lg text-navy font-light'>
+            {isToday && (
+              <span className='font-mono text-[10px] uppercase tracking-[0.2em] text-gold mr-2 align-middle'>
+                Today
+              </span>
+            )}
+            {format(new Date(dateStr + 'T12:00:00'), 'EEEE, MMMM d, yyyy')}
+          </p>
+          <p className='font-mono text-[10px] uppercase tracking-[0.2em] text-navy/40 mt-1'>
+            {bookings.length} {bookings.length === 1 ? 'booking' : 'bookings'} on this date
+          </p>
+        </div>
+
+        {/* Booking list */}
+        {bookings.length === 0 ? (
+          <AdminEmpty
+            text='No bookings on this date.'
+            subtext='Members book through the Reservations page.'
+          />
+        ) : (
+          <div className='space-y-3'>
+            {bookings.map((booking) => (
+              <ReservationRow
+                key={booking.id}
+                booking={booking}
+                run={run}
+                isPending={isPending}
+                showCancel={isToday}
+              />
+            ))}
+          </div>
+        )}
+      </AdminSection>
     </div>
   );
 }
@@ -121,52 +140,50 @@ function ReservationRow({
   return (
     <div className='bg-white border border-cream-mid px-4 sm:px-5 py-4'>
       <div className='flex items-start gap-4 sm:gap-6 min-w-0'>
-        <div className='flex-shrink-0'>
-          <p className='font-mono text-label text-gold uppercase tracking-[0.15em]'>
+        {/* Time */}
+        <div className='flex-shrink-0 w-24'>
+          <p className='font-mono text-xs text-gold uppercase tracking-[0.12em]'>
             {format(start, 'h:mm a')}
           </p>
-          <p className='font-mono text-label text-navy/55'>
+          <p className='font-mono text-xs text-navy/45'>
             – {format(end, 'h:mm a')}
           </p>
-        </div>
-
-        <div className='flex-shrink-0'>
-          <p className='font-mono text-label uppercase tracking-[0.15em] text-navy'>
-            {booking.bays?.name ?? 'Unknown Bay'}
-          </p>
-          <p className='font-mono text-label text-navy/55'>
+          <p className='font-mono text-[10px] text-navy/30 mt-0.5'>
             {booking.duration_minutes} min
           </p>
         </div>
 
+        {/* Bay */}
+        <div className='flex-shrink-0 w-20'>
+          <p className='font-mono text-xs uppercase tracking-[0.12em] text-navy'>
+            {booking.bays?.name ?? 'Unknown Bay'}
+          </p>
+        </div>
+
+        {/* Member + guests */}
         <div className='min-w-0 flex-1'>
           <p className='font-serif text-sm text-navy font-light truncate'>
             {booking.members?.full_name ?? 'Unknown member'}
           </p>
           {booking.guests?.length > 0 && (
-            <p className='font-mono text-label text-navy/55 truncate'>
+            <p className='font-mono text-[10px] text-navy/45 truncate mt-0.5'>
               + {booking.guests.map((g) => g.name).join(', ')}
             </p>
           )}
         </div>
 
+        {/* Cancel */}
         {showCancel && (
-          <button
-            disabled={isPending}
-            onClick={() => {
-              const who = booking.members?.full_name ?? 'this member';
-              if (
-                !confirm(
-                  `Cancel ${who}'s booking at ${format(start, 'h:mm a')}?`,
-                )
-              )
-                return;
-              run(() => cancelBookingAdminAction(booking.id));
-            }}
-            className='flex-shrink-0 font-mono text-label uppercase tracking-[0.15em] text-red-400 hover:text-red-700 transition-colors disabled:opacity-40'
-          >
-            Cancel
-          </button>
+          <div className='flex-shrink-0'>
+            <ConfirmButton
+              disabled={isPending}
+              onConfirm={() => run(() => cancelBookingAdminAction(booking.id))}
+              label='Cancel Booking'
+              confirmLabel='Yes, Cancel'
+              confirmMessage='Cancel this booking? The member will not be automatically notified.'
+              variant='danger'
+            />
+          </div>
         )}
       </div>
     </div>

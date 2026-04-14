@@ -58,11 +58,11 @@ export default async function HomePage() {
             <HeroReveal>
               <div className='relative z-10 max-w-2xl mx-auto flex flex-col items-center'>
                 <Image
-                  src='/logo-badge.png'
+                  src='/Logo-no-border.png'
                   alt='Fescue Golf Club'
-                  width={280}
-                  height={280}
-                  className='hero-item object-contain mb-10 drop-shadow-[0_4px_32px_rgba(184,158,86,0.22)] mix-blend-multiply'
+                  width={220}
+                  height={220}
+                  className='hero-item object-contain mb-10 drop-shadow-[0_4px_32px_rgba(184,158,86,0.22)]'
                   style={{ transitionDelay: '0ms' }}
                   priority
                 />
@@ -217,7 +217,7 @@ export default async function HomePage() {
                   </div>
                 )}
               </div>
-              <div className='relative aspect-[4/3] overflow-hidden'>
+              <div className='relative aspect-[3/4] overflow-hidden'>
                 {cms?.storyPhoto ? (
                   <SanityImage image={cms.storyPhoto} alt='Our story' />
                 ) : (

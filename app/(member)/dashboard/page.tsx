@@ -189,8 +189,8 @@ function QuickAction({
 
       <p
         className={[
-          'font-mono text-label uppercase tracking-[0.22em] mb-2',
-          isPrimary ? 'text-gold/80' : 'text-sage',
+          'font-mono text-xs uppercase tracking-[0.22em] mb-2',
+          isPrimary ? 'text-gold' : 'text-navy',
         ].join(' ')}
       >
         {label}

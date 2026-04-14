@@ -5,9 +5,15 @@ import { format } from 'date-fns';
 import type { BlackoutPeriod } from '@/lib/supabase/queries/blackout-periods';
 import type { Bay } from '@/lib/supabase/types';
 import { useActionState } from '../hooks/use-action-state';
-import { SectionHeader } from '../components/section-header';
-import { Table } from '../components/table';
-import { EmptyState } from '../components/empty-state';
+import {
+  AdminSection,
+  StatusMessage,
+  ConfirmButton,
+  FieldLabel,
+  inputCls,
+  selectCls,
+  AdminEmpty,
+} from '../components/admin-ui';
 import { createBlackoutAction, deleteBlackoutAction } from '../actions';
 
 const TIME_OPTIONS = Array.from({ length: 29 }, (_, i) => {
@@ -70,32 +76,24 @@ export function BlackoutDatesTab({
   }
 
   return (
-    <div className='space-y-10'>
-      {message && (
-        <div
-          className={[
-            'px-4 py-3 font-mono text-label uppercase tracking-[0.15em]',
-            message.isError
-              ? 'bg-red-50 text-red-700 border border-red-200'
-              : 'bg-sage/10 text-sage border border-sage/30',
-          ].join(' ')}
-        >
-          {message.text}
-        </div>
-      )}
+    <div className='space-y-6'>
+      <StatusMessage message={message} />
 
-      <section>
-        <SectionHeader
-          label='Blackout'
-          title='Block a Period'
-          description='Block specific bays or all bays for a time range or full day.'
-        />
-
+      {/* Block a date form */}
+      <AdminSection
+        icon='🚫'
+        title='Block Bookings on a Date'
+        help='Use this to prevent members from booking on a specific date or time — for example, if the club is closed for an event or maintenance.'
+      >
         <form onSubmit={handleSubmit} className='space-y-5 max-w-lg'>
+          {/* Date */}
           <div>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
+            <FieldLabel
+              required
+              help="The date you want to block. Members won't be able to book during this period."
+            >
               Date
-            </p>
+            </FieldLabel>
             <input
               type='date'
               name='date'
@@ -103,64 +101,68 @@ export function BlackoutDatesTab({
               min={today}
               required
               onChange={(e) => setDate(e.target.value)}
-              className='border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy focus:outline-none focus:border-navy'
+              className={inputCls}
             />
           </div>
 
+          {/* All day toggle */}
           <div>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
-              Time
-            </p>
-            <label className='flex items-center gap-2 cursor-pointer mb-3'>
+            <FieldLabel>Time</FieldLabel>
+            <label className='flex items-center gap-2.5 cursor-pointer mb-3'>
               <input
                 type='checkbox'
                 checked={allDay}
                 onChange={(e) => setAllDay(e.target.checked)}
-                className='accent-navy'
+                className='accent-navy w-4 h-4'
               />
-              <span className='font-mono text-label text-navy/70'>All day</span>
+              <span className='font-sans text-sm text-navy'>Block the entire day</span>
             </label>
             {!allDay && (
               <div className='flex items-center gap-3'>
-                <select
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className='border-b border-cream-mid bg-transparent pb-1 font-mono text-label text-navy focus:outline-none focus:border-navy'
-                >
-                  {TIME_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <span className='font-mono text-label text-navy/30'>to</span>
-                <select
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className='border-b border-cream-mid bg-transparent pb-1 font-mono text-label text-navy focus:outline-none focus:border-navy'
-                >
-                  {TIME_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+                <div>
+                  <p className='font-mono text-[10px] uppercase tracking-[0.15em] text-navy/40 mb-1'>From</p>
+                  <select
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    className={selectCls}
+                  >
+                    {TIME_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <span className='font-mono text-xs text-navy/30 mt-5'>to</span>
+                <div>
+                  <p className='font-mono text-[10px] uppercase tracking-[0.15em] text-navy/40 mb-1'>To</p>
+                  <select
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    className={selectCls}
+                  >
+                    {TIME_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
           </div>
 
+          {/* Bays */}
           <div>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
-              Bays
-            </p>
-            <label className='flex items-center gap-2 cursor-pointer mb-3'>
+            <FieldLabel>Which bays to block?</FieldLabel>
+            <label className='flex items-center gap-2.5 cursor-pointer mb-3'>
               <input
                 type='checkbox'
                 checked={allBays}
                 onChange={(e) => setAllBays(e.target.checked)}
-                className='accent-navy'
+                className='accent-navy w-4 h-4'
               />
-              <span className='font-mono text-label text-navy/70'>All bays</span>
+              <span className='font-sans text-sm text-navy'>All bays (entire club)</span>
             </label>
             {!allBays && (
               <div className='flex flex-wrap gap-3'>
@@ -170,81 +172,95 @@ export function BlackoutDatesTab({
                       type='checkbox'
                       checked={selectedBayIds.includes(bay.id)}
                       onChange={() => toggleBay(bay.id)}
-                      className='accent-navy'
+                      className='accent-navy w-4 h-4'
                     />
-                    <span className='font-mono text-label text-navy/70'>{bay.name}</span>
+                    <span className='font-sans text-sm text-navy'>{bay.name}</span>
                   </label>
                 ))}
               </div>
             )}
           </div>
 
+          {/* Reason */}
           <div>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
-              Reason{' '}
-              <span className='normal-case text-navy/30'>(optional)</span>
-            </p>
+            <FieldLabel help="Optional note — only visible to admins. E.g. 'Club championship', 'Bay 1 maintenance'">
+              Reason <span className='normal-case text-navy/30 font-sans text-[10px]'>(optional)</span>
+            </FieldLabel>
             <input
               type='text'
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder='e.g. Holiday party, Bay maintenance…'
-              className='w-full border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-navy/30 focus:outline-none focus:border-navy'
+              className={inputCls}
             />
           </div>
 
           <button
             type='submit'
             disabled={isPending || !date}
-            className='bg-navy text-cream font-mono text-label uppercase tracking-[0.2em] px-5 py-2 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity disabled:opacity-50'
+            className='bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.2em] px-5 py-2.5 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity disabled:opacity-50'
           >
-            {isPending ? 'Saving…' : 'Save Blackout'}
+            {isPending ? 'Saving…' : 'Block This Date →'}
           </button>
         </form>
-      </section>
+      </AdminSection>
 
-      <section>
-        <SectionHeader
-          label='Scheduled'
-          title={`Blocked Periods (${blackoutPeriods.length})`}
-        />
+      {/* Scheduled blocks */}
+      <AdminSection
+        icon='📋'
+        title={`Scheduled Blocks (${blackoutPeriods.length})`}
+      >
         {blackoutPeriods.length === 0 ? (
-          <EmptyState text='No blackout periods scheduled.' />
-        ) : (
-          <Table
-            headers={['Date', 'Time', 'Bays', 'Reason', '']}
-            rows={blackoutPeriods.map((p) => ({
-              id: p.id,
-              cells: [
-                format(new Date(p.date + 'T12:00:00'), 'EEE, MMM d, yyyy'),
-                p.start_time && p.end_time
-                  ? `${fmtTime(p.start_time)} – ${fmtTime(p.end_time)}`
-                  : 'All day',
-                p.all_bays
-                  ? 'All bays'
-                  : bays
-                      .filter((b) => p.bay_ids.includes(b.id))
-                      .map((b) => b.name)
-                      .join(', ') || '—',
-                p.reason ?? (
-                  <span className='text-navy/30 italic'>Bay Unavailable</span>
-                ),
-                <button
-                  key={p.id}
-                  disabled={isPending}
-                  onClick={() => {
-                    if (!confirm('Remove this blackout period?')) return;
-                    run(() => deleteBlackoutAction(p.id));
-                  }}
-                  className='font-mono text-label uppercase tracking-[0.15em] text-red-400 hover:text-red-700 transition-colors disabled:opacity-40'
-                >
-                  Remove
-                </button>,
-              ],
-            }))}
+          <AdminEmpty
+            text='No blocked periods scheduled.'
+            subtext='Use the form above to block a date.'
           />
+        ) : (
+          <div className='space-y-3'>
+            {blackoutPeriods.map((p) => (
+              <div key={p.id} className='border border-cream-mid bg-white p-4'>
+                <div className='flex items-start justify-between gap-4'>
+                  <div className='min-w-0 flex-1'>
+                    {/* Date */}
+                    <p className='font-serif text-base text-navy font-light'>
+                      {format(new Date(p.date + 'T12:00:00'), 'EEE, MMMM d, yyyy')}
+                    </p>
+                    {/* Time */}
+                    <p className='font-mono text-xs text-navy/55 mt-0.5'>
+                      {p.start_time && p.end_time
+                        ? `${fmtTime(p.start_time)} – ${fmtTime(p.end_time)}`
+                        : 'All day'}
+                    </p>
+                    {/* Bays */}
+                    <p className='font-mono text-xs text-navy/40 mt-0.5'>
+                      {p.all_bays
+                        ? 'All bays'
+                        : bays
+                            .filter((b) => p.bay_ids.includes(b.id))
+                            .map((b) => b.name)
+                            .join(', ') || '—'}
+                    </p>
+                    {/* Reason */}
+                    {p.reason ? (
+                      <p className='font-sans text-xs text-navy/50 mt-1 italic'>{p.reason}</p>
+                    ) : (
+                      <p className='font-sans text-xs text-navy/25 mt-1 italic'>Bay Unavailable</p>
+                    )}
+                  </div>
+                  <ConfirmButton
+                    disabled={isPending}
+                    onConfirm={() => run(() => deleteBlackoutAction(p.id))}
+                    label='Remove'
+                    confirmLabel='Yes, Remove'
+                    confirmMessage='Remove this blocked period? Members will be able to book again.'
+                    variant='danger'
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
-      </section>
+      </AdminSection>
     </div>
   );
 }

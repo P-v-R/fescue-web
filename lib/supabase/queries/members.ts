@@ -31,6 +31,18 @@ export async function getActiveMembers(): Promise<DirectoryMember[]> {
   return (data ?? []) as DirectoryMember[]
 }
 
+// Admin only — active member emails for bulk copy.
+export async function getActiveMemberEmails(): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('members')
+    .select('email')
+    .eq('is_active', true)
+    .order('full_name', { ascending: true })
+  if (error) throw new Error(`getActiveMemberEmails: ${error.message}`)
+  return (data ?? []).map((r) => r.email).filter(Boolean)
+}
+
 // Admin only — single member by ID with all fields.
 export async function getMemberById(id: string): Promise<Member | null> {
   const supabase = createAdminClient()

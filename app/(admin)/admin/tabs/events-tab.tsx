@@ -5,8 +5,15 @@ import { format } from 'date-fns';
 import type { Event, EventRsvpWithMember } from '@/lib/supabase/types';
 import { EventImageUpload } from '@/components/ui/event-image-upload';
 import { useActionState } from '../hooks/use-action-state';
-import { SectionHeader } from '../components/section-header';
-import { EmptyState } from '../components/empty-state';
+import {
+  AdminSection,
+  StatusMessage,
+  ConfirmButton,
+  FieldLabel,
+  inputCls,
+  selectCls,
+  AdminEmpty,
+} from '../components/admin-ui';
 import {
   createEventAction,
   updateEventAction,
@@ -105,56 +112,48 @@ export function EventsTab({
   }, [eventRsvps]);
 
   return (
-    <div className='space-y-10'>
-      {message && (
-        <div
-          className={[
-            'px-4 py-3 font-mono text-label uppercase tracking-[0.15em]',
-            message.isError
-              ? 'bg-red-50 text-red-700 border border-red-200'
-              : 'bg-sage/10 text-sage border border-sage/30',
-          ].join(' ')}
-        >
-          {message.text}
-        </div>
-      )}
+    <div className='space-y-6'>
+      <StatusMessage message={message} />
 
-      <section>
-        <SectionHeader
-          label={editingEvent ? 'Edit' : 'New'}
-          title={editingEvent ? 'Edit Event' : 'Create Event'}
-        />
+      {/* Create / Edit form */}
+      <AdminSection
+        icon='✏️'
+        title={editingEvent ? `Edit: ${editingEvent.title}` : 'Create New Event'}
+        help='Events appear on the member calendar. Members can RSVP if you enable it.'
+      >
         <form onSubmit={handleSubmit} className='space-y-5 max-w-lg'>
+          {/* Title */}
           <div>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>Title</p>
+            <FieldLabel required>Title</FieldLabel>
             <input
               type='text'
               value={title}
               required
               onChange={(e) => setTitle(e.target.value)}
               placeholder='Summer Member Night'
-              className='w-full border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-navy/30 focus:outline-none focus:border-navy'
+              className={inputCls}
             />
           </div>
 
+          {/* Date + Start time */}
           <div className='grid grid-cols-2 gap-4'>
             <div>
-              <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>Date</p>
+              <FieldLabel required>Date</FieldLabel>
               <input
                 type='date'
                 value={startsDate}
                 required
                 onChange={(e) => setStartsDate(e.target.value)}
-                className='border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy focus:outline-none focus:border-navy'
+                className={inputCls}
               />
             </div>
             <div>
-              <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>Start time</p>
+              <FieldLabel required>Start time</FieldLabel>
               <select
                 value={startsTime}
                 required
                 onChange={(e) => setStartsTime(e.target.value)}
-                className='border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy focus:outline-none focus:border-navy appearance-none pr-4'
+                className={selectCls + ' w-full'}
               >
                 {EVENT_TIME_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -163,14 +162,15 @@ export function EventsTab({
             </div>
           </div>
 
+          {/* End time */}
           <div className='max-w-[calc(50%-8px)]'>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
-              End time <span className='normal-case text-navy/30'>(optional)</span>
-            </p>
+            <FieldLabel>
+              End time <span className='normal-case font-sans text-[10px] text-navy/30'>(optional)</span>
+            </FieldLabel>
             <select
               value={endsTime}
               onChange={(e) => setEndsTime(e.target.value)}
-              className='border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy focus:outline-none focus:border-navy appearance-none pr-4'
+              className={selectCls + ' w-full'}
             >
               <option value=''>— none —</option>
               {EVENT_TIME_OPTIONS.map((o) => (
@@ -179,76 +179,83 @@ export function EventsTab({
             </select>
           </div>
 
+          {/* Location */}
           <div>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
-              Location <span className='normal-case text-navy/30'>(optional)</span>
-            </p>
+            <FieldLabel>
+              Location <span className='normal-case font-sans text-[10px] text-navy/30'>(optional)</span>
+            </FieldLabel>
             <input
               type='text'
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder='The Simulator Room'
-              className='w-full border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-navy/30 focus:outline-none focus:border-navy'
+              className={inputCls}
             />
           </div>
 
+          {/* Description */}
           <div>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
-              Description <span className='normal-case text-navy/30'>(optional)</span>
-            </p>
+            <FieldLabel>
+              Description <span className='normal-case font-sans text-[10px] text-navy/30'>(optional)</span>
+            </FieldLabel>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder='Event details…'
-              className='w-full border-b border-cream-mid bg-transparent pb-2 font-mono text-label text-navy placeholder:text-navy/30 focus:outline-none focus:border-navy resize-none'
+              className={inputCls + ' resize-none'}
             />
           </div>
 
+          {/* Photo */}
           <div>
-            <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/40 mb-2'>
-              Photo <span className='normal-case text-navy/30'>(optional)</span>
-            </p>
+            <FieldLabel>
+              Photo <span className='normal-case font-sans text-[10px] text-navy/30'>(optional)</span>
+            </FieldLabel>
             <EventImageUpload value={imageUrl} onChange={setImageUrl} />
           </div>
 
-          <label className='flex items-center gap-2 cursor-pointer'>
+          {/* RSVP toggle */}
+          <label className='flex items-center gap-2.5 cursor-pointer'>
             <input
               type='checkbox'
               checked={rsvpEnabled}
               onChange={(e) => setRsvpEnabled(e.target.checked)}
-              className='accent-navy'
+              className='accent-navy w-4 h-4'
             />
-            <span className='font-mono text-label text-navy/70'>Enable RSVP</span>
+            <span className='font-sans text-sm text-navy'>Allow members to RSVP to this event</span>
           </label>
 
           <div className='flex gap-3'>
             <button
               type='submit'
               disabled={isPending || !title || !startsDate}
-              className='bg-navy text-cream font-mono text-label uppercase tracking-[0.2em] px-5 py-2 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity disabled:opacity-50'
+              className='bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.2em] px-5 py-2.5 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity disabled:opacity-50'
             >
-              {isPending ? 'Saving…' : editingEvent ? 'Save Changes' : 'Create Event'}
+              {isPending ? 'Saving…' : editingEvent ? 'Save Changes →' : 'Create Event →'}
             </button>
             {editingEvent && (
               <button
                 type='button'
                 onClick={resetForm}
-                className='border border-cream-mid text-navy/50 font-mono text-label uppercase tracking-[0.15em] px-4 py-2 hover:border-navy/30 hover:text-navy transition-colors'
+                className='border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-2 hover:border-navy/30 hover:text-navy transition-colors'
               >
                 Cancel
               </button>
             )}
           </div>
         </form>
-      </section>
+      </AdminSection>
 
-      <section>
-        <SectionHeader label='Scheduled' title={`Events (${events.length})`} />
+      {/* Events list */}
+      <AdminSection
+        icon='📅'
+        title={`Upcoming Events (${events.length})`}
+      >
         {events.length === 0 ? (
-          <EmptyState text='No events yet. Create one above.' />
+          <AdminEmpty text='No events yet. Create one above.' />
         ) : (
-          <div className='space-y-2'>
+          <div className='space-y-3'>
             {events.map((event) => {
               const rsvps = rsvpsByEvent[event.id] ?? [];
               const goingCount = rsvps.filter((r) => r.status === 'going').length;
@@ -257,79 +264,84 @@ export function EventsTab({
               return (
                 <div key={event.id} className='border border-cream-mid bg-white'>
                   <div className='px-4 sm:px-5 py-4 flex items-start gap-4 sm:gap-6'>
+                    {/* Date/time */}
                     <div className='flex-shrink-0 w-20'>
-                      <p className='font-mono text-label text-gold uppercase tracking-[0.15em]'>
+                      <p className='font-mono text-xs text-gold uppercase tracking-[0.12em]'>
                         {format(new Date(event.starts_at), 'MMM d')}
                       </p>
-                      <p className='font-mono text-label text-navy/55'>
+                      <p className='font-mono text-xs text-navy/50'>
                         {format(new Date(event.starts_at), 'h:mm a')}
                       </p>
                     </div>
 
+                    {/* Details */}
                     <div className='min-w-0 flex-1'>
                       <p className='font-serif text-sm text-navy font-light'>{event.title}</p>
                       {event.location && (
-                        <p className='font-mono text-label text-navy/45 truncate'>{event.location}</p>
+                        <p className='font-mono text-[10px] text-navy/40 truncate mt-0.5'>{event.location}</p>
                       )}
                       {event.rsvp_enabled && (
-                        <button
-                          onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
-                          className='font-mono text-label uppercase tracking-[0.12em] text-sage hover:text-navy transition-colors mt-1'
-                        >
-                          {goingCount} going {isExpanded ? '▴' : '▾'}
-                        </button>
+                        <div className='flex items-center gap-2 mt-1'>
+                          <span className='font-mono text-[10px] uppercase tracking-[0.12em] text-cream bg-sage/70 px-2 py-0.5'>
+                            {goingCount} going
+                          </span>
+                          <button
+                            onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
+                            className='font-mono text-[10px] uppercase tracking-[0.12em] text-sage hover:text-navy transition-colors'
+                          >
+                            {isExpanded ? 'Hide ▴' : 'View RSVPs ▾'}
+                          </button>
+                        </div>
                       )}
                     </div>
 
-                    <div className='flex gap-4 flex-shrink-0'>
+                    {/* Actions */}
+                    <div className='flex gap-3 flex-shrink-0 items-center'>
                       <button
                         onClick={() => startEdit(event)}
-                        className='font-mono text-label uppercase tracking-[0.15em] text-gold hover:text-navy transition-colors'
+                        className='font-mono text-[10px] uppercase tracking-[0.15em] text-gold hover:text-navy transition-colors'
                       >
                         Edit
                       </button>
-                      <button
+                      <ConfirmButton
                         disabled={isPending}
-                        onClick={() => {
-                          if (!confirm(`Delete "${event.title}"? This will remove all RSVPs too.`)) return;
-                          run(() => deleteEventAction(event.id));
-                        }}
-                        className='font-mono text-label uppercase tracking-[0.15em] text-red-400 hover:text-red-700 transition-colors disabled:opacity-40'
-                      >
-                        Delete
-                      </button>
+                        onConfirm={() => run(() => deleteEventAction(event.id))}
+                        label='Delete'
+                        confirmLabel='Yes, Delete'
+                        confirmMessage='Delete this event and all RSVPs?'
+                        variant='danger'
+                      />
                     </div>
                   </div>
 
+                  {/* RSVPs expanded */}
                   {isExpanded && rsvps.length > 0 && (
                     <div className='border-t border-cream-mid px-4 sm:px-5 py-3'>
-                      <p className='font-mono text-label uppercase tracking-[0.18em] text-navy/40 mb-2'>
+                      <p className='font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40 mb-3'>
                         RSVPs
                       </p>
-                      <div className='space-y-1'>
+                      <div className='space-y-2'>
                         {rsvps.map((rsvp) => (
                           <div key={rsvp.id} className='flex items-center justify-between gap-4'>
-                            <div>
+                            <div className='flex items-center gap-3'>
                               <span className='font-serif text-sm font-light text-navy'>
                                 {rsvp.members?.full_name ?? 'Unknown'}
                               </span>
                               <span className={[
-                                'ml-3 font-mono text-label uppercase tracking-[0.12em]',
+                                'font-mono text-[10px] uppercase tracking-[0.12em]',
                                 rsvp.status === 'going' ? 'text-sage' : 'text-navy/35',
                               ].join(' ')}>
                                 {rsvp.status === 'going' ? 'Going' : 'Not going'}
                               </span>
                             </div>
-                            <button
+                            <ConfirmButton
                               disabled={isPending}
-                              onClick={() => {
-                                if (!confirm(`Remove ${rsvp.members?.full_name ?? 'this member'}'s RSVP?`)) return;
-                                run(() => removeRsvpAction(event.id, rsvp.member_id));
-                              }}
-                              className='font-mono text-label uppercase tracking-[0.12em] text-red-400 hover:text-red-700 transition-colors disabled:opacity-40'
-                            >
-                              Remove
-                            </button>
+                              onConfirm={() => run(() => removeRsvpAction(event.id, rsvp.member_id))}
+                              label='Remove'
+                              confirmLabel='Yes, Remove'
+                              confirmMessage="Remove this person's RSVP?"
+                              variant='danger'
+                            />
                           </div>
                         ))}
                       </div>
@@ -337,7 +349,7 @@ export function EventsTab({
                   )}
                   {isExpanded && rsvps.length === 0 && (
                     <div className='border-t border-cream-mid px-4 sm:px-5 py-3'>
-                      <p className='font-mono text-label text-navy/30 uppercase tracking-[0.15em]'>No RSVPs yet.</p>
+                      <p className='font-mono text-[10px] text-navy/30 uppercase tracking-[0.15em]'>No RSVPs yet.</p>
                     </div>
                   )}
                 </div>
@@ -345,7 +357,7 @@ export function EventsTab({
             })}
           </div>
         )}
-      </section>
+      </AdminSection>
     </div>
   );
 }

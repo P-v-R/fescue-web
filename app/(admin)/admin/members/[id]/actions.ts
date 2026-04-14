@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
@@ -61,6 +62,57 @@ export async function updateMemberSinceAction(
   if (error) return { error: error.message }
 
   revalidatePath(`/admin/members/${memberId}`)
+  revalidatePath('/members')
+  return {}
+}
+
+export async function archiveMemberAction(memberId: string): Promise<{ error?: string }> {
+  if (!UUID_RE.test(memberId)) return { error: 'Invalid member ID.' }
+
+  try {
+    await requireAdmin()
+  } catch {
+    return { error: 'Not authorized.' }
+  }
+
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('members')
+    .update({ is_active: false })
+    .eq('id', memberId)
+
+  if (error) return { error: error.message }
+
+  // Invalidate all active sessions so they're signed out immediately
+  await supabase.auth.admin.signOut(memberId)
+
+  revalidatePath(`/admin/members/${memberId}`)
+  revalidatePath('/admin/members')
+  revalidatePath('/members')
+  redirect('/admin/members')
+}
+
+export async function unarchiveMemberAction(memberId: string): Promise<{ error?: string }> {
+  if (!UUID_RE.test(memberId)) return { error: 'Invalid member ID.' }
+
+  try {
+    await requireAdmin()
+  } catch {
+    return { error: 'Not authorized.' }
+  }
+
+  const supabase = createAdminClient()
+
+  const { error } = await supabase
+    .from('members')
+    .update({ is_active: true })
+    .eq('id', memberId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/admin/members/${memberId}`)
+  revalidatePath('/admin/members')
   revalidatePath('/members')
   return {}
 }
