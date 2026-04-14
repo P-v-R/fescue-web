@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.1...fescue-web-v1.6.2) (2026-04-14)
+
+
+### Bug Fixes
+
+* correct octokit method and tag pattern in release workflow ([fcac2ee](https://github.com/P-v-R/fescue-web/commit/fcac2ee5338a1a3920757e812d9efda0071bd826))
+
 ## [1.6.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.0...fescue-web-v1.6.1) (2026-04-14)
 
 
