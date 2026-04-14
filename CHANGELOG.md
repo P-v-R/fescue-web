@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.5.0...fescue-web-v1.6.0) (2026-04-14)
+
+
+### Features
+
+* add Sentry error monitoring, tracing, and session replay ([c37ec80](https://github.com/P-v-R/fescue-web/commit/c37ec809d14167d825850b73a5f8b078ce4ce351))
+
 ## [1.5.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.2...fescue-web-v1.5.0) (2026-04-14)
 
 
