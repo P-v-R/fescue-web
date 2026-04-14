@@ -1,6 +1,6 @@
 # Fescue — Private Golf Simulator Club
 
-A member management and reservation platform for Fescue, a private golf simulator club. Built with Next.js 15 (App Router), Supabase, Sanity CMS, and Shopify Storefront.
+A member management and reservation platform for Fescue, a private golf simulator club. Built with Next.js 16 (App Router), Supabase, Sanity CMS, and Shopify Storefront.
 
 ---
 
@@ -14,6 +14,7 @@ A member management and reservation platform for Fescue, a private golf simulato
 | CMS | Sanity v3 |
 | Merch | Shopify Storefront API |
 | Email | Resend |
+| Error monitoring | Sentry |
 | Testing | Vitest |
 | Package manager | pnpm |
 
@@ -22,12 +23,12 @@ A member management and reservation platform for Fescue, a private golf simulato
 ## Features
 
 - **Member auth** — invite-only sign-up, password login, forgot-password flow
-- **Bay reservation system** — real-time availability grid, 1–2 hr bookings, guest support
+- **Bay reservation system** — real-time availability grid, 30 min–2 hr bookings, guest support
 - **Member dashboard** — bulletin feed (Sanity), upcoming reservations, club events calendar
 - **Member directory** — 2-column card grid with club champion plaque (Sanity-backed)
-- **Admin panel** — stats dashboard, member search/profiles, book-on-behalf, membership request pipeline with intro email (Resend)
-- **Tour request flow** — `/contact` form feeds membership pipeline; admin can send intro email and track status
-- **Public site** — landing page, about, request-a-tour contact form
+- **Admin panel** — stats dashboard, member search/profiles, book-on-behalf, membership request pipeline
+- **Tour request flow** — `/contact` form feeds membership pipeline; admin tracks status and copies applicant email
+- **Public site** — landing page, about, locations, request-a-tour contact form
 - **Merch store** — Shopify-powered product pages and cart (in progress)
 
 ---
@@ -62,6 +63,10 @@ See `.env.example` for all required keys:
 - `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` + `NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN`
 - `RESEND_API_KEY`
 - `NEXT_PUBLIC_APP_URL`
+- `REGISTRATION_ENCRYPTION_KEY`
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` + `NEXT_PUBLIC_GOOGLE_MAPS_PLACE_ID` + `NEXT_PUBLIC_CLUB_ADDRESS`
+
+Production and staging also require `TZ=America/Los_Angeles` and `SENTRY_ENABLED=true` / `NEXT_PUBLIC_SENTRY_ENABLED=true` (production only).
 
 ### Database migrations
 
@@ -71,7 +76,7 @@ Migrations live in `supabase/migrations/`. Create a new one with:
 supabase migration new my_migration_name
 ```
 
-Production migrations run automatically when a release PR is merged to `main` (via `release.yml`). Never run `supabase db push` against production manually.
+Production migrations run automatically on each release via `release.yml`. Never run `supabase db push` against production manually.
 
 ---
 
@@ -114,12 +119,8 @@ Deployed on [Railway](https://railway.app) with two environments:
 
 | Environment | Branch | URL |
 |---|---|---|
-| Staging | `staging` | `fescue-web-staging.up.railway.app` |
-| Production | `main` | `fescuegolf.com` |
-
-Both environments require all variables from `.env.example`, plus `TZ=America/Los_Angeles`.
-
-Supabase and Sanity projects are managed separately via their respective dashboards.
+| Staging | `staging` | `staging.fescuegolfclub.com` |
+| Production | `main` | `fescuegolfclub.com` |
 
 ---
 
@@ -142,10 +143,10 @@ git branch -d feat/my-feature
 
 ### Releasing to production
 
-When staging is tested and ready, merge the open Release Please PR on GitHub (`chore: release X.Y.Z`). This automatically:
-1. Tags the release
-2. Runs database migrations against production (`release.yml`)
-3. Railway deploys production from `main`
+Two PRs to merge when ready to release:
+
+1. **Merge the Release Please PR** (`chore: release X.Y.Z`) — bumps version, tags the release, runs DB migrations
+2. **Merge the deploy PR** (`Deploy fescue-web-vX.Y.Z to production`) — opened automatically by `promote.yml`, triggers Railway production deploy
 
 ### Commit message prefixes
 
@@ -158,6 +159,15 @@ The squash commit message when merging into `staging` determines the version bum
 | `chore:` | patch (hidden) | `chore: update deps` |
 | `BREAKING CHANGE:` | major | `BREAKING CHANGE: new auth flow` |
 
+### GitHub Actions
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yml` | push to `staging`, `feat/**`, `fix/**` | Typecheck, lint, tests |
+| `release-please.yml` | push to `staging` | Opens/updates version bump PR |
+| `release.yml` | version tag | Runs DB migrations, creates GitHub Release |
+| `promote.yml` | version tag | Opens `staging → main` deploy PR |
+
 ### Branch protection
 
-`main` is protected — direct pushes are blocked. The Release Please bot owns the `staging → main` PR; never open one manually.
+`main` is protected — direct pushes are blocked. `promote.yml` owns the `staging → main` PR; never open one manually.

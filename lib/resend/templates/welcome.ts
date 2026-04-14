@@ -44,7 +44,7 @@ export function welcomeEmailHtml({ loginUrl, recipientName }: WelcomeEmailData):
           Use the email address and password you set when you applied.
         </p>
         <p style="margin:0;font-family:'Courier New',monospace;font-size:9px;color:#6b6b6b;letter-spacing:0.12em;">
-          Need help? Reach Sean directly at <a href="mailto:sean@fescuegolfclub.com" style="color:#004225;text-decoration:none;">sean@fescuegolfclub.com</a> — replies to this email are not monitored.
+          Need help? Reach us at <a href="mailto:${process.env.OWNER_EMAIL}" style="color:#004225;text-decoration:none;">${process.env.OWNER_EMAIL}</a> — replies to this email are not monitored.
         </p>
 
       </td>

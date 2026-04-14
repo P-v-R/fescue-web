@@ -191,6 +191,22 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
         />
       </div>
 
+      {/* SGT Username */}
+      <div>
+        <label className={labelClass}>
+          SGT Username <span className="normal-case text-navy/30">(optional)</span>
+        </label>
+        <p className="font-sans text-xs text-navy/40 mb-3">
+          Already a Simulator Golf Tour member? Your username links your SGT stats to your Fescue profile.
+        </p>
+        <input
+          {...register('sgt_username')}
+          type="text"
+          placeholder="Your SGT username"
+          className={inputClass}
+        />
+      </div>
+
       {serverError && <p className={errorClass}>{serverError}</p>}
 
       <div className="pt-2">

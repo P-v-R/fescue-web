@@ -10,6 +10,7 @@ export const membershipRequestSchema = z.object({
   has_membership_org: z.boolean().optional(),
   membership_org_names: z.string().max(300).optional(),
   message: z.string().max(1000).optional(),
+  sgt_username: z.string().max(100).optional(),
 })
 
 export type MembershipRequestInput = z.infer<typeof membershipRequestSchema>

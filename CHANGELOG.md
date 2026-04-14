@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.7.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.4...fescue-web-v1.7.0) (2026-04-14)
+
+
+### Features
+
+* admin UX overhaul, archive member, copy emails, homepage logo ([e3bb8e5](https://github.com/P-v-R/fescue-web/commit/e3bb8e53a98ac86271e0218e0f2fb8628189fa8e))
+* SGT tournaments integration + sgt_username field ([71dedd4](https://github.com/P-v-R/fescue-web/commit/71dedd45ab66e2fe0e485a0322a0805791cbf485))
+
+
+### Bug Fixes
+
+* make owner notification email configurable via OWNER_EMAIL env var ([85f95cb](https://github.com/P-v-R/fescue-web/commit/85f95cb08c41f937493ea41157aee2db0f113bc1))
+* remove hardcoded owner email from codebase ([8c3bb72](https://github.com/P-v-R/fescue-web/commit/8c3bb72ec2d3d088ad388d6c5c5440bbf63ae1bd))
+
 ## [1.6.4](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.3...fescue-web-v1.6.4) (2026-04-14)
 
 

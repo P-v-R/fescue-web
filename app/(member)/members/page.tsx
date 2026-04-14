@@ -2,10 +2,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   getActiveMembers,
+  getActiveMemberEmails,
   type DirectoryMember,
 } from '@/lib/supabase/queries/members';
 import { getAllChampions } from '@/lib/sanity/queries';
 import type { ClubChampion } from '@/lib/sanity/types';
+import { createClient } from '@/lib/supabase/server';
+import { CopyEmailsButton } from '@/components/members/copy-emails-button';
 
 export const metadata = {
   title: 'Members — Fescue',
@@ -247,9 +250,17 @@ function MemberCard({ member }: { member: DirectoryMember }) {
 }
 
 export default async function MembersPage() {
-  const [members, champions] = await Promise.all([
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: currentMember } = user
+    ? await supabase.from('members').select('is_admin').eq('id', user.id).single()
+    : { data: null }
+  const isAdmin = currentMember?.is_admin === true
+
+  const [members, champions, adminEmails] = await Promise.all([
     getActiveMembers(),
     getAllChampions(),
+    isAdmin ? getActiveMemberEmails() : Promise.resolve([] as string[]),
   ]);
 
   return (
@@ -269,9 +280,14 @@ export default async function MembersPage() {
       {champions.length > 0 && <ChampionPlaque champions={champions} />}
 
       {/* Directory */}
-      <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/30 mb-1'>
-        {members.length} Active {members.length === 1 ? 'Member' : 'Members'}
-      </p>
+      <div className='flex items-center justify-between gap-4 mb-1'>
+        <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/30'>
+          {members.length} Active {members.length === 1 ? 'Member' : 'Members'}
+        </p>
+        {isAdmin && adminEmails.length > 0 && (
+          <CopyEmailsButton emails={adminEmails} />
+        )}
+      </div>
       <p className='font-sans text-sm font-light text-navy/40 mb-6'>
         Contact info is set by each member in their{' '}
         <Link

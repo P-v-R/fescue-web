@@ -12,56 +12,20 @@ on:
 
 jobs:
   release:
+    name: Create GitHub Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run database migrations
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      - run: supabase db push --password ${{ secrets.SUPABASE_DB_PASSWORD }}
-
-      - name: Build changelog
-        id: changelog
-        run: |
-          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^fescue-web-v[0-9]+\.[0-9]+\.[0-9]+$' | sed -n '2p')
-          if [ -n "$PREV_TAG" ]; then
-            COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)")
-          else
-            COMMITS=$(git log --pretty=format:"- %s (%h)")
-          fi
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          echo "$COMMITS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
-        uses: actions/github-script@v7
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
-          RELEASE_BODY: ${{ steps.changelog.outputs.changelog }}
-        with:
-          script: |
-            const tag = process.env.RELEASE_TAG;
-            const body = '## What changed\n\n' + (process.env.RELEASE_BODY || '');
-            try {
-              const existing = await github.rest.repos.getReleaseByTag({ owner: context.repo.owner, repo: context.repo.repo, tag });
-              await github.rest.repos.deleteRelease({ owner: context.repo.owner, repo: context.repo.repo, release_id: existing.data.id });
-            } catch {}
-            await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: tag,
-              name: tag,
-              body,
-              draft: false,
-              prerelease: false,
-            });
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/staging/CHANGELOG.md) for details." \
+            --latest

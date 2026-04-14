@@ -21,6 +21,7 @@ export async function acceptInviteAction(
       password: parsed.data.password,
       phone: parsed.data.phone,
       discord: parsed.data.discord,
+      sgt_username: parsed.data.sgt_username,
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.'

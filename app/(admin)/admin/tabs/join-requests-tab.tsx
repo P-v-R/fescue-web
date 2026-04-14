@@ -4,14 +4,19 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import type { JoinRequest } from '@/lib/supabase/types';
 import { useActionState } from '../hooks/use-action-state';
-import { SectionHeader } from '../components/section-header';
-import { Table } from '../components/table';
-import { EmptyState } from '../components/empty-state';
+import {
+  AdminSection,
+  StatusMessage,
+  ConfirmButton,
+  AdminEmpty,
+  StatusPill,
+} from '../components/admin-ui';
 import { approveJoinRequestAction, declineJoinRequestAction } from '../actions';
 
 export function JoinRequestsTab({ joinRequests }: { joinRequests: JoinRequest[] }) {
   const { message, isPending, run } = useActionState();
   const [showArchived, setShowArchived] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const pending = joinRequests.filter((r) => r.status === 'pending');
   const archived = joinRequests.filter((r) => r.status === 'approved' || r.status === 'declined');
@@ -20,49 +25,64 @@ export function JoinRequestsTab({ joinRequests }: { joinRequests: JoinRequest[] 
     ? `${window.location.origin}/join`
     : '/join';
 
-  return (
-    <div className='space-y-10'>
-      {message && (
-        <div
-          className={[
-            'px-4 py-3 font-mono text-label uppercase tracking-[0.15em]',
-            message.isError
-              ? 'bg-red-50 text-red-700 border border-red-200'
-              : 'bg-sage/10 text-sage border border-sage/30',
-          ].join(' ')}
-        >
-          {message.text}
-        </div>
-      )}
+  function handleCopy() {
+    navigator.clipboard.writeText(appUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
-      <section>
-        <SectionHeader
-          label='Access Link'
-          title='Shareable Join Link'
-          description='Send this link to existing club members so they can request an account. Each submission requires admin approval before they can sign in.'
-        />
-        <div className='flex items-center gap-3 max-w-xl'>
-          <code className='flex-1 border border-cream-mid bg-white px-3 py-2 font-mono text-label text-navy/70 truncate'>
+  return (
+    <div className='space-y-6'>
+      <StatusMessage message={message} />
+
+      {/* Stat card */}
+      <div className='flex gap-4'>
+        <div className='bg-white border border-cream-mid px-5 py-4 flex items-center gap-4'>
+          <span className='text-3xl font-serif text-navy font-light'>{pending.length}</span>
+          <div>
+            <p className='font-mono text-[10px] uppercase tracking-[0.2em] text-navy/40'>Pending</p>
+            <p className='font-mono text-[10px] uppercase tracking-[0.2em] text-navy/30'>
+              {pending.length === 1 ? 'request waiting' : 'requests waiting'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Shareable join link */}
+      <AdminSection
+        icon='🔗'
+        title='Shareable Join Link'
+        help="Share this link with people who want to join the club. They fill out a short form and you'll see their request here."
+      >
+        <p className='font-sans text-sm text-navy/60 mb-4'>
+          Share this link with anyone who wants to join. They fill out a short form and you&apos;ll see
+          their request appear below.
+        </p>
+        <div className='flex items-stretch gap-3 max-w-xl'>
+          <code className='flex-1 border border-cream-mid bg-cream/30 px-3 py-2.5 font-mono text-xs text-navy/60 truncate'>
             {appUrl}
           </code>
           <button
             type='button'
-            onClick={() => navigator.clipboard.writeText(appUrl)}
-            className='flex-shrink-0 border border-cream-mid text-navy/60 font-mono text-label uppercase tracking-[0.15em] px-4 py-2 hover:border-navy hover:text-navy transition-colors'
+            onClick={handleCopy}
+            className='flex-shrink-0 bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.2em] px-4 py-2.5 hover:opacity-90 transition-opacity'
           >
-            Copy
+            {copied ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
-      </section>
+      </AdminSection>
 
-      <section>
-        <SectionHeader
-          label='Pending'
-          title={`Pending Requests (${pending.length})`}
-          description='Approve to create their account and send a welcome email. Decline to reject the request.'
-        />
+      {/* Pending requests */}
+      <AdminSection
+        icon='📋'
+        title={`Pending Requests (${pending.length})`}
+        help='Each person below filled out the join form. Approve to create their account, or Decline to reject them.'
+      >
         {pending.length === 0 ? (
-          <EmptyState text='No pending join requests.' />
+          <AdminEmpty
+            text='No pending join requests.'
+            subtext="When someone submits the join form, they'll appear here."
+          />
         ) : (
           <div className='space-y-4'>
             {pending.map((req) => (
@@ -70,42 +90,35 @@ export function JoinRequestsTab({ joinRequests }: { joinRequests: JoinRequest[] 
             ))}
           </div>
         )}
-      </section>
+      </AdminSection>
 
+      {/* Archived */}
       {archived.length > 0 && (
-        <section>
+        <div>
           <button
             onClick={() => setShowArchived((v) => !v)}
-            className='flex items-center gap-2 font-mono text-label uppercase tracking-[0.2em] text-navy/40 hover:text-navy transition-colors'
+            className='flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.2em] text-navy/40 hover:text-navy transition-colors mb-4'
           >
             <span>{showArchived ? '▾' : '▸'}</span>
             Archived ({archived.length})
           </button>
           {showArchived && (
-            <div className='mt-4'>
-              <Table
-                headers={['Name', 'Email', 'Submitted', 'Status']}
-                rows={archived.map((r) => ({
-                  id: r.id,
-                  cells: [
-                    r.full_name,
-                    r.email,
-                    format(new Date(r.created_at), 'MMM d, yyyy'),
-                    <span
-                      key={r.id}
-                      className={[
-                        'font-mono text-label uppercase tracking-[0.15em]',
-                        r.status === 'approved' ? 'text-sage' : 'text-navy/40 line-through',
-                      ].join(' ')}
-                    >
-                      {r.status}
-                    </span>,
-                  ],
-                }))}
-              />
+            <div className='space-y-2'>
+              {archived.map((r) => (
+                <div
+                  key={r.id}
+                  className='flex items-center justify-between gap-4 px-4 py-3 bg-white border border-cream-mid'
+                >
+                  <div className='min-w-0'>
+                    <span className='font-serif text-sm text-navy font-light mr-3'>{r.full_name}</span>
+                    <span className='font-mono text-[10px] text-navy/40'>{r.email}</span>
+                  </div>
+                  <StatusPill status={r.status} />
+                </div>
+              ))}
             </div>
           )}
-        </section>
+        </div>
       )}
     </div>
   );
@@ -121,47 +134,38 @@ function JoinRequestCard({
   isPending: boolean;
 }) {
   return (
-    <div className='bg-white border border-cream-mid p-4 sm:p-5'>
+    <div className='border border-cream-mid bg-cream/20 p-4 sm:p-5'>
       <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
-        <div className='min-w-0'>
+        <div className='min-w-0 flex-1'>
           <p className='font-serif text-base text-navy font-light'>{request.full_name}</p>
-          <p className='font-mono text-label text-navy/55'>{request.email}</p>
+          <p className='font-mono text-xs text-navy/55'>{request.email}</p>
           {request.phone && (
-            <p className='font-mono text-label text-navy/55'>{request.phone}</p>
+            <p className='font-mono text-xs text-navy/55'>{request.phone}</p>
           )}
           {request.discord && (
-            <p className='font-mono text-label text-navy/40'>Discord: {request.discord}</p>
+            <p className='font-mono text-xs text-navy/40'>Discord: {request.discord}</p>
           )}
-          <p className='font-mono text-label text-navy/40 mt-0.5'>
-            {format(new Date(request.created_at), 'MMM d, yyyy')}
+          <p className='font-mono text-xs text-navy/35 mt-0.5'>
+            Submitted {format(new Date(request.created_at), 'MMM d, yyyy')}
           </p>
         </div>
-        <div className='flex gap-3 sm:flex-shrink-0 flex-wrap'>
-          <button
+        <div className='flex gap-3 sm:flex-shrink-0 flex-wrap items-start'>
+          <ConfirmButton
             disabled={isPending}
-            onClick={() => {
-              if (
-                !confirm(
-                  `Approve ${request.full_name} (${request.email})?\n\nThis will create their account and send a welcome email.`,
-                )
-              )
-                return;
-              run(() => approveJoinRequestAction(request.id));
-            }}
-            className='flex-1 sm:flex-none bg-navy text-cream font-mono text-label uppercase tracking-[0.15em] px-4 py-2.5 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity disabled:opacity-50'
-          >
-            Approve
-          </button>
-          <button
+            onConfirm={() => run(() => approveJoinRequestAction(request.id))}
+            label='Approve'
+            confirmLabel='Yes, Approve'
+            confirmMessage='This creates their account and sends a welcome email.'
+            variant='primary'
+          />
+          <ConfirmButton
             disabled={isPending}
-            onClick={() => {
-              if (!confirm(`Decline ${request.full_name}'s request?`)) return;
-              run(() => declineJoinRequestAction(request.id));
-            }}
-            className='flex-1 sm:flex-none border border-cream-mid text-navy/50 font-mono text-label uppercase tracking-[0.15em] px-4 py-2.5 hover:border-red-300 hover:text-red-600 transition-colors disabled:opacity-50'
-          >
-            Decline
-          </button>
+            onConfirm={() => run(() => declineJoinRequestAction(request.id))}
+            label='Decline'
+            confirmLabel='Yes, Decline'
+            confirmMessage="Decline this person's request?"
+            variant='danger'
+          />
         </div>
       </div>
     </div>
