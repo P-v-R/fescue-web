@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.4](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.3...fescue-web-v1.6.4) (2026-04-14)
+
+
+### Bug Fixes
+
+* pass changelog via env var to avoid JS string escaping issues ([29699ce](https://github.com/P-v-R/fescue-web/commit/29699ce8e4a540199544863087356b5682e8d17b))
+
 ## [1.6.3](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.2...fescue-web-v1.6.3) (2026-04-14)
 
 
