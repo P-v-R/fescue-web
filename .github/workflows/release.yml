@@ -45,9 +45,13 @@ jobs:
 
       - name: Create GitHub Release
         uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_BODY: ${{ steps.changelog.outputs.changelog }}
         with:
           script: |
-            const tag = '${{ github.ref_name }}';
+            const tag = process.env.RELEASE_TAG;
+            const body = '## What changed\n\n' + (process.env.RELEASE_BODY || '');
             try {
               const existing = await github.rest.repos.getReleaseByTag({ owner: context.repo.owner, repo: context.repo.repo, tag });
               await github.rest.repos.deleteRelease({ owner: context.repo.owner, repo: context.repo.repo, release_id: existing.data.id });
@@ -57,7 +61,7 @@ jobs:
               repo: context.repo.repo,
               tag_name: tag,
               name: tag,
-              body: '## What changed\n\n${{ steps.changelog.outputs.changelog }}',
+              body,
               draft: false,
               prerelease: false,
             });
