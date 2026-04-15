@@ -8,6 +8,7 @@ export const joinRequestSchema = z
     email: z.string().email('Please enter a valid email address.'),
     phone: z.string().optional(),
     discord: z.string().optional(),
+    sgt_username: z.string().optional(),
     member_since: z
       .number({ message: 'Please select the year you joined.' })
       .int()

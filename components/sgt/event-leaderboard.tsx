@@ -7,6 +7,7 @@ type Props = {
   gross: SgtLeaderboardRow[]
   net: SgtLeaderboardRow[]
   roundCount: number
+  memberNames?: Record<string, string>
 }
 
 function formatToPar(n: number): string {
@@ -44,7 +45,7 @@ function PositionBadge({ pos }: { pos: number | string }) {
   )
 }
 
-export function EventLeaderboard({ gross, net, roundCount }: Props) {
+export function EventLeaderboard({ gross, net, roundCount, memberNames = {} }: Props) {
   const [mode, setMode] = useState<'gross' | 'net'>('gross')
   const rows = mode === 'gross' ? gross : net
 
@@ -122,6 +123,9 @@ export function EventLeaderboard({ gross, net, roundCount }: Props) {
                         isTop3 ? 'text-navy text-base' : 'text-navy/80 text-sm',
                       ].join(' ')}>
                         {row.player_name}
+                        {memberNames[row.player_name.toLowerCase()] && (
+                          <span className="text-navy/40 font-light"> — {memberNames[row.player_name.toLowerCase()]}</span>
+                        )}
                       </span>
                     </td>
                     <td className="py-3 pr-4 text-right font-mono text-[10px] text-navy/40">
