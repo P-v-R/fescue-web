@@ -19,16 +19,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
 
-      - name: Open staging → main PR
+      - name: Create deploy branch and open PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           VERSION="${{ github.event.inputs.tag || github.ref_name }}"
-          EXISTING=$(gh pr list --base main --head staging --state open --json number --jq '.[0].number')
+          DEPLOY_BRANCH="deploy/${VERSION}"
+
+          # Skip if a PR for this version already exists
+          EXISTING=$(gh pr list --base main --state open --json number,headRefName \
+            --jq ".[] | select(.headRefName == \"${DEPLOY_BRANCH}\") | .number")
           if [ -n "$EXISTING" ]; then
             echo "PR #$EXISTING already exists, skipping."
             exit 0
           fi
-          BODY="Merging this PR deploys ${VERSION} to production via Railway."
-          gh pr create --base main --head staging --title "Deploy ${VERSION} to production" --body "$BODY"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create deploy branch from main, merge staging in (staging wins on conflicts)
+          git checkout -b "$DEPLOY_BRANCH" origin/main
+          git merge origin/staging -X theirs --no-edit
+
+          git push origin "$DEPLOY_BRANCH"
+
+          gh pr create \
+            --base main \
+            --head "$DEPLOY_BRANCH" \
+            --title "Deploy ${VERSION} to production" \
+            --body "Merging this PR deploys ${VERSION} to production via Railway."
