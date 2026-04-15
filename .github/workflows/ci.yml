@@ -42,7 +42,6 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          # Dummy values — sufficient for compilation. Real values are in Railway.
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
           NEXT_PUBLIC_SANITY_PROJECT_ID: placeholder
