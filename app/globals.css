@@ -1,21 +1,21 @@
 @import 'tailwindcss';
 
 :root {
-  --navy: #0a2b5e;
-  --navy-dark: #061a3a;
-  --navy-mid: #1a3f72;
+  --navy: #004225;
+  --navy-dark: #002918;
+  --navy-mid: #1a5535;
   --cream: #f5f0e8;
   --cream-light: #fdfaf4;
   --cream-mid: #ede6d8;
-  --sage: #6b7a52;
-  --sage-light: #8b9e68;
+  --sage: #5c7a52;
+  --sage-light: #7a9e68;
   --sand: #c8b89a;
   --sand-light: #e0d4bc;
   --gold: #b8963c;
   --gold-dark: #7a6328;
   --gold-light: #d4af60;
   --white: #ffffff;
-  --border: rgba(10, 43, 94, 0.1);
+  --border: rgba(0, 66, 37, 0.1);
   --border-warm: rgba(184, 150, 60, 0.25);
   --alert: #b84c3c;
 }
@@ -127,7 +127,7 @@ body {
   --fc-event-bg-color: var(--navy);
   --fc-event-border-color: var(--navy);
   --fc-event-text-color: var(--cream);
-  --fc-today-bg-color: rgba(184, 150, 60, 0.06);
+  --fc-today-bg-color: rgba(184, 150, 60, 0.07);
   --fc-button-bg-color: var(--navy);
   --fc-button-active-bg-color: var(--navy-mid);
   --fc-button-border-color: var(--navy);

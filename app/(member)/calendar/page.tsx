@@ -15,7 +15,12 @@ export default async function CalendarPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const initialEvents = await getEventsForMonth(new Date())
+  const [initialEvents, member] = await Promise.all([
+    getEventsForMonth(new Date()),
+    supabase.from('members').select('is_admin').eq('id', user.id).single(),
+  ])
+  const isAdmin = member.data?.is_admin ?? false
+
   const initialUserRsvps = await getMemberRsvpsForEvents(
     user.id,
     initialEvents.map((e) => e.id),
@@ -31,7 +36,7 @@ export default async function CalendarPage() {
         <div className="w-12 h-px bg-gold mt-4" />
       </div>
 
-      <CalendarWrapper initialEvents={initialEvents} initialUserRsvps={initialUserRsvps} />
+      <CalendarWrapper initialEvents={initialEvents} initialUserRsvps={initialUserRsvps} isAdmin={isAdmin} />
     </div>
   )
 }

@@ -5,6 +5,7 @@ export type Member = {
   avatar_url: string | null
   phone: string | null
   discord: string | null
+  sgt_username: string | null
   is_active: boolean
   is_admin: boolean
   member_since: number | null
@@ -50,8 +51,13 @@ export type MembershipRequest = {
   full_name: string
   email: string
   phone: string | null
+  zip_code: string | null
+  profession: string | null
   referral_source: string | null
+  has_membership_org: boolean | null
+  membership_org_names: string | null
   message: string | null
+  sgt_username: string | null
   status: 'pending' | 'contacted' | 'invited' | 'declined' | 'onboarded'
   created_at: string
 }

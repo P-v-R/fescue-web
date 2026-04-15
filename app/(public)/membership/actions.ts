@@ -5,6 +5,10 @@ import {
   createMembershipRequest,
   getMembershipRequestByEmailAdmin,
 } from '@/lib/supabase/queries/membership-requests'
+import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/resend/client'
+import { membershipNotificationEmail } from '@/lib/resend/templates/membership-notification'
+
+const OWNER_EMAIL = process.env.OWNER_EMAIL
 
 export async function submitMembershipRequestAction(
   input: unknown,
@@ -14,8 +18,18 @@ export async function submitMembershipRequestAction(
     return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
   }
 
-  const { first_name, last_name, email, phone, referral_source, message } = parsed.data
-  const full_name = `${first_name.trim()} ${last_name.trim()}`
+  const {
+    full_name,
+    email,
+    phone,
+    zip_code,
+    profession,
+    referral_source,
+    has_membership_org,
+    membership_org_names,
+    message,
+    sgt_username,
+  } = parsed.data
   const normalizedEmail = email.toLowerCase().trim()
 
   try {
@@ -28,13 +42,38 @@ export async function submitMembershipRequestAction(
     }
 
     await createMembershipRequest({
-      full_name,
+      full_name: full_name.trim(),
       email: normalizedEmail,
-      phone: phone?.trim() || undefined,
-      referral_source: referral_source?.trim() || undefined,
+      phone: phone.trim(),
+      zip_code: zip_code?.trim() || undefined,
+      profession: profession.trim(),
+      referral_source: referral_source.trim(),
+      has_membership_org,
+      membership_org_names: membership_org_names?.trim() || undefined,
       message: message?.trim() || undefined,
+      sgt_username: sgt_username?.trim() || undefined,
     })
-    return { success: "Thank you — we'll be in touch soon to schedule your tour." }
+
+    // Notify Sean of the new inquiry — fire and forget, don't block the response
+    if (isResendConfigured() && OWNER_EMAIL) {
+      const resend = createResendClient()
+      const { subject, html } = membershipNotificationEmail({
+        full_name: full_name.trim(),
+        email: normalizedEmail,
+        phone: phone.trim(),
+        profession: profession.trim(),
+        referral_source: referral_source.trim(),
+        message: message?.trim(),
+      })
+      resend.emails.send({
+        from: FROM_ADDRESSES.noreply,
+        to: OWNER_EMAIL,
+        subject,
+        html,
+      }).catch((err) => console.error('[membership notification]', err))
+    }
+
+    return { success: "Thank you — we'll be in touch soon." }
   } catch (err) {
     console.error('[submitMembershipRequestAction]', err)
     return {

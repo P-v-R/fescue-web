@@ -1,5 +1,169 @@
 # Changelog
 
+## [1.8.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.7.1...fescue-web-v1.8.0) (2026-04-15)
+
+
+### Features
+
+* overhaul account and tournament UI ([#34](https://github.com/P-v-R/fescue-web/issues/34)) ([96e2c20](https://github.com/P-v-R/fescue-web/commit/96e2c206f98d494c90339503cd734f7056e7ac24))
+
+
+### Bug Fixes
+
+* extract PR number from release-please output JSON ([#36](https://github.com/P-v-R/fescue-web/issues/36)) ([98bbccb](https://github.com/P-v-R/fescue-web/commit/98bbccba2ae93103b8e09a16d915aaaeb462a232))
+* skip GitHub Release creation if already exists ([#38](https://github.com/P-v-R/fescue-web/issues/38)) ([fd34546](https://github.com/P-v-R/fescue-web/commit/fd34546c9d8514ecc60483b259990eb941bb4c5e))
+
+## [1.7.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.7.0...fescue-web-v1.7.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* escape JSX entities in invites-tab to pass lint ([bba5a2e](https://github.com/P-v-R/fescue-web/commit/bba5a2e62d6191c9c86f5c17d775b4e848506308))
+
+## [1.7.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.4...fescue-web-v1.7.0) (2026-04-14)
+
+
+### Features
+
+* admin UX overhaul, archive member, copy emails, homepage logo ([e3bb8e5](https://github.com/P-v-R/fescue-web/commit/e3bb8e53a98ac86271e0218e0f2fb8628189fa8e))
+* SGT tournaments integration + sgt_username field ([71dedd4](https://github.com/P-v-R/fescue-web/commit/71dedd45ab66e2fe0e485a0322a0805791cbf485))
+
+
+### Bug Fixes
+
+* make owner notification email configurable via OWNER_EMAIL env var ([85f95cb](https://github.com/P-v-R/fescue-web/commit/85f95cb08c41f937493ea41157aee2db0f113bc1))
+* remove hardcoded owner email from codebase ([8c3bb72](https://github.com/P-v-R/fescue-web/commit/8c3bb72ec2d3d088ad388d6c5c5440bbf63ae1bd))
+
+## [1.6.4](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.3...fescue-web-v1.6.4) (2026-04-14)
+
+
+### Bug Fixes
+
+* pass changelog via env var to avoid JS string escaping issues ([29699ce](https://github.com/P-v-R/fescue-web/commit/29699ce8e4a540199544863087356b5682e8d17b))
+
+## [1.6.3](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.2...fescue-web-v1.6.3) (2026-04-14)
+
+
+### Bug Fixes
+
+* make GitHub Release creation idempotent ([5208a1c](https://github.com/P-v-R/fescue-web/commit/5208a1cc705902ba152fc6b66a7aa3f2328b0b23))
+
+## [1.6.2](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.1...fescue-web-v1.6.2) (2026-04-14)
+
+
+### Bug Fixes
+
+* correct octokit method and tag pattern in release workflow ([fcac2ee](https://github.com/P-v-R/fescue-web/commit/fcac2ee5338a1a3920757e812d9efda0071bd826))
+
+## [1.6.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.6.0...fescue-web-v1.6.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* resolve lint errors blocking CI ([052aedb](https://github.com/P-v-R/fescue-web/commit/052aedbddafc6d9aee9290f615dc6e471f08996f))
+* use PAT for release-please so tag pushes trigger downstream workflows ([d23d5b5](https://github.com/P-v-R/fescue-web/commit/d23d5b5a6856374a1b092ab4dd6792480ceb358d))
+
+## [1.6.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.5.0...fescue-web-v1.6.0) (2026-04-14)
+
+
+### Features
+
+* add Sentry error monitoring, tracing, and session replay ([c37ec80](https://github.com/P-v-R/fescue-web/commit/c37ec809d14167d825850b73a5f8b078ce4ce351))
+
+## [1.5.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.2...fescue-web-v1.5.0) (2026-04-14)
+
+
+### Features
+
+* booking window, lead notifications, admin clipboard, contact logo ([1876d1e](https://github.com/P-v-R/fescue-web/commit/1876d1ea3bf31d29e429e2b3ecf4794c7303d3d7))
+* cache calendar month fetches to avoid redundant requests ([3eb6e97](https://github.com/P-v-R/fescue-web/commit/3eb6e977b281e263f4d613505b1ccf761c6b0499))
+* dashboard layout, hide about, expand club champions schema ([523ad78](https://github.com/P-v-R/fescue-web/commit/523ad78097047320d20213facc19183b3d65c08c))
+
+
+### Bug Fixes
+
+* frame upcoming events sidebar in navy green box ([b1ceaee](https://github.com/P-v-R/fescue-web/commit/b1ceaeec955e077517cde658cb15b110c33b240f))
+* invert quail watermark so full silhouette is visible on dark bg ([cd60312](https://github.com/P-v-R/fescue-web/commit/cd603125c0ac2059c332f1faca998d25e3250157))
+
+## [1.4.2](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.1...fescue-web-v1.4.2) (2026-04-07)
+
+
+### Bug Fixes
+
+* rewrite promote.yml to fix YAML heredoc parse error ([7a022c7](https://github.com/P-v-R/fescue-web/commit/7a022c742344ebbe26e93512539c91ca124441a5))
+
+## [1.4.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.4.0...fescue-web-v1.4.1) (2026-04-07)
+
+
+### Bug Fixes
+
+* add workflow_dispatch to release and promote workflows ([1f7744d](https://github.com/P-v-R/fescue-web/commit/1f7744d6bcfa3c9e649f00b71a60cb64667342db))
+* align workflow tag triggers with release-please package prefix ([72e105d](https://github.com/P-v-R/fescue-web/commit/72e105d7c4f1de2fc663d837f65d0cb2a6cf5303))
+
+## [1.4.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.3.0...fescue-web-v1.4.0) (2026-04-07)
+
+
+### Features
+
+* add 5 more golf-course green themes to theme switcher ([f505751](https://github.com/P-v-R/fescue-web/commit/f5057519682a1f3d06784f5ef7bf569062622693))
+* homepage feature strip updates, partner links, east side location ([a325522](https://github.com/P-v-R/fescue-web/commit/a325522ae4ad2f0fc286788a91711b1640d4bd22))
+* upcoming reservations panel + email notification preference ([2a3774e](https://github.com/P-v-R/fescue-web/commit/2a3774e0ce7f89ee4058516fd5c27ed8f0579007))
+
+
+### Bug Fixes
+
+* remove theme switcher from public nav ([7680a80](https://github.com/P-v-R/fescue-web/commit/7680a800a528b933389ddaa040e51dd0578e70d5))
+* sync blackout periods in realtime on reservations grid ([9f661a9](https://github.com/P-v-R/fescue-web/commit/9f661a9365bbc4379dd18e58c38367196b969b6b))
+
+## [1.3.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.2.0...fescue-web-v1.3.0) (2026-03-30)
+
+
+### Features
+
+* add temporary theme switcher to public nav for color preview ([d10c800](https://github.com/P-v-R/fescue-web/commit/d10c800249bae68b902bd1b6daf6397b09c009b4))
+* google oauth sign in on login page ([22df5f8](https://github.com/P-v-R/fescue-web/commit/22df5f823c8ef9cd5347138900c3dda661312610))
+
+
+### Bug Fixes
+
+* add bgcolor attribute to email CTA buttons for iPhone Mail compatibility ([52d8e46](https://github.com/P-v-R/fescue-web/commit/52d8e4636cca9504ff975dad455f740cc28c880d))
+* security audit — open redirect, is_active checks, RLS recursion, headers, input validation ([3a94050](https://github.com/P-v-R/fescue-web/commit/3a94050ba80fde5f5f21c0a7c7cb4ea3f590c61a))
+
+## [1.2.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.1.0...fescue-web-v1.2.0) (2026-03-27)
+
+
+### Features
+
+* add arch logo to contact page, minimal quail favicon, updated brand assets ([15e36fe](https://github.com/P-v-R/fescue-web/commit/15e36fea3408cb79fbc311145790eaf0cb3281bd))
+* add Locations page and update public nav ([7f095a6](https://github.com/P-v-R/fescue-web/commit/7f095a692ab28169bc1eb7f516a6b26d451603aa))
+* add member since year field to invite acceptance form ([2090c64](https://github.com/P-v-R/fescue-web/commit/2090c640dd84a74d31f2f643bf21bc50417a7abd))
+* calendar loading skeleton, hero copy, and Sanity hub pane ([b1aabf7](https://github.com/P-v-R/fescue-web/commit/b1aabf7585e64c842a0f653d87c6c6ad54b4cddc))
+* club champions gross/net categories, test updates, migrations, docs ([4e666fa](https://github.com/P-v-R/fescue-web/commit/4e666fa6af5ffcbd4ed72387e0462bc600702060))
+* forgot password reset flow ([14a8c83](https://github.com/P-v-R/fescue-web/commit/14a8c839137e846c848bd3dac837171bf2c41a9a))
+* member_since on /join form for existing members; new members via invite default to current year ([259cb94](https://github.com/P-v-R/fescue-web/commit/259cb943db6ac4a2a8b5a8d5ea3e7a48f9f51d9f))
+* quail-alt nav logo and copy attendee emails for admins ([7f6c214](https://github.com/P-v-R/fescue-web/commit/7f6c2143b50069c4bef8a32a882ffdaeb2b1ead2))
+* rebrand from navy to forest green ([466a313](https://github.com/P-v-R/fescue-web/commit/466a313b9078d27007e81f8ed6e10445cd62d0b6))
+* sanity editable headings with portable text italic support ([2c487f2](https://github.com/P-v-R/fescue-web/commit/2c487f26da21721eb5f34b70c3067637c0e45eee))
+* tap reservation to view details and cancel ([7b7532f](https://github.com/P-v-R/fescue-web/commit/7b7532ff4a394c95dc40f6aa97d32e268b5b5da6))
+* update email templates to forest green with logo ([2c6d966](https://github.com/P-v-R/fescue-web/commit/2c6d966a40b03c47608bcea624aa4bae04d376f6))
+* update membership intake form to match owner's original ([1f1ccc2](https://github.com/P-v-R/fescue-web/commit/1f1ccc23707aac02e3fa661f435d0d16374f59ea))
+
+
+### Bug Fixes
+
+* add bgcolor attributes to email templates for mobile client compatibility ([eefa1a3](https://github.com/P-v-R/fescue-web/commit/eefa1a3fda7c5c6485a97609e0478e2b849db497))
+* align release-please config target-branch to main ([c051ccd](https://github.com/P-v-R/fescue-web/commit/c051ccd43b95e54a6cb629b4d7549514075c1d24))
+* champion plaque contrast and show most recent year with winners ([408c69f](https://github.com/P-v-R/fescue-web/commit/408c69f3fcf1a7a3abf7c51aaf76abf5cefdbd3d))
+* hide page header after membership form submission ([c84cdba](https://github.com/P-v-R/fescue-web/commit/c84cdba565de6162c68312c49cdde767a4088b70))
+* release-please target-branch should be main not staging ([14343b6](https://github.com/P-v-R/fescue-web/commit/14343b63c718d990dc23df49298897d5bb11c422))
+* release-please target-branch to staging so all staging commits appear in changelog ([4937d5e](https://github.com/P-v-R/fescue-web/commit/4937d5ed0ca745738d9653390ebea7de0da99b3d))
+* remove logo from email header ([87a8d57](https://github.com/P-v-R/fescue-web/commit/87a8d571582bedd1e9e4ceca88a24aa73678fb48))
+* route all emails through noreply, add sean@ contact hint ([2b70ada](https://github.com/P-v-R/fescue-web/commit/2b70ada5fa20b28a7a8e59c355448cb7e344ff6f))
+* update email from addresses to mail.fescuegolfclub.com ([6bda238](https://github.com/P-v-R/fescue-web/commit/6bda238a770741dd19e94cc8e5a5b48f86c36ce7))
+* update primary green to [#004225](https://github.com/P-v-R/fescue-web/issues/004225) ([af6a7e7](https://github.com/P-v-R/fescue-web/commit/af6a7e789b150ab7315655689c6deac48f903782))
+* use NEXT_PUBLIC_APP_URL as auth callback origin to avoid Railway internal localhost redirect ([8c5332e](https://github.com/P-v-R/fescue-web/commit/8c5332ee8d0c73169664ae13b3d51053bd325ddb))
+* zod v4 member_since param; add husky pre-push typecheck and CI workflow ([98d9eca](https://github.com/P-v-R/fescue-web/commit/98d9eca498b45dc040db8f6ad58b417c22866ab0))
+
 ## [1.1.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.0.2...fescue-web-v1.1.0) (2026-03-25)
 
 

@@ -34,6 +34,8 @@ export type BulletinPost = {
 
 export type ClubChampion = {
   year: number
+  championship: 'club' | 'member_guest' | 'member_member' | null
+  category: 'gross' | 'net' | 'champions'
   name: string
   tagline: string | null
 }
@@ -42,6 +44,7 @@ export type SanityPartner = {
   _key: string
   name: string | null
   logo: SanityImageAsset | null
+  url: string | null
 }
 
 export type SanityFeature = {
@@ -63,19 +66,29 @@ export type SanityAnnouncement = {
 }
 
 export type HomePage = {
+  heroHeading: PortableTextBlock[] | null
+  heroSubtext: string | null
   featuresPhoto: SanityImageAsset | null
   features: SanityFeature[] | null
+  storyHeading: PortableTextBlock[] | null
   storyBody: string | null
   storyPhoto: SanityImageAsset | null
+  clubhouseHeading: PortableTextBlock[] | null
   clubhousePhotos: SanityImageAsset[] | null
   clubhouseBody: string | null
+  partnersHeading: PortableTextBlock[] | null
   partners: SanityPartner[] | null
+  ctaHeading: PortableTextBlock[] | null
+  ctaSubtext: string | null
 }
 
 export type AboutPage = {
+  pageHeading: PortableTextBlock[] | null
   whoWeAreBody: string | null
   whoWeArePhoto: SanityImageAsset | null
   theSpaceBody: string | null
   theSpacePhoto: SanityImageAsset | null
   values: SanityValueCard[] | null
+  ctaHeading: PortableTextBlock[] | null
+  ctaSubtext: string | null
 }

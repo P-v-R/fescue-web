@@ -6,6 +6,8 @@ import { getAdminMemberBookings } from '@/lib/supabase/queries/bookings'
 import { getActiveBays } from '@/lib/supabase/queries/bays'
 import { BookForMemberModal } from './book-for-member-modal'
 import { MemberSinceField } from './member-since-field'
+import { SgtUsernameField } from './sgt-username-field'
+import { ArchiveMemberButton } from './archive-member-button'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -60,7 +62,16 @@ export default async function MemberProfilePage({ params }: Props) {
             <h1 className="font-serif text-2xl sm:text-display font-light text-navy">{member.full_name}</h1>
             <div className="w-12 h-px bg-gold mt-4" />
           </div>
-          <BookForMemberModal memberId={member.id} memberName={member.full_name} bays={bays} />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <ArchiveMemberButton
+              memberId={member.id}
+              memberName={member.full_name}
+              isActive={member.is_active}
+            />
+            {member.is_active && (
+              <BookForMemberModal memberId={member.id} memberName={member.full_name} bays={bays} />
+            )}
+          </div>
         </div>
       </div>
 
@@ -76,6 +87,7 @@ export default async function MemberProfilePage({ params }: Props) {
             memberSince={member.member_since}
             createdAt={member.created_at}
           />
+          <SgtUsernameField memberId={member.id} sgtUsername={member.sgt_username ?? null} />
           <InfoField label="Status" value={member.is_active ? (member.is_admin ? 'Admin' : 'Active') : 'Inactive'} />
         </div>
       </section>

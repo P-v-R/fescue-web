@@ -6,7 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { BayGrid } from '@/components/reservations/bay-grid'
 import { MobileBayList } from '@/components/reservations/mobile-bay-list'
 import { BookingModal } from '@/components/reservations/booking-modal'
-import type { Bay, BookingWithMember } from '@/lib/supabase/types'
+import { BookingDetailModal } from '@/components/reservations/booking-detail-modal'
+import { UpcomingReservationsDesktop, UpcomingReservationsMobile } from '@/components/reservations/upcoming-reservations-panel'
+import type { Bay, Booking, BookingWithMember, BookingWithBay } from '@/lib/supabase/types'
 import type { BlackoutPeriod } from '@/lib/utils/blackout'
 
 type SelectedSlot = {
@@ -22,10 +24,13 @@ type Props = {
   blackoutPeriods: BlackoutPeriod[]
 }
 
-export function ReservationsClient({ bays, initialBookings, userId, blackoutPeriods }: Props) {
+export function ReservationsClient({ bays, initialBookings, userId, blackoutPeriods: initialBlackoutPeriods }: Props) {
   const [date, setDate] = useState<Date>(startOfDay(new Date()))
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
+  const [blackoutPeriods, setBlackoutPeriods] = useState<BlackoutPeriod[]>(initialBlackoutPeriods)
+  const [upcomingBookings, setUpcomingBookings] = useState<BookingWithBay[]>([])
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null)
+  const [selectedBooking, setSelectedBooking] = useState<{ booking: BookingWithMember; bayName: string } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const isInitialMount = useRef(true)
@@ -37,6 +42,34 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
     }
   }, [])
+
+  const fetchBlackoutPeriods = useCallback(async () => {
+    const supabase = supabaseRef.current
+    const today = new Date().toISOString().split('T')[0]
+    const { data } = await supabase
+      .from('blackout_periods')
+      .select('*')
+      .gte('date', today)
+      .order('date', { ascending: true })
+      .order('start_time', { ascending: true, nullsFirst: true })
+    setBlackoutPeriods((data as BlackoutPeriod[]) ?? [])
+  }, [])
+
+  const fetchUpcomingBookings = useCallback(async () => {
+    const supabase = supabaseRef.current
+    const { data } = await supabase
+      .from('bookings')
+      .select('*, bays(name)')
+      .eq('member_id', userId)
+      .gt('start_time', new Date().toISOString())
+      .is('cancelled_at', null)
+      .order('start_time', { ascending: true })
+    setUpcomingBookings((data as BookingWithBay[]) ?? [])
+  }, [userId])
+
+  useEffect(() => {
+    fetchUpcomingBookings()
+  }, [fetchUpcomingBookings])
 
   const fetchBookings = useCallback(async (d: Date) => {
     setIsLoading(true)
@@ -56,22 +89,25 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
     }
   }, [])
 
-  // Realtime subscription — refresh grid when any booking changes
-  // NOTE: Realtime must be enabled on the `bookings` table in Supabase dashboard
-  // (Database → Replication → Tables → enable bookings)
+  // Realtime subscriptions — refresh grid when bookings or blackout periods change
+  // NOTE: Realtime must be enabled in Supabase dashboard for both tables
+  // (Database → Replication → Tables → enable bookings + blackout_periods)
   useEffect(() => {
     const supabase = supabaseRef.current
     const channel = supabase
-      .channel('bookings-grid')
+      .channel('reservations-grid')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
         fetchBookings(date)
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'blackout_periods' }, () => {
+        fetchBlackoutPeriods()
       })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [date, fetchBookings])
+  }, [date, fetchBookings, fetchBlackoutPeriods])
 
   // Fetch when date changes (skip first render — we have initialBookings for today)
   useEffect(() => {
@@ -82,6 +118,13 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
     fetchBookings(date)
   }, [date, fetchBookings])
 
+  function handleUpcomingCancelled(id: string) {
+    setUpcomingBookings((prev) => prev.filter((b) => b.id !== id))
+    // Also remove from the grid if it's on the currently viewed date
+    setBookings((prev) => prev.filter((b) => b.id !== id))
+    showToast('Booking cancelled.')
+  }
+
   function showToast(message: string) {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current)
     setToast(message)
@@ -89,7 +132,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
   }
 
   const today = startOfDay(new Date())
-  const maxDate = addDays(today, 30)
+  const maxDate = addDays(today, 90)
 
   const selectedDateStr = format(date, 'yyyy-MM-dd')
   const periodsForDate = blackoutPeriods.filter((p) => p.date === selectedDateStr)
@@ -107,7 +150,12 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           setDate={(d) => setDate(startOfDay(d))}
           userId={userId}
           onSlotClick={setSelectedSlot}
+          onBookingClick={(booking, bayName) => setSelectedBooking({ booking, bayName })}
           blackoutPeriods={periodsForDate}
+        />
+        <UpcomingReservationsMobile
+          bookings={upcomingBookings}
+          onCancelled={handleUpcomingCancelled}
         />
       </div>
 
@@ -188,27 +236,53 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           date={date}
           userId={userId}
           onSlotClick={setSelectedSlot}
+          onBookingClick={(booking, bayName) => setSelectedBooking({ booking, bayName })}
           blackoutPeriods={periodsForDate}
+        />
+
+        <UpcomingReservationsDesktop
+          bookings={upcomingBookings}
+          onCancelled={handleUpcomingCancelled}
         />
       </div>
 
-      {/* Booking modal */}
+      {/* Booking detail modal */}
+      {selectedBooking && (
+        <BookingDetailModal
+          booking={selectedBooking.booking}
+          bayName={selectedBooking.bayName}
+          onClose={() => setSelectedBooking(null)}
+          onCancelled={(id) => {
+            setBookings((prev) => prev.filter((b) => b.id !== id))
+            setUpcomingBookings((prev) => prev.filter((b) => b.id !== id))
+            showToast('Booking cancelled.')
+          }}
+        />
+      )}
+
+      {/* New booking modal */}
       {selectedSlot && (
         <BookingModal
           slot={selectedSlot}
           userId={userId}
           onClose={() => setSelectedSlot(null)}
           onSuccess={(booking) => {
+            const slot = selectedSlot
             setSelectedSlot(null)
             setBookings((prev) => [...prev, { ...booking, members: null }])
-            showToast(`Booked — ${selectedSlot.bayName} at ${format(new Date(booking.start_time), 'h:mm a')}`)
+            setUpcomingBookings((prev) =>
+              [...prev, { ...booking, bays: { name: slot.bayName } }].sort(
+                (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+              )
+            )
+            showToast(`Booked — ${slot.bayName} at ${format(new Date(booking.start_time), 'h:mm a')}`)
           }}
         />
       )}
 
-      {/* Toast notification */}
+      {/* Toast notification — raised on mobile so it doesn't overlap the FAB */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-navy text-cream px-5 py-3 shadow-xl">
+        <div className="fixed bottom-20 right-6 z-50 sm:bottom-6 bg-navy text-cream px-5 py-3 shadow-xl">
           <span className="font-mono text-label uppercase tracking-[0.18em]">{toast}</span>
         </div>
       )}

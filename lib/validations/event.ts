@@ -6,7 +6,7 @@ export const createEventSchema = z.object({
   starts_at: z.string().min(1, 'Start date and time is required.'),
   ends_at: z.string().optional(),
   location: z.string().optional(),
-  image_url: z.string().url('Must be a valid URL.').optional().or(z.literal('')),
+  image_url: z.string().url('Must be a valid URL.').refine((url) => url.startsWith('https://'), { message: 'Image URL must use HTTPS.' }).optional().or(z.literal('')),
   rsvp_enabled: z.boolean().default(true),
 })
 

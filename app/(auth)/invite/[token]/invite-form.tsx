@@ -9,6 +9,7 @@ import { formatPhone } from '@/lib/utils/phone'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
+
 type Props = {
   token: string
   inviteEmail: string
@@ -73,6 +74,19 @@ export function InviteForm({ token, inviteEmail }: Props) {
         />
         <p className="font-mono text-label text-navy/40 tracking-[0.1em]">
           Discord is our primary means of club communication.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Input
+          label="SGT Username"
+          type="text"
+          placeholder="Your Simulator Golf Tour username"
+          error={errors.sgt_username?.message}
+          {...register('sgt_username')}
+        />
+        <p className="font-mono text-label text-navy/40 tracking-[0.1em]">
+          Optional — links your SGT account to display your name on club leaderboards.
         </p>
       </div>
 

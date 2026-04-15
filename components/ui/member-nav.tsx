@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/reservations', label: 'Reservations' },
   { href: '/calendar', label: 'Calendar' },
+  { href: '/tournaments', label: 'Tournaments' },
   { href: '/members', label: 'Members' },
   { href: '/account', label: 'Account' },
 ];
@@ -25,6 +26,7 @@ export function MemberNav({ memberName, isAdmin }: Props) {
 
   // Close mobile menu on navigation
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
   }, [pathname]);
 
@@ -40,7 +42,7 @@ export function MemberNav({ memberName, isAdmin }: Props) {
         <Link href='/dashboard' className='shrink-0'>
           <span className='flex items-center justify-center overflow-hidden'>
             <Image
-              src='/logo-quail.png'
+              src='/quail-alt.png'
               alt='Fescue Golf Club'
               width={28}
               height={28}

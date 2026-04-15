@@ -8,7 +8,8 @@ import { CartIcon } from '@/components/shop/cart-icon';
 
 const NAV_LINKS = [
   { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Request a Tour' },
+  { href: '/location', label: 'Locations' },
+  { href: '/contact', label: 'Membership' },
   { href: '/shop', label: 'Shop' },
 ];
 
@@ -17,6 +18,7 @@ export function PublicNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
   }, [pathname]);
 
@@ -27,7 +29,7 @@ export function PublicNav() {
         {/* Left: Logo */}
         <Link href='/' className='shrink-0 justify-self-start'>
           <Image
-            src='/logo-quail.png'
+            src='/quail-alt.png'
             alt='Fescue Golf Club'
             width={28}
             height={28}

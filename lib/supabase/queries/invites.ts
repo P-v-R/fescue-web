@@ -77,7 +77,7 @@ export async function getInviteByToken(token: string): Promise<Invite | null> {
 // Email comes from the invite record — the form only collects full_name + password.
 export async function acceptInvite(
   token: string,
-  memberData: Pick<NewMember, 'full_name' | 'password'> & { phone?: string; discord?: string },
+  memberData: Pick<NewMember, 'full_name' | 'password'> & { phone?: string; discord?: string; sgt_username?: string },
 ): Promise<Member> {
   const supabase = createAdminClient()
 
@@ -107,6 +107,8 @@ export async function acceptInvite(
       full_name: memberData.full_name,
       phone: memberData.phone?.trim() || null,
       discord: memberData.discord?.trim() || null,
+      sgt_username: memberData.sgt_username?.trim() || null,
+      member_since: new Date().getFullYear(),
     })
     .select()
     .single()

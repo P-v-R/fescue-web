@@ -33,13 +33,20 @@ export async function getHomePage(): Promise<HomePage | null> {
   try {
     return await sanityClient.fetch(
       `*[_type == "homePage"][0] {
+        heroHeading,
+        heroSubtext,
         featuresPhoto,
         features[] { _key, label, body },
+        storyHeading,
         storyBody,
         storyPhoto,
+        clubhouseHeading,
         clubhousePhotos,
         clubhouseBody,
-        partners[] { _key, name, logo },
+        partnersHeading,
+        partners[] { _key, name, logo, url },
+        ctaHeading,
+        ctaSubtext,
       }`,
       {},
       { next: { revalidate: 60 } },
@@ -55,11 +62,14 @@ export async function getAboutPage(): Promise<AboutPage | null> {
   try {
     return await sanityClient.fetch(
       `*[_type == "aboutPage"][0] {
+        pageHeading,
         whoWeAreBody,
         whoWeArePhoto,
         theSpaceBody,
         theSpacePhoto,
         values[] { _key, title, body },
+        ctaHeading,
+        ctaSubtext,
       }`,
       {},
       { next: { revalidate: 60 } },
@@ -96,7 +106,7 @@ export async function getAllChampions(): Promise<ClubChampion[]> {
 
   try {
     return await sanityClient.fetch(
-      `*[_type == "clubChampion"] | order(year desc) { year, name, tagline }`,
+      `*[_type == "clubChampion"] | order(year desc, championship asc, category asc) { year, championship, category, name, tagline }`,
       {},
       { next: { revalidate: 300 } },
     )

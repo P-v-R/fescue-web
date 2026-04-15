@@ -6,7 +6,13 @@ export const metadata = {
   title: 'Sign In — Fescue Golf Club',
 }
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
+
   return (
     <AuthCard
       title="Sign in to your account"
@@ -20,6 +26,11 @@ export default function LoginPage() {
         </>
       }
     >
+      {error === 'not_a_member' && (
+        <p className="font-mono text-label tracking-[0.15em] uppercase text-red-500 mb-4">
+          No membership found for that Google account. Contact the club to request access.
+        </p>
+      )}
       <LoginForm />
     </AuthCard>
   )

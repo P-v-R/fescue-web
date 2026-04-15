@@ -4,48 +4,67 @@ import { useState } from 'react'
 import { cancelBookingAction } from '@/app/(member)/reservations/actions'
 
 export function CancelBookingButton({ bookingId }: { bookingId: string }) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cancelled, setCancelled] = useState(false)
 
   if (cancelled) {
     return (
-      <span className="font-mono text-label uppercase tracking-[0.15em] text-sand/60">
+      <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-navy/30">
         Cancelled
       </span>
     )
   }
 
-  async function handleCancel() {
-    const ok = window.confirm('Cancel this booking?')
-    if (!ok) return
-
-    setIsLoading(true)
+  async function handleConfirm() {
+    setLoading(true)
     setError(null)
     const result = await cancelBookingAction(bookingId)
-
     if (result.error) {
       setError(result.error)
-      setIsLoading(false)
+      setLoading(false)
+      setConfirming(false)
     } else {
       setCancelled(true)
     }
   }
 
-  return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        onClick={handleCancel}
-        disabled={isLoading}
-        className="font-mono text-label uppercase tracking-[0.18em] text-red-400/70 border border-red-300/30 px-3 py-1 hover:text-red-500 hover:border-red-400/50 transition-colors disabled:opacity-40"
-      >
-        {isLoading ? 'Cancelling…' : 'Cancel'}
-      </button>
-      {error && (
-        <p className="font-mono text-label uppercase tracking-[0.12em] text-red-500 text-right max-w-[180px]">
-          {error}
+  if (confirming) {
+    return (
+      <div className="flex flex-col items-end gap-1.5 shrink-0">
+        <p className="font-mono text-[9px] uppercase tracking-[0.1em] text-red-500">
+          Cancel booking?
         </p>
-      )}
-    </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setConfirming(false)}
+            disabled={loading}
+            className="font-mono text-[10px] uppercase tracking-[0.12em] text-navy/40 hover:text-navy transition-colors"
+          >
+            Keep
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={loading}
+            className="font-mono text-[10px] uppercase tracking-[0.12em] text-red-500 hover:text-red-700 border border-red-200 hover:border-red-400 px-2 py-1 transition-colors disabled:opacity-40"
+          >
+            {loading ? 'Cancelling…' : 'Yes'}
+          </button>
+        </div>
+        {error && (
+          <p className="font-mono text-[9px] text-red-500 text-right">{error}</p>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-navy/35 hover:text-red-500 border border-cream-mid hover:border-red-200 px-3 py-1.5 transition-colors"
+    >
+      Cancel
+    </button>
   )
 }

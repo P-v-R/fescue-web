@@ -14,7 +14,7 @@ export async function forgotPasswordAction(
 
   const supabase = await createClient()
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/account/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/account/reset-password`,
   })
 
   // Always return success — don't reveal whether the email is registered

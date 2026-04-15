@@ -1,15 +1,46 @@
-import { defineField, defineType } from 'sanity'
+import { defineField, defineType } from 'sanity';
+
+const headingField = (name: string, title: string, description: string) =>
+  defineField({
+    name,
+    title,
+    type: 'array',
+    of: [
+      {
+        type: 'block',
+        styles: [{ title: 'Normal', value: 'normal' }],
+        lists: [],
+        marks: {
+          decorators: [{ title: 'Italic', value: 'em' }],
+          annotations: [],
+        },
+      },
+    ],
+    description,
+  });
 
 export const aboutPage = defineType({
   name: 'aboutPage',
   title: 'About Page',
   type: 'document',
   groups: [
+    { name: 'header', title: 'Page Header' },
     { name: 'whoWeAre', title: 'Who We Are' },
     { name: 'theSpace', title: 'The Space' },
     { name: 'values', title: 'Our Values' },
+    { name: 'cta', title: 'CTA' },
   ],
   fields: [
+    // ── Page Header ──────────────────────────────────────────────────────────
+    {
+      ...headingField(
+        'pageHeading',
+        'Page Heading',
+        'Main h1. Use italic for emphasis. Default: "About Fescue"',
+      ),
+      group: 'header',
+    },
+
     // ── Who We Are ───────────────────────────────────────────────────────────
     defineField({
       name: 'whoWeAreBody',
@@ -57,7 +88,7 @@ export const aboutPage = defineType({
           preview: {
             select: { title: 'title' },
             prepare({ title }) {
-              return { title: title || 'Untitled Value' }
+              return { title: title || 'Untitled Value' };
             },
           },
         },
@@ -66,10 +97,28 @@ export const aboutPage = defineType({
       group: 'values',
       description: 'Up to 3 values.',
     }),
+
+    // ── CTA ──────────────────────────────────────────────────────────────────
+    {
+      ...headingField(
+        'ctaHeading',
+        'Heading',
+        'CTA heading. Use italic for emphasis. Default: "Interested In Joining?"',
+      ),
+      group: 'cta',
+    },
+    defineField({
+      name: 'ctaSubtext',
+      title: 'Subtext',
+      type: 'string',
+      group: 'cta',
+      description:
+        'Small line below heading. Default: "Tours are available by appointment."',
+    }),
   ],
   preview: {
     prepare() {
-      return { title: 'About Page' }
+      return { title: 'About Page' };
     },
   },
-})
+});

@@ -3,6 +3,9 @@ import Image from 'next/image';
 import { getAboutPage } from '@/lib/sanity/queries';
 import { urlFor } from '@/lib/sanity/client';
 import type { SanityImageAsset } from '@/lib/sanity/types';
+import { PortableTextHeading } from '@/components/ui/portable-text-heading';
+
+const hasContent = (v: unknown) => Array.isArray(v) && v.length > 0
 
 export const metadata = {
   title: 'About — Fescue Golf Club',
@@ -48,7 +51,11 @@ export default async function AboutPage() {
           Our Story
         </p>
         <h1 className='font-serif text-3xl sm:text-display font-light text-navy'>
-          About Fescue
+          {hasContent(cms?.pageHeading) ? (
+            <PortableTextHeading value={cms!.pageHeading!} />
+          ) : (
+            'About Fescue'
+          )}
         </h1>
         <div className='w-12 h-px bg-gold mt-4' />
       </div>
@@ -131,76 +138,6 @@ export default async function AboutPage() {
 
         <div className='h-px bg-sand/30' />
 
-        {/* Location */}
-        {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && process.env.NEXT_PUBLIC_GOOGLE_MAPS_PLACE_ID && (() => {
-          const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!
-          const placeId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_PLACE_ID!
-          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(process.env.NEXT_PUBLIC_CLUB_ADDRESS ?? '')}`
-          const address = encodeURIComponent(process.env.NEXT_PUBLIC_CLUB_ADDRESS ?? '')
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL
-          const markerParam = appUrl && !appUrl.includes('localhost')
-            ? `markers=icon:${appUrl}/logo-badge.png|${address}`
-            : `markers=color:0xb8963c|${address}`
-          const staticUrl =
-            `https://maps.googleapis.com/maps/api/staticmap` +
-            `?center=${address}` +
-            `&zoom=15` +
-            `&size=640x380` +
-            `&scale=2` +
-            `&${markerParam}` +
-            `&style=feature:poi|visibility:off` +
-            `&style=feature:transit|visibility:off` +
-            `&style=feature:road.highway|element:geometry|color:0xe8e0d0` +
-            `&style=feature:road.arterial|element:geometry|color:0xf0ebe0` +
-            `&style=feature:landscape|element:geometry|color:0xf5f0e8` +
-            `&style=feature:water|element:geometry|color:0xd4cfc6` +
-            `&style=feature:all|element:labels.text.fill|color:0x0a2b5e` +
-            `&style=feature:all|element:labels.text.stroke|color:0xf5f0e8` +
-            `&key=${key}`
-
-          return (
-            <section>
-              <div className='mb-6'>
-                <div className='flex items-center gap-4 mb-1'>
-                  <p className='font-mono text-label font-medium uppercase tracking-[0.22em] text-navy/80'>
-                    Find Us
-                  </p>
-                  <div className='flex-1 h-px bg-sand/30' />
-                </div>
-                {process.env.NEXT_PUBLIC_CLUB_ADDRESS && (
-                  <p className='font-mono text-label uppercase tracking-[0.15em] text-navy/40'>
-                    {process.env.NEXT_PUBLIC_CLUB_ADDRESS}
-                  </p>
-                )}
-              </div>
-              <a href={mapsUrl} target='_blank' rel='noopener noreferrer' className='block relative border border-sand/40 group'>
-                {/* Corner ticks */}
-                <span className='absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/40 z-10' />
-                <span className='absolute top-0 right-0 w-4 h-4 border-t border-r border-gold/40 z-10' />
-                <span className='absolute bottom-0 left-0 w-4 h-4 border-b border-l border-gold/40 z-10' />
-                <span className='absolute bottom-0 right-0 w-4 h-4 border-b border-r border-gold/40 z-10' />
-                <Image
-                  src={staticUrl}
-                  alt='Fescue Golf Club location map'
-                  width={1280}
-                  height={760}
-                  style={{ minHeight: '260px' }}
-                  className='w-full h-auto block'
-                  unoptimized
-                />
-                {/* Hover overlay */}
-                <div className='absolute inset-0 bg-navy/0 group-hover:bg-navy/5 transition-colors duration-200 flex items-center justify-center'>
-                  <span className='opacity-0 group-hover:opacity-100 transition-opacity font-mono text-label uppercase tracking-[0.2em] text-navy bg-cream/90 px-4 py-2 shadow-sm'>
-                    Open in Maps
-                  </span>
-                </div>
-              </a>
-            </section>
-          )
-        })()}
-
-        <div className='h-px bg-sand/30' />
-
         {/* Our Values */}
         <section>
           <p className='font-mono text-label font-medium uppercase tracking-[0.22em] text-navy/80 mb-8'>
@@ -231,10 +168,14 @@ export default async function AboutPage() {
       {/* CTA */}
       <div className='mt-20 pt-12 border-t border-cream-mid text-center'>
         <p className='font-serif text-xl font-light text-navy mb-2'>
-          Ready to see it in person?
+          {hasContent(cms?.ctaHeading) ? (
+            <PortableTextHeading value={cms!.ctaHeading!} />
+          ) : (
+            'Ready to see it in person?'
+          )}
         </p>
         <p className='font-mono text-label uppercase tracking-[0.15em] text-navy/45 mb-6'>
-          Tours are available by appointment.
+          {cms?.ctaSubtext ?? 'Tours are available by appointment.'}
         </p>
         <Link
           href='/contact'

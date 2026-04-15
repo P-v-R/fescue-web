@@ -2,10 +2,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   getActiveMembers,
+  getActiveMemberEmails,
   type DirectoryMember,
 } from '@/lib/supabase/queries/members';
 import { getAllChampions } from '@/lib/sanity/queries';
 import type { ClubChampion } from '@/lib/sanity/types';
+import { createClient } from '@/lib/supabase/server';
+import { CopyEmailsButton } from '@/components/members/copy-emails-button';
 
 export const metadata = {
   title: 'Members — Fescue',
@@ -13,9 +16,36 @@ export const metadata = {
 
 export const dynamic = 'force-dynamic';
 
+const CHAMPIONSHIP_ORDER = ['club', 'member_guest', 'member_member']
+const CHAMPIONSHIP_LABELS: Record<string, string> = {
+  club: 'Club Championship',
+  member_guest: 'Member Guest',
+  member_member: 'Member Member',
+}
+
 function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
-  const current = champions[0];
-  const past = champions.slice(1);
+  // Normalize: old records without championship default to 'club'
+  const normalized = champions.map((c) => ({ ...c, championship: c.championship ?? 'club' }))
+
+  // Group by year
+  const byYear = normalized.reduce<Record<number, typeof normalized>>((acc, c) => {
+    if (!acc[c.year]) acc[c.year] = []
+    acc[c.year].push(c)
+    return acc
+  }, {})
+  const years = Object.keys(byYear).map(Number).sort((a, b) => b - a)
+  const currentYear = years[0]
+  const currentChamps = byYear[currentYear]
+  const pastYears = years.slice(1)
+
+  // Group current year by championship
+  const byChampionship = currentChamps.reduce<Record<string, typeof normalized>>((acc, c) => {
+    const key = c.championship ?? 'club'
+    if (!acc[key]) acc[key] = []
+    acc[key].push(c)
+    return acc
+  }, {})
+  const presentChampionships = CHAMPIONSHIP_ORDER.filter((k) => byChampionship[k])
 
   return (
     <div className='relative bg-navy overflow-hidden mb-14'>
@@ -30,69 +60,132 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
       <div className='frame-scalloped absolute inset-[10px] pointer-events-none' />
 
       <div className='relative px-10 py-10'>
-        {/* Header label */}
+        {/* Header */}
         <div className='flex items-center gap-4 mb-8'>
           <div className='flex-1 h-px bg-gold/20' />
           <p className='font-mono text-label uppercase tracking-[0.3em] text-gold'>
-            Fescue Club Champion
+            Fescue Club Champions
           </p>
           <div className='flex-1 h-px bg-gold/20' />
         </div>
 
-        {/* Current champion — hero */}
-        <div className='text-center mb-8'>
-          <p
-            className='font-mono text-lg uppercase tracking-[0.25em] text-gold mb-3'
-            style={{
-              fontFamily: 'var(--font-pinyon), cursive',
-              fontSize: '',
-            }}
-          >
-            {current.year}
-          </p>
-          <h2
-            className='text-cream leading-none mb-3'
-            style={{
-              fontFamily: 'var(--font-pinyon), cursive',
-              fontSize: 'clamp(2.4rem, 6vw, 3.6rem)',
-            }}
-          >
-            {current.name}
-          </h2>
-          {current.tagline && (
-            <p className='font-serif text-lg italic text-cream/70 font-light mt-2'>
-              {current.tagline}
-            </p>
-          )}
+        {/* Current year */}
+        <p
+          className='text-center text-gold mb-8'
+          style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.4rem, 3vw, 1.8rem)' }}
+        >
+          {currentYear}
+        </p>
+
+        <div className='space-y-8'>
+          {presentChampionships.map((champKey, i) => {
+            const entries = byChampionship[champKey]
+            const isClub = champKey === 'club'
+            return (
+              <div key={champKey}>
+                {/* Championship name divider (skip for club if it's the only one) */}
+                {(presentChampionships.length > 1) && (
+                  <p className='text-center font-mono text-[9px] uppercase tracking-[0.3em] text-gold/50 mb-5'>
+                    {CHAMPIONSHIP_LABELS[champKey]}
+                  </p>
+                )}
+
+                {isClub ? (
+                  // Club Championship: Gross + Net side by side
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10'>
+                    {(['gross', 'net'] as const).map((cat) => {
+                      const champ = entries.find((c) => c.category === cat)
+                      return (
+                        <div key={cat} className='text-center'>
+                          <p className='font-mono text-label uppercase tracking-[0.25em] text-gold/75 mb-3'>
+                            {cat} champion
+                          </p>
+                          {champ ? (
+                            <>
+                              <h2
+                                className='text-cream leading-none mb-2'
+                                style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(2rem, 5vw, 3rem)' }}
+                              >
+                                {champ.name}
+                              </h2>
+                              {champ.tagline && (
+                                <p className='font-serif text-sm italic text-cream/60 font-light mt-1'>{champ.tagline}</p>
+                              )}
+                            </>
+                          ) : (
+                            <p className='font-serif italic text-cream/25 text-sm'>TBD</p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  // Team events: centered winner name
+                  <div className='text-center'>
+                    {entries.map((champ) => (
+                      <div key={champ.name}>
+                        <h2
+                          className='text-cream leading-none mb-2'
+                          style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)' }}
+                        >
+                          {champ.name}
+                        </h2>
+                        {champ.tagline && (
+                          <p className='font-serif text-sm italic text-cream/60 font-light mt-1'>{champ.tagline}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Divider between championships */}
+                {i < presentChampionships.length - 1 && (
+                  <div className='flex items-center gap-3 mt-8'>
+                    <div className='flex-1 h-px bg-gold/15' />
+                    <div className='w-1 h-1 rotate-45 bg-gold/30 shrink-0' />
+                    <div className='flex-1 h-px bg-gold/15' />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
 
-        {/* Past champions */}
-        {past.length > 0 && (
+        {/* Past years */}
+        {pastYears.length > 0 && (
           <>
-            <div className='flex items-center gap-3 mb-5'>
+            <div className='flex items-center gap-3 my-8'>
               <div className='flex-1 h-px bg-gold/15' />
               <div className='w-1 h-1 rotate-45 bg-gold/30 shrink-0' />
               <div className='flex-1 h-px bg-gold/15' />
             </div>
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-2 max-w-lg mx-auto'>
-              {past.map((c) => (
-                <div key={c.year} className='flex items-baseline gap-2.5'>
-                  <span
-                    className='font-mono text-gold/35 shrink-0'
-                    style={{ fontSize: '10px', letterSpacing: '0.08em' }}
-                  >
-                    {c.year}
+            <div className='space-y-2 max-w-lg mx-auto'>
+              <div className='grid grid-cols-[3rem_1fr_1fr_1fr] gap-x-4 mb-1'>
+                <span />
+                {(['club', 'member_guest', 'member_member'] as const).map((k) => (
+                  <span key={k} className='font-mono text-gold/40 uppercase truncate' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>
+                    {k === 'club' ? 'Club' : k === 'member_guest' ? 'Mbr Guest' : 'Mbr Member'}
                   </span>
-                  <span className='font-serif text-cream/35 text-xs font-light truncate'>
-                    {c.name}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
+              {pastYears.map((year) => {
+                const gross = byYear[year].find((c) => (c.championship ?? 'club') === 'club' && c.category === 'gross')
+                const mg = byYear[year].find((c) => c.championship === 'member_guest')
+                const mm = byYear[year].find((c) => c.championship === 'member_member')
+                return (
+                  <div key={year} className='grid grid-cols-[3rem_1fr_1fr_1fr] gap-x-4 items-baseline'>
+                    <span className='font-mono text-gold/60 text-right' style={{ fontSize: '10px', letterSpacing: '0.08em' }}>{year}</span>
+                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{gross?.name ?? '—'}</span>
+                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{mg?.name ?? '—'}</span>
+                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{mm?.name ?? '—'}</span>
+                  </div>
+                )
+              })}
             </div>
           </>
         )}
 
-        {/* Footer label */}
+        {/* Footer */}
         <div className='flex items-center gap-4 mt-8'>
           <div className='flex-1 h-px bg-gold/20' />
           <div className='w-1.5 h-1.5 rotate-45 bg-gold/40 shrink-0' />
@@ -157,9 +250,17 @@ function MemberCard({ member }: { member: DirectoryMember }) {
 }
 
 export default async function MembersPage() {
-  const [members, champions] = await Promise.all([
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: currentMember } = user
+    ? await supabase.from('members').select('is_admin').eq('id', user.id).single()
+    : { data: null }
+  const isAdmin = currentMember?.is_admin === true
+
+  const [members, champions, adminEmails] = await Promise.all([
     getActiveMembers(),
     getAllChampions(),
+    isAdmin ? getActiveMemberEmails() : Promise.resolve([] as string[]),
   ]);
 
   return (
@@ -179,9 +280,14 @@ export default async function MembersPage() {
       {champions.length > 0 && <ChampionPlaque champions={champions} />}
 
       {/* Directory */}
-      <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/30 mb-1'>
-        {members.length} Active {members.length === 1 ? 'Member' : 'Members'}
-      </p>
+      <div className='flex items-center justify-between gap-4 mb-1'>
+        <p className='font-mono text-label uppercase tracking-[0.2em] text-navy/30'>
+          {members.length} Active {members.length === 1 ? 'Member' : 'Members'}
+        </p>
+        {isAdmin && adminEmails.length > 0 && (
+          <CopyEmailsButton emails={adminEmails} />
+        )}
+      </div>
       <p className='font-sans text-sm font-light text-navy/40 mb-6'>
         Contact info is set by each member in their{' '}
         <Link
