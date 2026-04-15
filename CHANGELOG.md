@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.9.0...fescue-web-v1.9.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* promote.yml creates conflict-free deploy branch; fix tsconfig pre-push ([#48](https://github.com/P-v-R/fescue-web/issues/48)) ([f0d7762](https://github.com/P-v-R/fescue-web/commit/f0d776299afa50dab00b2522ef5ea82c1de7ea9a))
+
 ## [1.9.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.8.0...fescue-web-v1.9.0) (2026-04-15)
 
 
