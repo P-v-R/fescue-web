@@ -26,6 +26,7 @@
 
 # claude / internal
 .claude/
+.playwright-mcp/
 fescue-build-guide.md
 fescue-style-guide*.html
 CLAUDE.md

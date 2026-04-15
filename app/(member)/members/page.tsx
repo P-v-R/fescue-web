@@ -23,11 +23,19 @@ const CHAMPIONSHIP_LABELS: Record<string, string> = {
   member_member: 'Member Member',
 }
 
+function GoldRule({ diamond = false }: { diamond?: boolean }) {
+  return (
+    <div className='flex items-center gap-3'>
+      <div className='flex-1 h-px bg-gold/25' />
+      {diamond && <div className='w-1.5 h-1.5 rotate-45 bg-gold/50 shrink-0' />}
+      <div className='flex-1 h-px bg-gold/25' />
+    </div>
+  )
+}
+
 function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
-  // Normalize: old records without championship default to 'club'
   const normalized = champions.map((c) => ({ ...c, championship: c.championship ?? 'club' }))
 
-  // Group by year
   const byYear = normalized.reduce<Record<number, typeof normalized>>((acc, c) => {
     if (!acc[c.year]) acc[c.year] = []
     acc[c.year].push(c)
@@ -38,7 +46,6 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
   const currentChamps = byYear[currentYear]
   const pastYears = years.slice(1)
 
-  // Group current year by championship
   const byChampionship = currentChamps.reduce<Record<string, typeof normalized>>((acc, c) => {
     const key = c.championship ?? 'club'
     if (!acc[key]) acc[key] = []
@@ -48,102 +55,109 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
   const presentChampionships = CHAMPIONSHIP_ORDER.filter((k) => byChampionship[k])
 
   return (
-    <div className='relative bg-navy overflow-hidden mb-14'>
-      {/* Corner ticks */}
-      <span className='absolute top-0 left-0 w-5 h-5 border-t border-l border-gold/40' />
-      <span className='absolute top-0 right-0 w-5 h-5 border-t border-r border-gold/40' />
-      <span className='absolute bottom-0 left-0 w-5 h-5 border-b border-l border-gold/40' />
-      <span className='absolute bottom-0 right-0 w-5 h-5 border-b border-r border-gold/40' />
-
-      {/* Double scalloped frames */}
+    <div className='relative bg-navy overflow-hidden mb-14'
+      style={{
+        backgroundImage: 'radial-gradient(ellipse at 50% 0%, rgba(255,210,100,0.04) 0%, transparent 70%)',
+      }}
+    >
+      {/* Corner ornaments */}
+      <span className='absolute top-0 left-0 w-7 h-7 border-t-2 border-l-2 border-gold/35' />
+      <span className='absolute top-0 right-0 w-7 h-7 border-t-2 border-r-2 border-gold/35' />
+      <span className='absolute bottom-0 left-0 w-7 h-7 border-b-2 border-l-2 border-gold/35' />
+      <span className='absolute bottom-0 right-0 w-7 h-7 border-b-2 border-r-2 border-gold/35' />
       <div className='frame-scalloped absolute inset-2 pointer-events-none' />
       <div className='frame-scalloped absolute inset-[10px] pointer-events-none' />
 
-      <div className='relative px-10 py-10'>
-        {/* Header */}
-        <div className='flex items-center gap-4 mb-8'>
-          <div className='flex-1 h-px bg-gold/20' />
-          <p className='font-mono text-label uppercase tracking-[0.3em] text-gold'>
+      <div className='relative px-8 sm:px-14 py-12'>
+
+        {/* ── Header ── */}
+        <div className='flex items-center gap-4 mb-10'>
+          <div className='flex-1 h-px bg-gold/25' />
+          <p className='font-mono text-[10px] uppercase tracking-[0.35em] text-gold px-2'>
             Fescue Club Champions
           </p>
-          <div className='flex-1 h-px bg-gold/20' />
+          <div className='flex-1 h-px bg-gold/25' />
         </div>
 
-        {/* Current year */}
-        <p
-          className='text-center text-gold mb-8'
-          style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.4rem, 3vw, 1.8rem)' }}
-        >
-          {currentYear}
-        </p>
+        {/* ── Current year — centerpiece plaque ── */}
+        <div className='text-center mb-10'>
+          <p
+            className='text-gold/90 leading-none'
+            style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(2.8rem, 7vw, 4.5rem)' }}
+          >
+            {currentYear}
+          </p>
+        </div>
 
-        <div className='space-y-8'>
+        <div className='space-y-10'>
           {presentChampionships.map((champKey, i) => {
             const entries = byChampionship[champKey]
             const isClub = champKey === 'club'
+
             return (
               <div key={champKey}>
-                {/* Championship name divider (skip for club if it's the only one) */}
-                {(presentChampionships.length > 1) && (
-                  <p className='text-center font-mono text-[9px] uppercase tracking-[0.3em] text-gold/50 mb-5'>
+                {/* Championship label */}
+                <div className='flex items-center gap-4 mb-7'>
+                  <div className='flex-1 h-px bg-gold/15' />
+                  <p className='font-mono text-[10px] uppercase tracking-[0.3em] text-gold/55 px-1'>
                     {CHAMPIONSHIP_LABELS[champKey]}
                   </p>
-                )}
+                  <div className='flex-1 h-px bg-gold/15' />
+                </div>
 
                 {isClub ? (
-                  // Club Championship: Gross + Net side by side
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-10'>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12'>
                     {(['gross', 'net'] as const).map((cat) => {
                       const champ = entries.find((c) => c.category === cat)
                       return (
                         <div key={cat} className='text-center'>
-                          <p className='font-mono text-label uppercase tracking-[0.25em] text-gold/75 mb-3'>
-                            {cat} champion
+                          <p className='font-mono text-[10px] uppercase tracking-[0.28em] text-gold/60 mb-4'>
+                            {cat} Champion
                           </p>
                           {champ ? (
                             <>
                               <h2
-                                className='text-cream leading-none mb-2'
-                                style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(2rem, 5vw, 3rem)' }}
+                                className='text-cream leading-[1.1]'
+                                style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(2.4rem, 5.5vw, 3.6rem)' }}
                               >
                                 {champ.name}
                               </h2>
                               {champ.tagline && (
-                                <p className='font-serif text-sm italic text-cream/60 font-light mt-1'>{champ.tagline}</p>
+                                <p className='font-serif text-xs italic text-cream/45 font-light mt-2 tracking-wide'>
+                                  {champ.tagline}
+                                </p>
                               )}
                             </>
                           ) : (
-                            <p className='font-serif italic text-cream/25 text-sm'>TBD</p>
+                            <p className='font-serif italic text-cream/20 text-sm'>TBD</p>
                           )}
                         </div>
                       )
                     })}
                   </div>
                 ) : (
-                  // Team events: centered winner name
                   <div className='text-center'>
                     {entries.map((champ) => (
-                      <div key={champ.name}>
+                      <div key={champ.name} className='mb-2 last:mb-0'>
                         <h2
-                          className='text-cream leading-none mb-2'
-                          style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.8rem, 4vw, 2.6rem)' }}
+                          className='text-cream leading-[1.15] px-4'
+                          style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(2rem, 4.5vw, 3rem)' }}
                         >
                           {champ.name}
                         </h2>
                         {champ.tagline && (
-                          <p className='font-serif text-sm italic text-cream/60 font-light mt-1'>{champ.tagline}</p>
+                          <p className='font-serif text-xs italic text-cream/45 font-light mt-2 tracking-wide'>
+                            {champ.tagline}
+                          </p>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Divider between championships */}
                 {i < presentChampionships.length - 1 && (
-                  <div className='flex items-center gap-3 mt-8'>
-                    <div className='flex-1 h-px bg-gold/15' />
-                    <div className='w-1 h-1 rotate-45 bg-gold/30 shrink-0' />
-                    <div className='flex-1 h-px bg-gold/15' />
+                  <div className='mt-10'>
+                    <GoldRule diamond />
                   </div>
                 )}
               </div>
@@ -151,33 +165,63 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
           })}
         </div>
 
-        {/* Past years */}
+        {/* ── Past years — honor roll ── */}
         {pastYears.length > 0 && (
           <>
-            <div className='flex items-center gap-3 my-8'>
-              <div className='flex-1 h-px bg-gold/15' />
-              <div className='w-1 h-1 rotate-45 bg-gold/30 shrink-0' />
-              <div className='flex-1 h-px bg-gold/15' />
+            <div className='my-10'>
+              <GoldRule diamond />
             </div>
-            <div className='space-y-2 max-w-lg mx-auto'>
-              <div className='grid grid-cols-[3rem_1fr_1fr_1fr] gap-x-4 mb-1'>
-                <span />
-                {(['club', 'member_guest', 'member_member'] as const).map((k) => (
-                  <span key={k} className='font-mono text-gold/40 uppercase truncate' style={{ fontSize: '8px', letterSpacing: '0.2em' }}>
-                    {k === 'club' ? 'Club' : k === 'member_guest' ? 'Mbr Guest' : 'Mbr Member'}
-                  </span>
-                ))}
-              </div>
+
+            {/* Section label */}
+            <p className='text-center font-mono text-[10px] uppercase tracking-[0.3em] text-gold/40 mb-8'>
+              Past Champions
+            </p>
+
+            <div className='space-y-0 max-w-2xl mx-auto'>
               {pastYears.map((year) => {
                 const gross = byYear[year].find((c) => (c.championship ?? 'club') === 'club' && c.category === 'gross')
                 const mg = byYear[year].find((c) => c.championship === 'member_guest')
                 const mm = byYear[year].find((c) => c.championship === 'member_member')
+                const hasTeamEvents = mg || mm
+
                 return (
-                  <div key={year} className='grid grid-cols-[3rem_1fr_1fr_1fr] gap-x-4 items-baseline'>
-                    <span className='font-mono text-gold/60 text-right' style={{ fontSize: '10px', letterSpacing: '0.08em' }}>{year}</span>
-                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{gross?.name ?? '—'}</span>
-                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{mg?.name ?? '—'}</span>
-                    <span className='font-serif text-cream/60 text-xs font-light truncate'>{mm?.name ?? '—'}</span>
+                  <div key={year} className='border-b border-gold/10 last:border-0 py-4 first:pt-0'>
+                    {/* Year */}
+                    <span
+                      className='block text-center text-gold/50 mb-3 leading-none'
+                      style={{ fontFamily: 'var(--font-pinyon), cursive', fontSize: 'clamp(1.1rem, 2.5vw, 1.4rem)' }}
+                    >
+                      {year}
+                    </span>
+
+                    {hasTeamEvents ? (
+                      /* Multi-event year: stack each event */
+                      <div className='space-y-2'>
+                        {gross && (
+                          <div className='flex items-baseline gap-3 justify-center flex-wrap'>
+                            <span className='font-mono text-[9px] uppercase tracking-[0.2em] text-gold/35 shrink-0'>Club</span>
+                            <span className='font-serif text-sm font-light text-cream/65 text-center'>{gross.name}</span>
+                          </div>
+                        )}
+                        {mg && (
+                          <div className='flex items-baseline gap-3 justify-center flex-wrap'>
+                            <span className='font-mono text-[9px] uppercase tracking-[0.2em] text-gold/35 shrink-0 whitespace-nowrap'>Mbr–Guest</span>
+                            <span className='font-serif text-sm font-light text-cream/65 text-center'>{mg.name}</span>
+                          </div>
+                        )}
+                        {mm && (
+                          <div className='flex items-baseline gap-3 justify-center flex-wrap'>
+                            <span className='font-mono text-[9px] uppercase tracking-[0.2em] text-gold/35 shrink-0 whitespace-nowrap'>Mbr–Mbr</span>
+                            <span className='font-serif text-sm font-light text-cream/65 text-center'>{mm.name}</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Club-only year: single centered name */
+                      <p className='font-serif text-sm font-light text-cream/65 text-center'>
+                        {gross?.name ?? '—'}
+                      </p>
+                    )}
                   </div>
                 )
               })}
@@ -185,11 +229,9 @@ function ChampionPlaque({ champions }: { champions: ClubChampion[] }) {
           </>
         )}
 
-        {/* Footer */}
-        <div className='flex items-center gap-4 mt-8'>
-          <div className='flex-1 h-px bg-gold/20' />
-          <div className='w-1.5 h-1.5 rotate-45 bg-gold/40 shrink-0' />
-          <div className='flex-1 h-px bg-gold/20' />
+        {/* Footer rule */}
+        <div className='mt-10'>
+          <GoldRule diamond />
         </div>
       </div>
     </div>
