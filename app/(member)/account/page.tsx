@@ -41,9 +41,9 @@ export default async function AccountPage() {
     .join('') ?? '?'
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
 
-      {/* ── Identity header ── */}
+      {/* ── Identity header — full width ── */}
       <div className="bg-navy px-8 py-8 flex items-center gap-6">
         <div className="shrink-0 w-16 h-16 rounded-full border border-gold/50 flex items-center justify-center">
           <span className="font-serif text-xl font-light text-gold tracking-wider">
@@ -65,69 +65,83 @@ export default async function AccountPage() {
         </div>
       </div>
 
-      {/* ── Profile (read-only) ── */}
-      <AccountCard label="Profile" icon="◈">
-        <FieldRow label="Full Name" value={member?.full_name} />
-        <FieldRow label="Email" value={member?.email} />
-        <div className="pt-3 border-t border-cream-mid mt-1">
-          <Link
-            href="/forgot-password"
-            className="font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40 hover:text-gold transition-colors"
-          >
-            Change Password →
-          </Link>
+      {/* ── Two-column body ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 items-start">
+
+        {/* Left — Settings */}
+        <div className="space-y-6">
+
+          {/* ── Profile (read-only) ── */}
+          <AccountCard label="Profile" icon="◈">
+            <FieldRow label="Full Name" value={member?.full_name} />
+            <FieldRow label="Email" value={member?.email} />
+            <div className="pt-3 border-t border-cream-mid mt-1">
+              <Link
+                href="/forgot-password"
+                className="font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40 hover:text-gold transition-colors"
+              >
+                Change Password →
+              </Link>
+            </div>
+          </AccountCard>
+
+          {/* ── Contact info (editable) ── */}
+          <ContactInfoSection
+            phone={member?.phone ?? null}
+            discord={member?.discord ?? null}
+            sgtUsername={member?.sgt_username ?? null}
+          />
+
+          {/* ── Email preferences ── */}
+          <EmailPreferencesSection
+            emailBookingConfirmation={member?.email_booking_confirmation ?? true}
+          />
+
         </div>
-      </AccountCard>
 
-      {/* ── Contact info (editable) ── */}
-      <ContactInfoSection
-        phone={member?.phone ?? null}
-        discord={member?.discord ?? null}
-        sgtUsername={member?.sgt_username ?? null}
-      />
+        {/* Right — Reservations */}
+        <div className="space-y-6">
 
-      {/* ── Email preferences ── */}
-      <EmailPreferencesSection
-        emailBookingConfirmation={member?.email_booking_confirmation ?? true}
-      />
+          {/* ── Upcoming bookings ── */}
+          <AccountCard
+            label="Upcoming Reservations"
+            icon="◷"
+            count={upcoming.length > 0 ? upcoming.length : undefined}
+          >
+            {upcoming.length === 0 ? (
+              <p className="font-serif italic text-sm text-navy/35 py-2">
+                No upcoming reservations.{' '}
+                <Link href="/reservations" className="not-italic text-gold hover:underline">
+                  Book a bay →
+                </Link>
+              </p>
+            ) : (
+              <div className="flex flex-col divide-y divide-cream-mid">
+                {upcoming.map((booking) => (
+                  <BookingRow key={booking.id} booking={booking} showCancel />
+                ))}
+              </div>
+            )}
+          </AccountCard>
 
-      {/* ── Upcoming bookings ── */}
-      <AccountCard
-        label="Upcoming Reservations"
-        icon="◷"
-        count={upcoming.length > 0 ? upcoming.length : undefined}
-      >
-        {upcoming.length === 0 ? (
-          <p className="font-serif italic text-sm text-navy/35 py-2">
-            No upcoming reservations.{' '}
-            <Link href="/reservations" className="not-italic text-gold hover:underline">
-              Book a bay →
-            </Link>
-          </p>
-        ) : (
-          <div className="flex flex-col divide-y divide-cream-mid">
-            {upcoming.map((booking) => (
-              <BookingRow key={booking.id} booking={booking} showCancel />
-            ))}
-          </div>
-        )}
-      </AccountCard>
-
-      {/* ── Past bookings ── */}
-      {past.length > 0 && (
-        <AccountCard label="Past Reservations" icon="◁" muted>
-          <div className="flex flex-col divide-y divide-cream-mid">
-            {past.slice(0, 10).map((booking) => (
-              <BookingRow key={booking.id} booking={booking} showCancel={false} />
-            ))}
-          </div>
-          {past.length > 10 && (
-            <p className="font-mono text-[10px] text-navy/30 uppercase tracking-[0.15em] pt-3 border-t border-cream-mid">
-              + {past.length - 10} more
-            </p>
+          {/* ── Past bookings ── */}
+          {past.length > 0 && (
+            <AccountCard label="Past Reservations" icon="◁" muted>
+              <div className="flex flex-col divide-y divide-cream-mid">
+                {past.slice(0, 10).map((booking) => (
+                  <BookingRow key={booking.id} booking={booking} showCancel={false} />
+                ))}
+              </div>
+              {past.length > 10 && (
+                <p className="font-mono text-[10px] text-navy/30 uppercase tracking-[0.15em] pt-3 border-t border-cream-mid">
+                  + {past.length - 10} more
+                </p>
+              )}
+            </AccountCard>
           )}
-        </AccountCard>
-      )}
+
+        </div>
+      </div>
     </div>
   )
 }
