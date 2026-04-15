@@ -57,6 +57,22 @@ export async function getMemberById(id: string): Promise<Member | null> {
   return data as Member
 }
 
+// Returns a map of lowercase sgt_username → full_name for all active members.
+// Used to annotate tournament leaderboards with real names.
+export async function getMemberNamesBySgtUsername(): Promise<Record<string, string>> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('members')
+    .select('full_name, sgt_username')
+    .eq('is_active', true)
+    .not('sgt_username', 'is', null)
+  const map: Record<string, string> = {}
+  for (const row of data ?? []) {
+    if (row.sgt_username) map[row.sgt_username.toLowerCase()] = row.full_name
+  }
+  return map
+}
+
 // Admin only — deactivate a member and sign them out.
 export async function deactivateMember(memberId: string): Promise<void> {
   const supabase = createAdminClient()

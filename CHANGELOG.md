@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.10.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.9.1...fescue-web-v1.10.0) (2026-04-15)
+
+
+### Features
+
+* SGT username on join form and leaderboard name display ([#51](https://github.com/P-v-R/fescue-web/issues/51)) ([76de2ba](https://github.com/P-v-R/fescue-web/commit/76de2baae24f27af749a8d6628c3bd7f1954a3dd))
+
+## [1.9.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.9.0...fescue-web-v1.9.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* promote.yml creates conflict-free deploy branch; fix tsconfig pre-push ([#48](https://github.com/P-v-R/fescue-web/issues/48)) ([f0d7762](https://github.com/P-v-R/fescue-web/commit/f0d776299afa50dab00b2522ef5ea82c1de7ea9a))
+
 ## [1.9.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.8.0...fescue-web-v1.9.0) (2026-04-15)
 
 
