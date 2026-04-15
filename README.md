@@ -76,7 +76,7 @@ Migrations live in `supabase/migrations/`. Create a new one with:
 supabase migration new my_migration_name
 ```
 
-Production migrations run automatically on each release via `release.yml`. Never run `supabase db push` against production manually.
+Production migrations run automatically when `main` is updated (`migrate.yml`). Never run `supabase db push` against production manually.
 
 ---
 
@@ -143,10 +143,11 @@ git branch -d feat/my-feature
 
 ### Releasing to production
 
-Two PRs to merge when ready to release:
+**You only merge one PR to ship to production:**
 
-1. **Merge the Release Please PR** (`chore: release X.Y.Z`) — bumps version, tags the release, runs DB migrations
-2. **Merge the deploy PR** (`Deploy fescue-web-vX.Y.Z to production`) — opened automatically by `promote.yml`, triggers Railway production deploy
+1. Each push to `staging` triggers Release Please, which opens a version bump PR (`chore: release X.Y.Z`). This PR **auto-merges** once CI passes — no action needed.
+2. Auto-merge tags the release → `promote.yml` opens a **deploy PR** (`Deploy fescue-web-vX.Y.Z to production`)
+3. **Merge the deploy PR** → Railway deploys production → `migrate.yml` runs DB migrations
 
 ### Commit message prefixes
 
@@ -163,10 +164,11 @@ The squash commit message when merging into `staging` determines the version bum
 
 | Workflow | Trigger | What it does |
 |---|---|---|
-| `ci.yml` | push to `staging`, `feat/**`, `fix/**` | Typecheck, lint, tests |
-| `release-please.yml` | push to `staging` | Opens/updates version bump PR |
-| `release.yml` | version tag | Runs DB migrations, creates GitHub Release |
+| `ci.yml` | push to `staging`/`feat/**`/`fix/**`; PR to `staging`/`main` | Type check, lint, test, build |
+| `release-please.yml` | push to `staging` | Opens version bump PR; auto-merges when CI passes |
+| `release.yml` | version tag | Creates GitHub Release |
 | `promote.yml` | version tag | Opens `staging → main` deploy PR |
+| `migrate.yml` | push to `main` | Runs `supabase db push` against production |
 
 ### Branch protection
 
