@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getTours, getTournaments, getStandings } from '@/lib/sgt/queries'
 import { StandingsTable } from '@/components/sgt/standings-table'
+import { getMemberNamesBySgtUsername } from '@/lib/supabase/queries/members'
 import type { SgtTour, SgtTournament } from '@/lib/sgt/types'
 
 type Props = {
@@ -52,11 +53,12 @@ export default async function TourDetailPage({ params }: Props) {
 
   if (isNaN(tourId)) return null
 
-  const [tours, tournaments, grossStandings, netStandings] = await Promise.all([
+  const [tours, tournaments, grossStandings, netStandings, memberNames] = await Promise.all([
     getTours().catch(() => [] as SgtTour[]),
     getTournaments(tourId).catch(() => [] as SgtTournament[]),
     getStandings(tourId, 'gross').catch(() => []),
     getStandings(tourId, 'net').catch(() => []),
+    getMemberNamesBySgtUsername().catch(() => ({} as Record<string, string>)),
   ])
 
   const tour = tours.find((t) => t.tourId === tourId)
@@ -120,7 +122,7 @@ export default async function TourDetailPage({ params }: Props) {
                 Standings not yet available.
               </p>
             ) : (
-              <StandingsTable gross={grossStandings} net={netStandings} />
+              <StandingsTable gross={grossStandings} net={netStandings} memberNames={memberNames} />
             )}
           </div>
         </div>
