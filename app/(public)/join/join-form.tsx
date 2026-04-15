@@ -97,6 +97,19 @@ export function JoinForm() {
         </p>
       </div>
 
+      <div className='flex flex-col gap-2'>
+        <Input
+          label='SGT Username'
+          type='text'
+          placeholder='Your SimulatGolf Tour username'
+          error={errors.sgt_username?.message}
+          {...register('sgt_username')}
+        />
+        <p className='font-mono text-label text-navy/40 tracking-[0.1em]'>
+          Optional — links your account to tournament standings.
+        </p>
+      </div>
+
       {/* Member since */}
       <div className='flex flex-col gap-2'>
         <label className='font-mono text-label uppercase tracking-[0.28em] text-sage'>
