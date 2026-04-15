@@ -1,17 +1,5 @@
 # Changelog
 
-## [1.8.0](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.7.1...fescue-web-v1.8.0) (2026-04-15)
-
-
-### Features
-
-* overhaul account and tournament UI ([#34](https://github.com/P-v-R/fescue-web/issues/34)) ([96e2c20](https://github.com/P-v-R/fescue-web/commit/96e2c206f98d494c90339503cd734f7056e7ac24))
-
-
-### Bug Fixes
-
-* extract PR number from release-please output JSON ([#36](https://github.com/P-v-R/fescue-web/issues/36)) ([98bbccb](https://github.com/P-v-R/fescue-web/commit/98bbccba2ae93103b8e09a16d915aaaeb462a232))
-
 ## [1.7.1](https://github.com/P-v-R/fescue-web/compare/fescue-web-v1.7.0...fescue-web-v1.7.1) (2026-04-14)
 
 
