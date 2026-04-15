@@ -105,7 +105,7 @@ Copy `.env.example` to `.env.local`. Key groups:
 ### Branches
 - `feat/*` / `fix/*` — all development work. Never commit directly to `staging`.
 - `staging` — integration branch. Only receives squash-merges from feature branches. Deploys to Railway staging automatically.
-- `main` — production only. **Never push directly to main.** Managed by Release Please.
+- `main` — production only. **Never push directly to main.**
 
 ### Day-to-day
 Always work on a feature branch, then squash-merge into `staging` when the feature is complete:
@@ -115,51 +115,39 @@ git checkout -b feat/my-feature
 # ... do work, commit freely ...
 git checkout staging
 git merge --squash feat/my-feature
-git commit -m "feat: describe the feature"   # this message feeds the changelog
+git commit -m "feat: describe the feature"
 git push origin staging
 git branch -d feat/my-feature
 ```
 
-The squash commit message must use the correct prefix (`feat:`, `fix:`, etc.) — Release Please reads staging commits to build the changelog, not the individual branch commits.
-
-Pushing to `staging` deploys to Railway staging automatically.
-
-### Commit message prefixes (required)
-Release Please reads these to determine the version bump and generate the changelog:
-
-| Prefix | Version bump | Shows in changelog |
-|--------|-------------|-------------------|
-| `feat:` | minor (0.1.0 → 0.2.0) | Yes |
-| `fix:` | patch (0.1.0 → 0.1.1) | Yes |
-| `chore:` | patch | No |
-| `BREAKING CHANGE:` | major (0.1.0 → 1.0.0) | Yes |
+Pushing to `staging` deploys to Railway staging and runs migrations against the staging DB automatically.
 
 ### Releasing to production
-Every push to `staging` triggers the **Release Please** bot. The full release flow:
+When staging is ready to ship:
 
-1. Release Please reads `staging` commits since the last tag and opens/updates a **version bump PR targeting `staging`** (updates `CHANGELOG.md` and `package.json` version). This PR **auto-merges** once CI passes — you don't touch it.
-2. Auto-merge creates a release tag (e.g. `fescue-web-v1.2.0`) on staging → `promote.yml` opens a **`staging → main` deploy PR**
-3. **Merge the deploy PR** → Railway detects the push to `main` and deploys production
-4. After `main` is updated, `migrate.yml` runs `supabase db push` against production
-
-**You only ever merge one PR to ship to production** — the `staging → main` deploy PR. The version bump PR auto-merges on its own.
-
-**Never open PRs from staging → main manually** — `promote.yml` owns that PR.
+1. Open a PR from `staging` → `main`
+2. Merge it → Railway deploys production, `migrate-prod.yml` runs migrations against the production DB
 
 ### GitHub Actions workflows
 | File | Trigger | What it does |
 |------|---------|--------------|
 | `ci.yml` | push to `staging`/`feat/**`/`fix/**`, PR to `staging`/`main` | Type check, lint, test, build |
-| `release-please.yml` | push to `staging` | Creates/updates version bump PR; auto-merges it when CI passes |
-| `release.yml` | version tag | Creates GitHub Release |
-| `promote.yml` | version tag | Opens `staging → main` deploy PR |
-| `migrate.yml` | push to `main` | Runs `supabase db push` against production |
+| `migrate.yml` | push to `staging` | Runs `supabase db push` against staging DB |
+| `migrate-prod.yml` | push to `main` | Runs `supabase db push` against production DB |
+
+### Required GitHub secrets
+| Secret | Used by |
+|--------|---------|
+| `SUPABASE_ACCESS_TOKEN` | Both migrate workflows |
+| `SUPABASE_STAGING_PROJECT_REF` | `migrate.yml` |
+| `SUPABASE_STAGING_DB_PASSWORD` | `migrate.yml` |
+| `SUPABASE_PROJECT_REF` | `migrate-prod.yml` |
+| `SUPABASE_DB_PASSWORD` | `migrate-prod.yml` |
 
 ### Never
 - Push directly to `main`
 - Use `--force` on `main`
-- Manually open staging → main PRs (`promote.yml` owns that)
-- Run `supabase db push` against production manually (`migrate.yml` handles it)
+- Run `supabase db push` against production manually (`migrate-prod.yml` handles it)
 
 ## Build Progress
 
