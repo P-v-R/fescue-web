@@ -29,4 +29,4 @@ jobs:
         if: ${{ steps.release.outputs.pr }}
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: gh pr merge --auto --squash ${{ steps.release.outputs.pr }}
+        run: gh pr merge --auto --squash ${{ fromJson(steps.release.outputs.pr).number }}
