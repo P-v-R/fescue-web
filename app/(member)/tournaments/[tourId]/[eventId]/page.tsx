@@ -27,63 +27,73 @@ export default async function EventLeaderboardPage({ params }: Props) {
   const roundNums = grossLeaderboard.flatMap((r) => r.rounds.map((rd) => rd.round))
   const roundCount = roundNums.length > 0 ? Math.max(...roundNums) : 1
 
+  const statusClass =
+    event?.status === 'In Progress'
+      ? 'text-navy bg-sage/15'
+      : event?.status === 'Completed'
+        ? 'text-navy/50 bg-cream'
+        : 'text-navy/40 bg-cream'
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
+    <div className="max-w-4xl space-y-8">
+
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs font-mono text-[var(--color-sage)] mb-8 flex-wrap">
-        <Link href="/tournaments" className="hover:text-[var(--color-navy)] transition-colors">
+      <nav className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-navy/35 flex-wrap">
+        <Link href="/tournaments" className="hover:text-navy transition-colors">
           Tournaments
         </Link>
         <span>/</span>
-        <Link
-          href={`/tournaments/${tourId}`}
-          className="hover:text-[var(--color-navy)] transition-colors"
-        >
+        <Link href={`/tournaments/${tourId}`} className="hover:text-navy transition-colors">
           {tour?.name ?? `Tour ${tourId}`}
         </Link>
         <span>/</span>
-        <span className="text-[var(--color-navy)]">{event?.name ?? `Event ${eventId}`}</span>
+        <span className="text-navy/60">{event?.name ?? `Event ${eventId}`}</span>
       </nav>
 
-      <div className="mb-8">
-        <h1 className="font-serif text-3xl text-[var(--color-navy)] leading-tight">
+      {/* Event header */}
+      <div>
+        <h1 className="font-serif text-2xl sm:text-display font-light text-navy leading-tight">
           {event?.name ?? `Event ${eventId}`}
         </h1>
         {event && (
-          <>
-            <p className="mt-1 text-sm text-[var(--color-sage)]">{event.courseName}</p>
-            <p className="mt-1 text-xs font-mono text-[var(--color-sage)] tracking-wide">
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40">
+              {event.courseName}
+            </p>
+            <span className="text-navy/20">·</span>
+            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40">
               {new Date(event.start_date).toLocaleDateString('en-US', {
                 month: 'long', day: 'numeric', year: 'numeric',
               })}
             </p>
-            <div className="mt-3">
-              <span
-                className={`text-xs font-mono uppercase tracking-widest rounded-full px-3 py-1 ${
-                  event.status === 'In Progress'
-                    ? 'text-[var(--color-navy)] bg-[var(--color-sage-light)]'
-                    : event.status === 'Completed'
-                      ? 'text-[var(--color-sand-dark)] bg-[var(--color-sand-light)]'
-                      : 'text-[var(--color-sage)] bg-[var(--color-sand-light)]'
-                }`}
-              >
-                {event.status}
-              </span>
-            </div>
-          </>
+            <span className={`font-mono text-[9px] uppercase tracking-[0.15em] px-2 py-0.5 ${statusClass}`}>
+              {event.status}
+            </span>
+          </div>
         )}
+        <div className="w-12 h-px bg-gold mt-4" />
       </div>
 
-      <div className="border border-[var(--color-sand)] rounded-xl p-6 bg-white">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[var(--color-sage)] mb-5">
-          Leaderboard
-        </h2>
-        <EventLeaderboard
-          gross={grossLeaderboard}
-          net={netLeaderboard}
-          roundCount={roundCount}
-        />
+      {/* Leaderboard card */}
+      <div className="bg-white border border-cream-mid">
+        <div className="flex items-center gap-2 px-6 py-4 border-b border-cream-mid">
+          <span className="text-gold/70 text-sm leading-none">◈</span>
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/60">
+            Leaderboard
+          </p>
+          {grossLeaderboard.length > 0 && (
+            <span className="ml-auto font-mono text-[10px] bg-gold/15 text-gold px-2 py-0.5 tracking-[0.1em]">
+              {grossLeaderboard.length} players
+            </span>
+          )}
+        </div>
+        <div className="px-6 py-5">
+          <EventLeaderboard
+            gross={grossLeaderboard}
+            net={netLeaderboard}
+            roundCount={roundCount}
+          />
+        </div>
       </div>
     </div>
   )

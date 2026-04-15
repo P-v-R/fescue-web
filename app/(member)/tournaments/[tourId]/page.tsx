@@ -8,48 +8,40 @@ type Props = {
 }
 
 function statusBadge(status: string) {
-  const map: Record<string, string> = {
-    'In Progress': 'text-[var(--color-navy)] bg-[var(--color-sage-light)]',
-    Upcoming: 'text-[var(--color-sage)] bg-[var(--color-sand-light)]',
-    Completed: 'text-[var(--color-sand-dark)] bg-[var(--color-sand-light)]',
-  }
-  return map[status] ?? 'text-[var(--color-sage)] bg-[var(--color-sand-light)]'
+  if (status === 'In Progress') return 'text-navy bg-sage/15'
+  if (status === 'Completed') return 'text-navy/50 bg-cream'
+  return 'text-navy/40 bg-cream'
 }
 
 function EventRow({ event, tourId }: { event: SgtTournament; tourId: number }) {
   const start = new Date(event.start_date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+    month: 'short', day: 'numeric', year: 'numeric',
   })
   const isPlayable = event.status === 'In Progress' || event.status === 'Completed'
 
   return (
-    <div className="border border-[var(--color-sand)] rounded-xl p-5 bg-white">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-serif text-lg text-[var(--color-navy)] leading-snug">
-            {event.name}
-          </h3>
-          <p className="mt-0.5 text-sm text-[var(--color-sage)]">{event.courseName}</p>
-          <p className="mt-1 text-xs font-mono text-[var(--color-sage)] tracking-wide">{start}</p>
-        </div>
-        <span
-          className={`flex-shrink-0 text-xs font-mono uppercase tracking-widest rounded-full px-3 py-1 ${statusBadge(event.status)}`}
-        >
+    <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-cream-mid last:border-0">
+      <div className="flex-1 min-w-0">
+        <p className="font-serif text-base font-light text-navy leading-snug">
+          {event.name}
+        </p>
+        <p className="font-mono text-[10px] text-navy/40 mt-0.5 tracking-[0.08em]">
+          {event.courseName} · {start}
+        </p>
+      </div>
+      <div className="flex items-center gap-4 shrink-0">
+        <span className={`font-mono text-[9px] uppercase tracking-[0.15em] px-2 py-0.5 ${statusBadge(event.status)}`}>
           {event.status}
         </span>
-      </div>
-      {isPlayable && (
-        <div className="mt-4 pt-4 border-t border-[var(--color-sand-light)]">
+        {isPlayable && (
           <Link
             href={`/tournaments/${tourId}/${event.tournamentId}`}
-            className="text-xs font-mono uppercase tracking-widest text-[var(--color-navy)] hover:text-[var(--color-gold-dark)] transition-colors"
+            className="font-mono text-[10px] uppercase tracking-[0.15em] text-navy/40 hover:text-gold transition-colors whitespace-nowrap"
           >
-            View Leaderboard →
+            Leaderboard →
           </Link>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
@@ -67,85 +59,97 @@ export default async function TourDetailPage({ params }: Props) {
     getStandings(tourId, 'net').catch(() => []),
   ])
 
-  // Best-effort tour header — falls back to a generic label if tours API flaked
   const tour = tours.find((t) => t.tourId === tourId)
-
   const sorted = [...tournaments].sort(
     (a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime(),
   )
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="max-w-3xl space-y-8">
+
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs font-mono text-[var(--color-sage)] mb-8">
-        <Link href="/tournaments" className="hover:text-[var(--color-navy)] transition-colors">
+      <nav className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-navy/35">
+        <Link href="/tournaments" className="hover:text-navy transition-colors">
           Tournaments
         </Link>
         <span>/</span>
-        <span className="text-[var(--color-navy)]">{tour?.name ?? `Tour ${tourId}`}</span>
+        <span className="text-navy/60">{tour?.name ?? `Tour ${tourId}`}</span>
       </nav>
 
-      <div className="flex items-start justify-between gap-4 mb-8">
+      {/* Tour header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl text-[var(--color-navy)] leading-tight">
+          <h1 className="font-serif text-2xl sm:text-display font-light text-navy leading-tight">
             {tour?.name ?? `Tour ${tourId}`}
           </h1>
           {tour && (
-            <p className="mt-1 text-sm font-mono text-[var(--color-sage)] tracking-wide">
-              {new Date(tour.start_date).toLocaleDateString('en-US', {
-                month: 'short',
-                year: 'numeric',
-              })}{' '}
-              —{' '}
-              {new Date(tour.end_date).toLocaleDateString('en-US', {
-                month: 'short',
-                year: 'numeric',
-              })}
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40">
+              {new Date(tour.start_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+              {' — '}
+              {new Date(tour.end_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
             </p>
           )}
+          <div className="w-12 h-px bg-gold mt-4" />
         </div>
-        {tour && (tour.active === 1 ? (
-          <span className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-[var(--color-navy)] bg-[var(--color-sage-light)] rounded-full px-3 py-1 flex-shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-navy)] animate-pulse" />
-            Active
-          </span>
-        ) : (
-          <span className="text-xs font-mono uppercase tracking-widest text-[var(--color-sage)] bg-[var(--color-sand-light)] rounded-full px-3 py-1 flex-shrink-0">
-            Past
-          </span>
-        ))}
+        {tour && (
+          tour.active === 1 ? (
+            <span className="inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.15em] text-navy bg-sage/15 px-3 py-1 shrink-0 mt-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-navy animate-pulse" />
+              Active
+            </span>
+          ) : (
+            <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-navy/35 bg-cream px-3 py-1 shrink-0 mt-1">
+              Past
+            </span>
+          )
+        )}
       </div>
 
       {/* Standings */}
-      <section className="mb-12">
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[var(--color-sage)] mb-5">
-          Tour Standings
-        </h2>
-        <div className="border border-[var(--color-sand)] rounded-xl p-6 bg-white">
-          {grossStandings.length === 0 && netStandings.length === 0 ? (
-            <p className="text-sm text-[var(--color-sage)] italic">
-              Standings not yet available.
+      <section>
+        <div className="bg-white border border-cream-mid">
+          <div className="flex items-center gap-2 px-6 py-4 border-b border-cream-mid">
+            <span className="text-gold/70 text-sm leading-none">◈</span>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/60">
+              Tour Standings
             </p>
-          ) : (
-            <StandingsTable gross={grossStandings} net={netStandings} />
-          )}
+          </div>
+          <div className="px-6 py-5">
+            {grossStandings.length === 0 && netStandings.length === 0 ? (
+              <p className="font-serif italic text-sm text-navy/35">
+                Standings not yet available.
+              </p>
+            ) : (
+              <StandingsTable gross={grossStandings} net={netStandings} />
+            )}
+          </div>
         </div>
       </section>
 
       {/* Events */}
       <section>
-        <h2 className="font-mono text-xs uppercase tracking-widest text-[var(--color-sage)] mb-5">
-          Events
-        </h2>
-        {sorted.length === 0 ? (
-          <p className="text-sm text-[var(--color-sage)] italic">No events scheduled.</p>
-        ) : (
-          <div className="space-y-3">
-            {sorted.map((event) => (
-              <EventRow key={event.tournamentId} event={event} tourId={tourId} />
-            ))}
+        <div className="bg-white border border-cream-mid">
+          <div className="flex items-center gap-2 px-6 py-4 border-b border-cream-mid">
+            <span className="text-gold/70 text-sm leading-none">◈</span>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/60">
+              Events
+            </p>
+            <span className="ml-auto font-mono text-[10px] bg-gold/15 text-gold px-2 py-0.5 tracking-[0.1em]">
+              {sorted.length}
+            </span>
           </div>
-        )}
+          {sorted.length === 0 ? (
+            <div className="px-6 py-5">
+              <p className="font-serif italic text-sm text-navy/35">No events scheduled.</p>
+            </div>
+          ) : (
+            <div>
+              {sorted.map((event) => (
+                <EventRow key={event.tournamentId} event={event} tourId={tourId} />
+              ))}
+            </div>
+          )}
+        </div>
       </section>
     </div>
   )
