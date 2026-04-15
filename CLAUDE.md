@@ -108,25 +108,36 @@ Copy `.env.example` to `.env.local`. Key groups:
 - `main` — production only. **Never push directly to main.**
 
 ### Day-to-day
-Always work on a feature branch, then squash-merge into `staging` when the feature is complete:
+Always work on a feature branch, then open a PR to `staging`. Branch protection requires CI to pass — you cannot push directly to `staging`.
 
 ```bash
 git checkout -b feat/my-feature
 # ... do work, commit freely ...
-git checkout staging
-git merge --squash feat/my-feature
-git commit -m "feat: describe the feature"
-git push origin staging
+git push origin feat/my-feature
+# Open PR → staging on GitHub, squash-merge when CI passes
 git branch -d feat/my-feature
 ```
 
-Pushing to `staging` deploys to Railway staging and runs migrations against the staging DB automatically.
+Merging into `staging` deploys to Railway staging and runs migrations against the staging DB automatically.
 
 ### Releasing to production
-When staging is ready to ship:
+**Do not open a PR from `staging` → `main` directly** — squash-merge history means git sees a very old merge base and generates massive false conflicts.
 
-1. Open a PR from `staging` → `main`
-2. Merge it → Railway deploys production, `migrate-prod.yml` runs migrations against the production DB
+Instead, build the deploy PR off `main`:
+
+```bash
+git fetch origin
+git checkout -b deploy/prod origin/main
+
+# Apply only the files that changed on staging vs main
+git diff --name-only origin/main origin/staging | xargs git checkout origin/staging --
+
+git commit -m "chore: deploy to production"
+git push -u origin deploy/prod
+gh pr create --base main --head deploy/prod --title "Deploy to production"
+```
+
+Merge the PR → Railway deploys production, `migrate-prod.yml` runs migrations.
 
 ### GitHub Actions workflows
 | File | Trigger | What it does |
