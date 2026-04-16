@@ -213,3 +213,29 @@ body {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ─── High contrast mode ─────────────────────────────────────────────── */
+/* Applied as a class on the member layout wrapper when the member has    */
+/* high_contrast enabled in their account settings. Boosts muted text     */
+/* opacity so all copy meets WCAG AA contrast ratios.                     */
+
+html.high-contrast .text-navy\/20 { color: color-mix(in srgb, var(--navy) 55%, transparent); }
+html.high-contrast .text-navy\/25 { color: color-mix(in srgb, var(--navy) 58%, transparent); }
+html.high-contrast .text-navy\/30 { color: color-mix(in srgb, var(--navy) 62%, transparent); }
+html.high-contrast .text-navy\/35 { color: color-mix(in srgb, var(--navy) 65%, transparent); }
+html.high-contrast .text-navy\/40 { color: color-mix(in srgb, var(--navy) 70%, transparent); }
+html.high-contrast .text-navy\/45 { color: color-mix(in srgb, var(--navy) 75%, transparent); }
+html.high-contrast .text-navy\/50 { color: color-mix(in srgb, var(--navy) 82%, transparent); }
+html.high-contrast .text-navy\/60 { color: color-mix(in srgb, var(--navy) 88%, transparent); }
+
+html.high-contrast .text-cream\/40 { color: color-mix(in srgb, var(--cream) 78%, transparent); }
+
+html.high-contrast .text-gold\/70 { color: color-mix(in srgb, var(--gold) 90%, transparent); }
+html.high-contrast .text-gold\/35 { color: color-mix(in srgb, var(--gold) 70%, transparent); }
+
+html.high-contrast .border-cream-mid {
+  border-color: color-mix(in srgb, var(--cream-mid) 50%, var(--navy));
+}
+html.high-contrast .border-cream-mid\/60 {
+  border-color: color-mix(in srgb, var(--cream-mid) 40%, var(--navy));
+}

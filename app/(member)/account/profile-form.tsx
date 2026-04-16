@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { updateProfileAction, updateEmailPreferencesAction } from './actions'
+import { updateProfileAction, updatePreferencesAction } from './actions'
 import { formatPhone } from '@/lib/utils/phone'
 
 // ─── Contact info ─────────────────────────────────────────────────────────────
@@ -164,25 +164,40 @@ function EditableFieldRow({
   )
 }
 
-// ─── Email preferences ────────────────────────────────────────────────────
+// ─── Preferences ──────────────────────────────────────────────────────────
 export function EmailPreferencesSection({
   emailBookingConfirmation,
+  highContrast,
 }: {
   emailBookingConfirmation: boolean
+  highContrast: boolean
 }) {
-  const [checked, setChecked] = useState(emailBookingConfirmation)
+  const [bookingConfirm, setBookingConfirm] = useState(emailBookingConfirmation)
+  const [contrast, setContrast] = useState(highContrast)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleToggle() {
-    const next = !checked
-    setChecked(next)
+  async function handleToggle(field: 'booking' | 'contrast') {
+    const nextBooking = field === 'booking' ? !bookingConfirm : bookingConfirm
+    const nextContrast = field === 'contrast' ? !contrast : contrast
+    if (field === 'booking') setBookingConfirm(nextBooking)
+    if (field === 'contrast') {
+      setContrast(nextContrast)
+      document.documentElement.classList.toggle('high-contrast', nextContrast)
+    }
     setSaving(true)
     setError(null)
-    const result = await updateEmailPreferencesAction({ email_booking_confirmation: next })
+    const result = await updatePreferencesAction({
+      email_booking_confirmation: nextBooking,
+      high_contrast: nextContrast,
+    })
     setSaving(false)
     if (result.error) {
-      setChecked(!next)
+      if (field === 'booking') setBookingConfirm(!nextBooking)
+      if (field === 'contrast') {
+        setContrast(!nextContrast)
+        document.documentElement.classList.toggle('high-contrast', !nextContrast)
+      }
       setError(result.error)
     }
   }
@@ -195,40 +210,71 @@ export function EmailPreferencesSection({
           Preferences
         </p>
       </div>
-      <div className="px-6 py-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="font-sans text-sm font-light text-navy-dark">
-              Booking confirmations
-            </p>
-            <p className="font-mono text-[10px] text-navy/35 mt-0.5 tracking-[0.08em]">
-              Receive an email when you book a bay
-            </p>
-          </div>
-          <button
-            role="switch"
-            aria-checked={checked}
-            onClick={handleToggle}
+      <div className="px-6 py-5 space-y-5">
+        <PreferenceRow
+          label="Booking confirmations"
+          description="Receive an email when you book a bay"
+          checked={bookingConfirm}
+          disabled={saving}
+          onToggle={() => handleToggle('booking')}
+        />
+        <div className="border-t border-cream-mid/60 pt-5">
+          <PreferenceRow
+            label="High contrast"
+            description="Increases text contrast throughout the member portal for easier reading"
+            checked={contrast}
             disabled={saving}
-            className={[
-              'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              checked ? 'bg-navy' : 'bg-cream-mid',
-            ].join(' ')}
-          >
-            <span
-              className={[
-                'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200',
-                checked ? 'translate-x-5' : 'translate-x-0',
-              ].join(' ')}
-            />
-          </button>
+            onToggle={() => handleToggle('contrast')}
+          />
         </div>
         {error && (
-          <p className="font-mono text-[10px] text-red-500 mt-3">{error}</p>
+          <p className="font-mono text-[10px] text-red-500">{error}</p>
         )}
       </div>
+    </div>
+  )
+}
+
+function PreferenceRow({
+  label,
+  description,
+  checked,
+  disabled,
+  onToggle,
+}: {
+  label: string
+  description: string
+  checked: boolean
+  disabled: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <p className="font-sans text-sm font-light text-navy-dark">{label}</p>
+        <p className="font-mono text-[10px] text-navy/35 mt-0.5 tracking-[0.08em]">
+          {description}
+        </p>
+      </div>
+      <button
+        role="switch"
+        aria-checked={checked}
+        onClick={onToggle}
+        disabled={disabled}
+        className={[
+          'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
+          checked ? 'bg-navy' : 'bg-cream-mid',
+        ].join(' ')}
+      >
+        <span
+          className={[
+            'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200',
+            checked ? 'translate-x-5' : 'translate-x-0',
+          ].join(' ')}
+        />
+      </button>
     </div>
   )
 }

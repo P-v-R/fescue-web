@@ -62,8 +62,9 @@ export async function submitSuggestionAction(input: {
   return {}
 }
 
-export async function updateEmailPreferencesAction(input: {
+export async function updatePreferencesAction(input: {
   email_booking_confirmation: boolean
+  high_contrast: boolean
 }): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -71,7 +72,10 @@ export async function updateEmailPreferencesAction(input: {
 
   const { error } = await supabase
     .from('members')
-    .update({ email_booking_confirmation: input.email_booking_confirmation })
+    .update({
+      email_booking_confirmation: input.email_booking_confirmation,
+      high_contrast: input.high_contrast,
+    })
     .eq('id', user.id)
 
   if (error) return { error: error.message }

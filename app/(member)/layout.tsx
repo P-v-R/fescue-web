@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { MemberNav } from '@/components/ui/member-nav'
 import { AnnouncementBanner } from '@/components/ui/announcement-banner'
 import { getAnnouncement } from '@/lib/sanity/queries'
+import { HighContrastApplier } from './high-contrast-applier'
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -13,7 +14,7 @@ export default async function MemberLayout({ children }: { children: React.React
   if (!user) redirect('/login')
 
   const [{ data: member }, announcement] = await Promise.all([
-    supabase.from('members').select('full_name, is_admin').eq('id', user.id).single(),
+    supabase.from('members').select('full_name, is_admin, high_contrast').eq('id', user.id).single(),
     getAnnouncement(),
   ])
 
@@ -21,6 +22,7 @@ export default async function MemberLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-screen bg-cream-light">
+      <HighContrastApplier enabled={member?.high_contrast ?? false} />
       <MemberNav
         memberName={member?.full_name ?? ''}
         isAdmin={member?.is_admin ?? false}

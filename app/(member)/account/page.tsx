@@ -19,7 +19,7 @@ export default async function AccountPage() {
   const [{ data: member }, { data: bookingsRaw }] = await Promise.all([
     supabase
       .from('members')
-      .select('full_name, email, phone, discord, sgt_username, created_at, email_booking_confirmation')
+      .select('full_name, email, phone, discord, sgt_username, created_at, email_booking_confirmation, high_contrast')
       .eq('id', user!.id)
       .single(),
     supabase
@@ -96,6 +96,7 @@ export default async function AccountPage() {
           {/* ── Email preferences ── */}
           <EmailPreferencesSection
             emailBookingConfirmation={member?.email_booking_confirmation ?? true}
+            highContrast={member?.high_contrast ?? false}
           />
 
           {/* ── Club suggestions ── */}
