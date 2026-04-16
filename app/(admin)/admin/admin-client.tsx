@@ -79,7 +79,7 @@ export function AdminClient({
           >
             {tab.label}
             {tab.badge && (
-              <span className='flex h-4 w-4 items-center justify-center rounded-full bg-gold text-label font-bold text-white'>
+              <span className='flex min-w-[1.25rem] h-5 px-1 items-center justify-center bg-gold text-[9px] font-mono font-bold text-white'>
                 {tab.badge}
               </span>
             )}

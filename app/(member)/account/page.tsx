@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { CancelBookingButton } from './cancel-button'
 import { ContactInfoSection, EmailPreferencesSection } from './profile-form'
+import { SuggestionForm } from './suggestion-form'
 import type { BookingWithBay } from '@/lib/supabase/types'
 
 export const metadata = {
@@ -96,6 +97,11 @@ export default async function AccountPage() {
           <EmailPreferencesSection
             emailBookingConfirmation={member?.email_booking_confirmation ?? true}
           />
+
+          {/* ── Club suggestions ── */}
+          <AccountCard label="Club Suggestions" icon="✉">
+            <SuggestionForm />
+          </AccountCard>
 
         </div>
 

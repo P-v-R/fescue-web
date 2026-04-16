@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { notifySuggestion } from '@/lib/discord/notify'
 
 export async function logoutAction(): Promise<never> {
   const supabase = await createClient()
@@ -32,6 +33,32 @@ export async function updateProfileAction(input: {
 
   revalidatePath('/account')
   revalidatePath('/members')
+  return {}
+}
+
+export async function submitSuggestionAction(input: {
+  body: string
+  anonymous: boolean
+}): Promise<{ error?: string }> {
+  const body = input.body.trim().slice(0, 2000)
+  if (!body) return { error: 'Suggestion cannot be empty.' }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not signed in.' }
+
+  const { data: member } = await supabase
+    .from('members')
+    .select('full_name')
+    .eq('id', user.id)
+    .single()
+
+  await notifySuggestion({
+    body,
+    memberName: member?.full_name ?? 'Unknown member',
+    anonymous: input.anonymous,
+  })
+
   return {}
 }
 

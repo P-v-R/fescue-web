@@ -20,6 +20,7 @@ import {
   deleteEventAction,
   removeRsvpAction,
 } from '../actions';
+import { DiscordNotifyButton } from '../components/discord-notify-button';
 
 const EVENT_TIME_OPTIONS = Array.from({ length: 72 }, (_, i) => {
   const totalMins = 6 * 60 + i * 15;
@@ -303,6 +304,7 @@ export function EventsTab({
                       >
                         Edit
                       </button>
+                      <DiscordNotifyButton event={event} />
                       <ConfirmButton
                         disabled={isPending}
                         onConfirm={() => run(() => deleteEventAction(event.id))}
