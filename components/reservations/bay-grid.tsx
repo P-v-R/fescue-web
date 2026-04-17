@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { isBefore } from 'date-fns';
 import {
   generateTimeSlots,
@@ -38,6 +38,21 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingCl
   const now = new Date();
   const slots = useMemo(() => generateTimeSlots(date), [date]);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const currentRowRef = useRef<HTMLTableRowElement>(null)
+  const currentSlotIdx = useMemo(
+    () => slots.findIndex((slot) => !isBefore(slot, new Date())),
+    [slots],
+  )
+
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    const row = currentRowRef.current
+    if (container && row) {
+      container.scrollTop = row.offsetTop - 80
+    }
+  }, [date])
+
   // Build a map from "slotIdx-bayIdx" to booking start, and a set of continuation keys
   const { bookingStarts, continuations } = useMemo(() => {
     const bookingStarts = new Map<string, { booking: BookingWithMember; span: number }>();
@@ -67,7 +82,7 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingCl
       <p className='sm:hidden px-3 py-1.5 bg-cream-mid/60 text-center font-mono text-label text-sand/70 uppercase tracking-[0.15em] border-b border-sand/30'>
         ← Scroll to see all bays →
       </p>
-      <div className='max-h-[70vh] sm:max-h-[75vh] overflow-y-auto'>
+      <div ref={scrollContainerRef} className='max-h-[70vh] sm:max-h-[75vh] overflow-y-auto'>
         <table className='w-full border-collapse text-sm min-w-[600px]'>
           {/* Column headers */}
           <thead className='sticky top-0 z-10 bg-navy-dark'>
@@ -94,6 +109,7 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingCl
               return (
                 <tr
                   key={slotIdx}
+                  ref={slotIdx === currentSlotIdx ? currentRowRef : undefined}
                   className={isHour ? 'border-t border-sand/40' : ''}
                 >
                   {/* Time label */}
@@ -185,12 +201,12 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingCl
                         }
                         className={[
                           'border-r border-sand/35 last:border-r-0 border-b border-b-sand/20',
-                          'h-7 transition-colors duration-150',
+                          'h-7 transition-[background-color,box-shadow] duration-100',
                           isPastHour
                             ? 'bg-navy/[0.08] cursor-default'
                             : isBlackedOut
                               ? 'bg-gold/25 cursor-not-allowed'
-                              : 'bg-white cursor-pointer hover:bg-gold/[0.12] active:bg-gold/[0.20]',
+                              : 'bg-white cursor-pointer hover:bg-gold/[0.14] hover:[box-shadow:inset_0_0_0_1px_rgba(184,150,60,0.45)] active:bg-gold/[0.22]',
                         ].join(' ')}
                       >
                         {isBlackedOut && isHour && (

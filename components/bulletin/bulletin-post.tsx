@@ -23,7 +23,7 @@ const portableTextComponents = {
   },
   marks: {
     strong: ({ children }: { children?: React.ReactNode }) => (
-      <strong className="font-medium text-navy">{children}</strong>
+      <strong className="font-bold text-navy">{children}</strong>
     ),
     em: ({ children }: { children?: React.ReactNode }) => (
       <em className="italic">{children}</em>
@@ -47,14 +47,22 @@ const portableTextComponents = {
   },
   list: {
     bullet: ({ children }: { children?: React.ReactNode }) => (
-      <ul className="list-disc list-inside font-sans text-sm font-light text-navy-dark mb-3 space-y-1">
+      <ul className="list-disc list-outside pl-5 font-sans text-sm font-light text-navy-dark mb-3 space-y-1.5">
         {children}
       </ul>
     ),
     number: ({ children }: { children?: React.ReactNode }) => (
-      <ol className="list-decimal list-inside font-sans text-sm font-light text-navy-dark mb-3 space-y-1">
+      <ol className="list-decimal list-outside pl-5 font-sans text-sm font-light text-navy-dark mb-3 space-y-1.5">
         {children}
       </ol>
+    ),
+  },
+  listItem: {
+    bullet: ({ children }: { children?: React.ReactNode }) => (
+      <li className="leading-relaxed pl-1">{children}</li>
+    ),
+    number: ({ children }: { children?: React.ReactNode }) => (
+      <li className="leading-relaxed pl-1">{children}</li>
     ),
   },
 }

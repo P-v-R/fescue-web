@@ -78,7 +78,7 @@ export default async function DashboardPage() {
       <OrnamentDivider className='mb-10' />
 
       {/* Main content grid */}
-      <div className='grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8'>
+      <div className='grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8'>
         {/* Bulletin feed */}
         <div>
           <p className='font-mono text-label uppercase tracking-[0.28em] text-sage mb-5'>
