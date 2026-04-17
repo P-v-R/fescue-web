@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 const guestSchema = z.object({
   name: z.string().min(1, 'Guest name is required'),
-  email: z.string().email('Invalid guest email'),
+  email: z.string().email('Invalid guest email').optional().or(z.literal('')),
 })
 
 export const newBookingSchema = z.object({

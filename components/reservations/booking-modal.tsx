@@ -23,6 +23,7 @@ type Props = {
 
 type GuestEntry = { name: string; email: string };
 
+
 const DURATIONS = [
   { value: 30, label: '30 min' },
   { value: 60, label: '1 hour' },
@@ -70,8 +71,8 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
 
     for (let i = 0; i < guests.length; i++) {
       const g = guests[i];
-      if (!g.name.trim() || !g.email.trim()) {
-        setError(`Please complete name and email for guest ${i + 1}.`);
+      if (!g.name.trim()) {
+        setError(`Please enter a name for guest ${i + 1}.`);
         return;
       }
     }
@@ -85,7 +86,7 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
       duration_minutes: duration,
       guests: guests.map((g) => ({
         name: g.name.trim(),
-        email: g.email.trim(),
+        ...(g.email.trim() ? { email: g.email.trim() } : {}),
       })),
     });
 
@@ -197,8 +198,8 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
                   : `Ends at ${format(endTime, 'h:mm a')}`}
               </p>
               {duration === 120 && (
-                <p className='font-mono text-label tracking-[0.1em] text-navy'>
-                  2+ players required for this duration
+                <p className='font-mono text-label tracking-[0.1em] text-sand'>
+                  2-hour sessions are intended for 2+ players
                 </p>
               )}
             </div>
@@ -254,7 +255,7 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
                       placeholder='Jane Smith'
                     />
                     <Input
-                      label='Email'
+                      label='Email (optional)'
                       type='email'
                       value={guest.email}
                       onChange={(e) => updateGuest(i, 'email', e.target.value)}

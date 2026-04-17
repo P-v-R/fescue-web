@@ -208,9 +208,25 @@ export async function createBlackoutAction(
     if (!allDay && startTime! >= endTime!) return { error: 'End time must be after start time.' }
 
     await createBlackoutPeriod({ date, start_time: startTime, end_time: endTime, all_bays: allBays, bay_ids: bayIds, reason, created_by: adminId })
+
+    const addToCalendar = formData.get('add_to_calendar') === 'true'
+    if (addToCalendar) {
+      const eventTitle = (formData.get('calendar_event_title') as string | null)?.trim() || reason || 'Bay Unavailable'
+      const startsAt = allDay ? `${date}T08:00:00` : `${date}T${startTime}`
+      const endsAt = allDay ? `${date}T22:00:00` : `${date}T${endTime}`
+      await createEvent({
+        title: eventTitle,
+        starts_at: new Date(startsAt).toISOString(),
+        ends_at: new Date(endsAt).toISOString(),
+        rsvp_enabled: false,
+        created_by: adminId,
+      })
+      revalidatePath('/calendar')
+    }
+
     revalidatePath('/admin')
     revalidatePath('/reservations')
-    return { success: 'Blackout period saved.' }
+    return { success: addToCalendar ? 'Blackout period saved and added to calendar.' : 'Blackout period saved.' }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to create blackout.' }
   }
@@ -246,7 +262,7 @@ export async function createBookingForMemberAction(
     if (!memberId || !bayId || !startTime || !duration) {
       return { error: 'All fields are required.' }
     }
-    if (![60, 90, 120].includes(duration)) {
+    if (duration <= 0 || duration % 30 !== 0 || duration > 840) {
       return { error: 'Invalid duration.' }
     }
 
@@ -254,7 +270,7 @@ export async function createBookingForMemberAction(
       member_id: memberId,
       bay_id: bayId,
       start_time: startTime,
-      duration_minutes: duration as 60 | 90 | 120,
+      duration_minutes: duration,
       guests: [],
     })
 

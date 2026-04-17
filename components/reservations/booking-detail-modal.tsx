@@ -104,7 +104,7 @@ export function BookingDetailModal({ booking, bayName, onClose, onCancelled }: P
                 {guests.map((g, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <span className="font-sans text-sm font-light text-navy">{g.name}</span>
-                    <span className="font-mono text-label text-navy/40">{g.email}</span>
+                    {g.email && <span className="font-mono text-label text-navy/40">{g.email}</span>}
                   </div>
                 ))}
               </div>

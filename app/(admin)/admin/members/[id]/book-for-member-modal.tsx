@@ -13,7 +13,18 @@ const TIME_OPTIONS = Array.from({ length: 29 }, (_, i) => {
   return { value, label }
 })
 
-const DURATIONS = [60, 90, 120] as const
+const DURATIONS = [
+  { value: 60,  label: '1 hr' },
+  { value: 90,  label: '1.5 hrs' },
+  { value: 120, label: '2 hrs' },
+  { value: 180, label: '3 hrs' },
+  { value: 240, label: '4 hrs' },
+  { value: 360, label: '6 hrs' },
+  { value: 480, label: '8 hrs' },
+  { value: 840, label: 'Full day' },
+] as const
+
+type DurationValue = typeof DURATIONS[number]['value']
 
 function todayStr() {
   return new Date().toISOString().split('T')[0]
@@ -36,7 +47,7 @@ export function BookForMemberModal({ memberId, memberName, bays }: Props) {
   const [date, setDate] = useState(todayStr())
   const [bayId, setBayId] = useState(bays[0]?.id ?? '')
   const [time, setTime] = useState('10:00')
-  const [duration, setDuration] = useState<60 | 90 | 120>(60)
+  const [duration, setDuration] = useState<DurationValue>(60)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -151,24 +162,16 @@ export function BookForMemberModal({ memberId, memberName, bays }: Props) {
 
                 {/* Duration */}
                 <div>
-                  <label className="font-mono text-label uppercase tracking-[0.18em] text-sand block mb-2">Duration</label>
-                  <div className="flex gap-2">
+                  <label className="font-mono text-label uppercase tracking-[0.18em] text-sand block mb-1">Duration</label>
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value) as DurationValue)}
+                    className="w-full bg-white border border-cream-mid px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-gold transition-colors"
+                  >
                     {DURATIONS.map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setDuration(d)}
-                        className={[
-                          'flex-1 py-2 font-mono text-label uppercase tracking-[0.15em] border transition-colors',
-                          duration === d
-                            ? 'bg-navy text-cream border-navy'
-                            : 'bg-white text-navy border-cream-mid hover:border-gold/40',
-                        ].join(' ')}
-                      >
-                        {d}min
-                      </button>
+                      <option key={d.value} value={d.value}>{d.label}</option>
                     ))}
-                  </div>
+                  </select>
                 </div>
 
                 {error && <p className="font-mono text-label text-red-500">{error}</p>}
