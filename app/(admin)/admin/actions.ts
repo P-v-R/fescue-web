@@ -577,7 +577,8 @@ export async function notifyEventAction(
     })
     return { success: 'Sent to Discord.' }
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to notify Discord.' }
+    console.error('[discord] notifyEventAction failed:', err)
+    return { error: 'Failed to post to Discord. Check server logs.' }
   }
 }
 

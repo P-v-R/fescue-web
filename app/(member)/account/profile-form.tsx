@@ -181,35 +181,38 @@ export function EmailPreferencesSection({
   const [error, setError] = useState<string | null>(null)
 
   async function handleToggle(field: 'booking' | 'contrast' | 'dark') {
-    const nextBooking = field === 'booking' ? !bookingConfirm : bookingConfirm
-    const nextContrast = field === 'contrast' ? !contrast : contrast
-    const nextDark = field === 'dark' ? !dark : dark
-    if (field === 'booking') setBookingConfirm(nextBooking)
+    if (saving) return
+
+    const next = field === 'booking' ? !bookingConfirm : field === 'contrast' ? !contrast : !dark
+
+    if (field === 'booking') setBookingConfirm(next)
     if (field === 'contrast') {
-      setContrast(nextContrast)
-      document.documentElement.classList.toggle('high-contrast', nextContrast)
+      setContrast(next)
+      document.documentElement.classList.toggle('high-contrast', next)
     }
     if (field === 'dark') {
-      setDark(nextDark)
-      document.documentElement.classList.toggle('dark-mode', nextDark)
+      setDark(next)
+      document.documentElement.classList.toggle('dark-mode', next)
     }
+
     setSaving(true)
     setError(null)
-    const result = await updatePreferencesAction({
-      email_booking_confirmation: nextBooking,
-      high_contrast: nextContrast,
-      dark_mode: nextDark,
-    })
+    const payload =
+      field === 'booking' ? { email_booking_confirmation: next } :
+      field === 'contrast' ? { high_contrast: next } :
+      { dark_mode: next }
+    const result = await updatePreferencesAction(payload)
     setSaving(false)
+
     if (result.error) {
-      if (field === 'booking') setBookingConfirm(!nextBooking)
+      if (field === 'booking') setBookingConfirm(!next)
       if (field === 'contrast') {
-        setContrast(!nextContrast)
-        document.documentElement.classList.toggle('high-contrast', !nextContrast)
+        setContrast(!next)
+        document.documentElement.classList.toggle('high-contrast', !next)
       }
       if (field === 'dark') {
-        setDark(!nextDark)
-        document.documentElement.classList.toggle('dark-mode', !nextDark)
+        setDark(!next)
+        document.documentElement.classList.toggle('dark-mode', !next)
       }
       setError(result.error)
     }

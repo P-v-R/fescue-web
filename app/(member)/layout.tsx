@@ -3,8 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { MemberNav } from '@/components/ui/member-nav'
 import { AnnouncementBanner } from '@/components/ui/announcement-banner'
 import { getAnnouncement } from '@/lib/sanity/queries'
-import { HighContrastApplier } from './high-contrast-applier'
-import { DarkModeApplier } from './dark-mode-applier'
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -21,10 +19,18 @@ export default async function MemberLayout({ children }: { children: React.React
 
   const activeAnnouncement = announcement?.isActive ? announcement : null
 
+  const darkMode = member?.dark_mode ?? false
+  const highContrast = member?.high_contrast ?? false
+  const themeScript = [
+    darkMode && "document.documentElement.classList.add('dark-mode');",
+    highContrast && "document.documentElement.classList.add('high-contrast');",
+  ].filter(Boolean).join('')
+
   return (
     <div className="min-h-screen bg-cream-light">
-      <DarkModeApplier enabled={member?.dark_mode ?? false} />
-      <HighContrastApplier enabled={member?.high_contrast ?? false} />
+      {themeScript && (
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      )}
       <MemberNav
         memberName={member?.full_name ?? ''}
         isAdmin={member?.is_admin ?? false}

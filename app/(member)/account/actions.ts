@@ -53,19 +53,24 @@ export async function submitSuggestionAction(input: {
     .eq('id', user.id)
     .single()
 
-  await notifySuggestion({
-    body,
-    memberName: member?.full_name ?? 'Unknown member',
-    anonymous: input.anonymous,
-  })
+  try {
+    await notifySuggestion({
+      body,
+      memberName: member?.full_name ?? 'Unknown member',
+      anonymous: input.anonymous,
+    })
+  } catch (err) {
+    console.error('[suggestion] failed to send to Discord:', err)
+    return { error: 'Failed to send suggestion. Please try again.' }
+  }
 
   return {}
 }
 
 export async function updatePreferencesAction(input: {
-  email_booking_confirmation: boolean
-  high_contrast: boolean
-  dark_mode: boolean
+  email_booking_confirmation?: boolean
+  high_contrast?: boolean
+  dark_mode?: boolean
 }): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -73,11 +78,7 @@ export async function updatePreferencesAction(input: {
 
   const { error } = await supabase
     .from('members')
-    .update({
-      email_booking_confirmation: input.email_booking_confirmation,
-      high_contrast: input.high_contrast,
-      dark_mode: input.dark_mode,
-    })
+    .update(input)
     .eq('id', user.id)
 
   if (error) return { error: error.message }

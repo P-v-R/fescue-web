@@ -40,7 +40,10 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingCl
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const currentRowRef = useRef<HTMLTableRowElement>(null)
-  const currentSlotIdx = slots.findIndex((slot) => !isBefore(slot, now))
+  const currentSlotIdx = useMemo(
+    () => slots.findIndex((slot) => !isBefore(slot, new Date())),
+    [slots],
+  )
 
   useEffect(() => {
     const container = scrollContainerRef.current

@@ -90,7 +90,25 @@ Brand CSS variables are defined in `app/globals.css`. Key colors: `--navy` (`#00
 
 ### Key Types
 
-`lib/supabase/types.ts` contains all database types. `BookingWithBay` is the join type used on the account page.
+`lib/supabase/types.ts` contains all database types. `BookingWithBay` is the join type used on the account page. **When adding DB columns, always add them to the corresponding type in `types.ts` manually** — there is no Supabase type-gen in this project.
+
+### Dark Mode & High Contrast
+
+Both are toggled in `/account` preferences and persisted as boolean columns on `members` (`dark_mode`, `high_contrast`). They are applied by an **inline `<script>` block** rendered in `app/(member)/layout.tsx` — this runs synchronously before React hydration to prevent flash-of-unstyled-content (FOUC). Do NOT use `useEffect`-based appliers for this.
+
+CSS overrides live in `app/globals.css` under `html.dark-mode`, `html.high-contrast`, and `html.dark-mode.high-contrast` selectors. When adding new Tailwind opacity variants (e.g. `text-navy/75`), add a corresponding dark mode override. Hover states (`hover:border-navy/30`, `group-hover:*`) need explicit dark mode overrides too — Tailwind generates separate classes that the variable remapping doesn't cover.
+
+When the toggle fires in `profile-form.tsx`, it:
+1. Immediately calls `document.documentElement.classList.toggle()` for instant visual feedback
+2. Sends only the changed field to `updatePreferencesAction` (partial update — avoids race conditions from combined writes)
+
+### Discord Integration
+
+`lib/discord/notify.ts` contains two functions:
+- `notifyNewEvent()` — posts event embed to `DISCORD_WEBHOOK_URL`
+- `notifySuggestion()` — posts suggestion embed to `DISCORD_SUGGESTIONS_WEBHOOK_URL`
+
+Both features **self-disable** when their env var is absent: the admin "Post to Discord" button is hidden if `DISCORD_WEBHOOK_URL` is unset (checked server-side in `admin/page.tsx`); the Club Suggestions card is hidden if `DISCORD_SUGGESTIONS_WEBHOOK_URL` is unset (checked in `account/page.tsx`). Never render Discord UI unconditionally.
 
 ## Environment Variables
 
@@ -99,6 +117,8 @@ Copy `.env.example` to `.env.local`. Key groups:
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only, never expose to client
 - `SANITY_API_TOKEN` — server-only write access
 - `NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN` + `NEXT_PUBLIC_SHOPIFY_STOREFRONT_TOKEN` — browser-safe
+- `DISCORD_WEBHOOK_URL` — optional; enables "Post to Discord" button on admin events
+- `DISCORD_SUGGESTIONS_WEBHOOK_URL` — optional; enables Club Suggestions form on account page
 
 ## Git & Release Flow
 
@@ -174,6 +194,11 @@ When staging is ready to ship:
 - **Locations page** — `/location` on the public site with Google Maps static map, "West LA" labeling, `01` numbering to imply future growth
 - **30-minute bookings** — allowed in validation/types; DB constraint updated via migration `20260326000000_bookings_allow_30min.sql`
 - **Email templates** — all use shared `emailShell()` in `lib/resend/templates/shared.ts`. Always use `bgcolor` HTML attribute alongside CSS `background-color` on `<td>` elements — mobile email clients (Gmail iOS) strip CSS but respect the HTML attribute
+- **Dark mode + high contrast** — member preferences stored in DB, applied via inline `<script>` in member layout (no FOUC). CSS overrides in `app/globals.css`. See "Dark Mode & High Contrast" section above.
+- **Discord integration (Fescue Bot)** — admin can post events to Discord; members can submit club suggestions. Both features hidden when webhook env vars absent. See "Discord Integration" section above.
+- **Change password** — `/account/change-password` page within the member area calls `supabase.auth.updateUser()` directly. The `/forgot-password` route is only for unauthenticated users; logged-in users are redirected away from it by middleware.
+- **Booking grid auto-scroll** — `BayGrid` scrolls to the current time slot on mount via `useRef` + `useEffect([date])`
+- **Club suggestions** — `submitSuggestionAction` in `account/actions.ts` posts to Discord suggestions webhook. Returns an error to the user if the webhook call fails.
 
 ### Email flows
 All emails sent from `noreply@mail.fescuegolfclub.com`. Emails that may need a reply include a note directing members to `sean@fescuegolfclub.com`.

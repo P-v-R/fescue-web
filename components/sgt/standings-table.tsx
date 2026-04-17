@@ -16,6 +16,9 @@ function isDifferent(a: SgtStandingsEntry[], b: SgtStandingsEntry[]) {
 
 function PositionBadge({ pos }: { pos: number | string }) {
   const pos1 = typeof pos === 'string' ? parseInt(pos, 10) : pos
+  if (Number.isNaN(pos1)) return (
+    <span className="font-mono text-[10px] text-navy/30 w-6 text-center shrink-0">{pos}</span>
+  )
   if (pos1 === 1) return (
     <span className="inline-flex items-center justify-center w-6 h-6 bg-gold text-white font-mono text-[9px] font-semibold shrink-0">
       1

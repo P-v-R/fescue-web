@@ -74,7 +74,7 @@ export async function notifySuggestion({
 
   const author = anonymous ? 'Anonymous member' : memberName
 
-  await fetch(SUGGESTIONS_WEBHOOK_URL, {
+  const res = await fetch(SUGGESTIONS_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -88,7 +88,6 @@ export async function notifySuggestion({
         },
       ],
     }),
-  }).catch((err) => {
-    console.error('[discord] failed to send suggestion:', err)
   })
+  if (!res.ok) throw new Error(`Discord webhook returned ${res.status}`)
 }
