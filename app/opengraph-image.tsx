@@ -39,24 +39,10 @@ export default function Image() {
 
       <img
         src={logoSrc}
-        width={480}
-        height={480}
-        style={{ objectFit: 'contain', marginBottom: 28 }}
+        width={520}
+        height={520}
+        style={{ objectFit: 'contain' }}
       />
-
-      <div
-        style={{
-          color: '#f5f0e8',
-          fontSize: 32,
-          letterSpacing: '0.35em',
-          fontFamily: 'Georgia, serif',
-          textTransform: 'uppercase',
-          opacity: 0.85,
-          display: 'flex',
-        }}
-      >
-        Fescue Golf Club
-      </div>
     </div>,
     { ...size },
   );
