@@ -93,6 +93,7 @@ export default async function AdminPage() {
         bays={bays}
         events={events}
         eventRsvps={eventRsvps}
+        discordEnabled={!!process.env.DISCORD_WEBHOOK_URL}
       />
     </div>
   )

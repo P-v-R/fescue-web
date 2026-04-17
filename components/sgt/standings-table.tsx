@@ -22,12 +22,12 @@ function PositionBadge({ pos }: { pos: number | string }) {
     </span>
   )
   if (pos1 === 2) return (
-    <span className="inline-flex items-center justify-center w-6 h-6 bg-navy/15 text-navy font-mono text-[9px] shrink-0">
+    <span className="inline-flex items-center justify-center w-6 h-6 bg-[#8a9db5] text-white font-mono text-[9px] font-semibold shrink-0">
       2
     </span>
   )
   if (pos1 === 3) return (
-    <span className="inline-flex items-center justify-center w-6 h-6 bg-cream text-navy/60 font-mono text-[9px] shrink-0">
+    <span className="inline-flex items-center justify-center w-6 h-6 bg-[#a0744a] text-white font-mono text-[9px] font-semibold shrink-0">
       3
     </span>
   )

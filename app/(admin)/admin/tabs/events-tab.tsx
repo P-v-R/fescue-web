@@ -35,9 +35,11 @@ const EVENT_TIME_OPTIONS = Array.from({ length: 72 }, (_, i) => {
 export function EventsTab({
   events,
   eventRsvps,
+  discordEnabled,
 }: {
   events: Event[];
   eventRsvps: EventRsvpWithMember[];
+  discordEnabled: boolean;
 }) {
   const { message, isPending, run } = useActionState();
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
@@ -304,7 +306,7 @@ export function EventsTab({
                       >
                         Edit
                       </button>
-                      <DiscordNotifyButton event={event} />
+                      {discordEnabled && <DiscordNotifyButton event={event} />}
                       <ConfirmButton
                         disabled={isPending}
                         onConfirm={() => run(() => deleteEventAction(event.id))}

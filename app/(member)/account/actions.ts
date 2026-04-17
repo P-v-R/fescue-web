@@ -65,6 +65,7 @@ export async function submitSuggestionAction(input: {
 export async function updatePreferencesAction(input: {
   email_booking_confirmation: boolean
   high_contrast: boolean
+  dark_mode: boolean
 }): Promise<{ error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -75,6 +76,7 @@ export async function updatePreferencesAction(input: {
     .update({
       email_booking_confirmation: input.email_booking_confirmation,
       high_contrast: input.high_contrast,
+      dark_mode: input.dark_mode,
     })
     .eq('id', user.id)
 

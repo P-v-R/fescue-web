@@ -168,28 +168,37 @@ function EditableFieldRow({
 export function EmailPreferencesSection({
   emailBookingConfirmation,
   highContrast,
+  darkMode,
 }: {
   emailBookingConfirmation: boolean
   highContrast: boolean
+  darkMode: boolean
 }) {
   const [bookingConfirm, setBookingConfirm] = useState(emailBookingConfirmation)
   const [contrast, setContrast] = useState(highContrast)
+  const [dark, setDark] = useState(darkMode)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleToggle(field: 'booking' | 'contrast') {
+  async function handleToggle(field: 'booking' | 'contrast' | 'dark') {
     const nextBooking = field === 'booking' ? !bookingConfirm : bookingConfirm
     const nextContrast = field === 'contrast' ? !contrast : contrast
+    const nextDark = field === 'dark' ? !dark : dark
     if (field === 'booking') setBookingConfirm(nextBooking)
     if (field === 'contrast') {
       setContrast(nextContrast)
       document.documentElement.classList.toggle('high-contrast', nextContrast)
+    }
+    if (field === 'dark') {
+      setDark(nextDark)
+      document.documentElement.classList.toggle('dark-mode', nextDark)
     }
     setSaving(true)
     setError(null)
     const result = await updatePreferencesAction({
       email_booking_confirmation: nextBooking,
       high_contrast: nextContrast,
+      dark_mode: nextDark,
     })
     setSaving(false)
     if (result.error) {
@@ -197,6 +206,10 @@ export function EmailPreferencesSection({
       if (field === 'contrast') {
         setContrast(!nextContrast)
         document.documentElement.classList.toggle('high-contrast', !nextContrast)
+      }
+      if (field === 'dark') {
+        setDark(!nextDark)
+        document.documentElement.classList.toggle('dark-mode', !nextDark)
       }
       setError(result.error)
     }
@@ -218,10 +231,17 @@ export function EmailPreferencesSection({
           disabled={saving}
           onToggle={() => handleToggle('booking')}
         />
-        <div className="border-t border-cream-mid/60 pt-5">
+        <div className="border-t border-cream-mid/60 pt-5 space-y-5">
+          <PreferenceRow
+            label="Dark mode"
+            description="Switches the member portal to a deep forest dark theme"
+            checked={dark}
+            disabled={saving}
+            onToggle={() => handleToggle('dark')}
+          />
           <PreferenceRow
             label="High contrast"
-            description="Increases text contrast throughout the member portal for easier reading"
+            description="Increases text contrast for easier reading — works in both light and dark"
             checked={contrast}
             disabled={saving}
             onToggle={() => handleToggle('contrast')}
