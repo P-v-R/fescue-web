@@ -30,6 +30,23 @@ function fmtTime(t: string) {
   return `${h > 12 ? h - 12 : h === 0 ? 12 : h}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
 
+function generateBlackoutDescription(
+  allBays: boolean,
+  selectedBayIds: string[],
+  bays: Bay[],
+  allDay: boolean,
+  startTime: string,
+  endTime: string,
+): string {
+  const bayLabel = allBays
+    ? 'All bays'
+    : selectedBayIds.length === 1
+      ? (bays.find((b) => b.id === selectedBayIds[0])?.name ?? 'Selected bay')
+      : `${selectedBayIds.length} bays`
+  const timeLabel = allDay ? 'all day' : `from ${fmtTime(startTime)} to ${fmtTime(endTime)}`
+  return `${bayLabel} will be unavailable ${timeLabel}.`
+}
+
 export function BlackoutDatesTab({
   blackoutPeriods,
   bays,
@@ -47,6 +64,7 @@ export function BlackoutDatesTab({
   const [reason, setReason] = useState('');
   const [addToCalendar, setAddToCalendar] = useState(false);
   const [calendarTitle, setCalendarTitle] = useState('');
+  const [calendarDescription, setCalendarDescription] = useState('');
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -68,6 +86,10 @@ export function BlackoutDatesTab({
     fd.set('reason', reason);
     fd.set('add_to_calendar', String(addToCalendar));
     fd.set('calendar_event_title', calendarTitle);
+    fd.set(
+      'calendar_event_description',
+      calendarDescription || generateBlackoutDescription(allBays, selectedBayIds, bays, allDay, startTime, endTime),
+    );
     run(async () => {
       const result = await createBlackoutAction(fd);
       if (!result.error) {
@@ -76,6 +98,7 @@ export function BlackoutDatesTab({
         setSelectedBayIds([]);
         setAddToCalendar(false);
         setCalendarTitle('');
+        setCalendarDescription('');
       }
       return result;
     });
@@ -216,13 +239,22 @@ export function BlackoutDatesTab({
               <span className='font-sans text-sm text-navy'>Add event to member calendar</span>
             </label>
             {addToCalendar && (
-              <input
-                type='text'
-                value={calendarTitle}
-                onChange={(e) => setCalendarTitle(e.target.value)}
-                placeholder={reason || 'Bay Unavailable'}
-                className={inputCls}
-              />
+              <div className='space-y-2'>
+                <input
+                  type='text'
+                  value={calendarTitle}
+                  onChange={(e) => setCalendarTitle(e.target.value)}
+                  placeholder={reason || 'Bay Unavailable'}
+                  className={inputCls}
+                />
+                <textarea
+                  value={calendarDescription}
+                  onChange={(e) => setCalendarDescription(e.target.value)}
+                  placeholder={generateBlackoutDescription(allBays, selectedBayIds, bays, allDay, startTime, endTime)}
+                  rows={2}
+                  className={`${inputCls} resize-none`}
+                />
+              </div>
             )}
           </div>
 

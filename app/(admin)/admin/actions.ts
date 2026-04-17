@@ -212,10 +212,12 @@ export async function createBlackoutAction(
     const addToCalendar = formData.get('add_to_calendar') === 'true'
     if (addToCalendar) {
       const eventTitle = (formData.get('calendar_event_title') as string | null)?.trim() || reason || 'Bay Unavailable'
+      const eventDescription = (formData.get('calendar_event_description') as string | null)?.trim() || undefined
       const startsAt = allDay ? `${date}T08:00:00` : `${date}T${startTime}`
       const endsAt = allDay ? `${date}T22:00:00` : `${date}T${endTime}`
       await createEvent({
         title: eventTitle,
+        description: eventDescription,
         starts_at: new Date(startsAt).toISOString(),
         ends_at: new Date(endsAt).toISOString(),
         rsvp_enabled: false,
