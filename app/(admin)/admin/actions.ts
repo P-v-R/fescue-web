@@ -9,7 +9,7 @@ import { deactivateMember } from '@/lib/supabase/queries/members'
 import { cancelBookingAdmin, getAdminBookingsForDate, createBookingAdmin, type AdminBooking } from '@/lib/supabase/queries/bookings'
 import { updateMembershipRequestStatus } from '@/lib/supabase/queries/membership-requests'
 import { createBlackoutPeriod, deleteBlackoutPeriod } from '@/lib/supabase/queries/blackout-periods'
-import { createEvent, updateEvent, deleteEvent } from '@/lib/supabase/queries/events'
+import { createEvent, updateEvent, deleteEvent, getEventById } from '@/lib/supabase/queries/events'
 import { deleteRsvpAdmin } from '@/lib/supabase/queries/event-rsvps'
 import { getJoinRequestForApproval, markJoinRequestApproved, markJoinRequestDeclined } from '@/lib/supabase/queries/join-requests'
 import { createEventSchema } from '@/lib/validations/event'
@@ -17,6 +17,7 @@ import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/re
 import { inviteEmailHtml, inviteEmailText } from '@/lib/resend/templates/invite'
 import { introEmailHtml, introEmailText } from '@/lib/resend/templates/intro'
 import { welcomeEmailHtml, welcomeEmailText } from '@/lib/resend/templates/welcome'
+import { notifyNewEvent } from '@/lib/discord/notify'
 
 // ─── Auth guard helper ────────────────────────────────────────────────────────
 
@@ -555,6 +556,29 @@ export async function deleteEventAction(
     return { success: 'Event deleted.' }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to delete event.' }
+  }
+}
+
+export async function notifyEventAction(
+  id: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const event = await getEventById(id)
+    if (!event) return { error: 'Event not found.' }
+    await notifyNewEvent({
+      id: event.id,
+      title: event.title,
+      description: event.description ?? undefined,
+      starts_at: event.starts_at,
+      ends_at: event.ends_at ?? undefined,
+      location: event.location ?? undefined,
+      rsvp_enabled: event.rsvp_enabled,
+    })
+    return { success: 'Sent to Discord.' }
+  } catch (err) {
+    console.error('[discord] notifyEventAction failed:', err)
+    return { error: 'Failed to post to Discord. Check server logs.' }
   }
 }
 

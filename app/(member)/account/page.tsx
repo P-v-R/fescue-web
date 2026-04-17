@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { CancelBookingButton } from './cancel-button'
 import { ContactInfoSection, EmailPreferencesSection } from './profile-form'
+import { SuggestionForm } from './suggestion-form'
 import type { BookingWithBay } from '@/lib/supabase/types'
 
 export const metadata = {
@@ -18,7 +19,7 @@ export default async function AccountPage() {
   const [{ data: member }, { data: bookingsRaw }] = await Promise.all([
     supabase
       .from('members')
-      .select('full_name, email, phone, discord, sgt_username, created_at, email_booking_confirmation')
+      .select('full_name, email, phone, discord, sgt_username, created_at, email_booking_confirmation, high_contrast, dark_mode')
       .eq('id', user!.id)
       .single(),
     supabase
@@ -77,7 +78,7 @@ export default async function AccountPage() {
             <FieldRow label="Email" value={member?.email} />
             <div className="pt-3 border-t border-cream-mid mt-1">
               <Link
-                href="/forgot-password"
+                href="/account/change-password"
                 className="font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40 hover:text-gold transition-colors"
               >
                 Change Password →
@@ -95,7 +96,16 @@ export default async function AccountPage() {
           {/* ── Email preferences ── */}
           <EmailPreferencesSection
             emailBookingConfirmation={member?.email_booking_confirmation ?? true}
+            highContrast={member?.high_contrast ?? false}
+            darkMode={member?.dark_mode ?? false}
           />
+
+          {/* ── Club suggestions ── */}
+          {!!process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL && (
+            <AccountCard label="Club Suggestions" icon="✉">
+              <SuggestionForm />
+            </AccountCard>
+          )}
 
         </div>
 
