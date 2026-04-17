@@ -25,6 +25,7 @@ type Props = {
   bays: Bay[];
   events: Event[];
   eventRsvps: EventRsvpWithMember[];
+  discordEnabled: boolean;
 };
 
 export function AdminClient({
@@ -38,6 +39,7 @@ export function AdminClient({
   bays,
   events,
   eventRsvps,
+  discordEnabled,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('invites');
 
@@ -103,7 +105,7 @@ export function AdminClient({
         <BlackoutDatesTab blackoutPeriods={blackoutPeriods} bays={bays} />
       )}
       {activeTab === 'events' && (
-        <EventsTab events={events} eventRsvps={eventRsvps} />
+        <EventsTab events={events} eventRsvps={eventRsvps} discordEnabled={discordEnabled} />
       )}
     </div>
   );

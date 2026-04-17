@@ -13,14 +13,24 @@ export default async function MemberLayout({ children }: { children: React.React
   if (!user) redirect('/login')
 
   const [{ data: member }, announcement] = await Promise.all([
-    supabase.from('members').select('full_name, is_admin').eq('id', user.id).single(),
+    supabase.from('members').select('full_name, is_admin, high_contrast, dark_mode').eq('id', user.id).single(),
     getAnnouncement(),
   ])
 
   const activeAnnouncement = announcement?.isActive ? announcement : null
 
+  const darkMode = member?.dark_mode ?? false
+  const highContrast = member?.high_contrast ?? false
+  const themeScript = [
+    darkMode && "document.documentElement.classList.add('dark-mode');",
+    highContrast && "document.documentElement.classList.add('high-contrast');",
+  ].filter(Boolean).join('')
+
   return (
     <div className="min-h-screen bg-cream-light">
+      {themeScript && (
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      )}
       <MemberNav
         memberName={member?.full_name ?? ''}
         isAdmin={member?.is_admin ?? false}

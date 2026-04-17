@@ -10,6 +10,9 @@ export type Member = {
   is_admin: boolean
   member_since: number | null
   created_at: string
+  email_booking_confirmation: boolean
+  high_contrast: boolean
+  dark_mode: boolean
 }
 
 export type Invite = {

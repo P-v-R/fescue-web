@@ -26,8 +26,8 @@ export default async function EventDetailPage({ params }: Props) {
   if (!event) notFound()
 
   const [userRsvps, allRsvps] = await Promise.all([
-    getMemberRsvpsForEvents(user.id, [event.id]),
-    event.rsvp_enabled ? getRsvpsForEvent(event.id) : Promise.resolve([]),
+    getMemberRsvpsForEvents(user.id, [event.id]).catch(() => []),
+    event.rsvp_enabled ? getRsvpsForEvent(event.id).catch(() => []) : Promise.resolve([]),
   ])
 
   const myRsvp = userRsvps.find((r) => r.event_id === event.id)?.status ?? null
