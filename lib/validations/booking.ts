@@ -12,4 +12,8 @@ export const newBookingSchema = z.object({
   guests: z.array(guestSchema).max(3, 'Maximum 3 guests allowed').default([]),
 })
 
-export type NewBookingInput = z.infer<typeof newBookingSchema>
+// Base inferred type (strict schema for member bookings)
+type _NewBookingInputBase = z.infer<typeof newBookingSchema>
+
+// Allow wider duration for admin submissions — server validates actual range
+export type NewBookingInput = Omit<_NewBookingInputBase, 'duration_minutes'> & { duration_minutes: number }

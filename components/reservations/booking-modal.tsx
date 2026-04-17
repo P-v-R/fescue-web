@@ -46,6 +46,7 @@ const ADMIN_DURATIONS = [
 
 type Duration = 30 | 60 | 90 | 120 | 180 | 240 | 360 | 480 | 840;
 
+
 export function BookingModal({ slot, onClose, onSuccess, isAdmin = false }: Props) {
   const [duration, setDuration] = useState<Duration>(60);
   const [guests, setGuests] = useState<GuestEntry[]>([]);
