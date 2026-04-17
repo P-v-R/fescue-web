@@ -16,6 +16,14 @@ export type CreateEventInput = {
 
 export type UpdateEventInput = Partial<Omit<CreateEventInput, 'created_by'>>
 
+// Member-facing — single event by ID
+export async function getEventById(id: string): Promise<Event | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.from('events').select('*').eq('id', id).single()
+  if (error) return null
+  return data as Event
+}
+
 // Member-facing — events for a given calendar month
 export async function getEventsForMonth(month: Date): Promise<Event[]> {
   const supabase = await createClient()

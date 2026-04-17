@@ -213,3 +213,124 @@ body {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ─── Dark mode ──────────────────────────────────────────────────────── */
+/* Deep Forest palette: dark forest green backgrounds, warm cream text.   */
+/* Gold accents remain unchanged — they read beautifully on dark green.   */
+
+html.dark-mode body          { background-color: #0c1b10; color: #f0ebe3; }
+html.dark-mode .bg-cream-light { background-color: #0c1b10; }
+html.dark-mode .bg-white       { background-color: #122318; }
+html.dark-mode .bg-cream       { background-color: #172e1d; }
+html.dark-mode .bg-cream-mid   { background-color: rgba(245, 240, 232, 0.10); }
+
+html.dark-mode .text-navy-dark { color: #f0ebe3; }
+html.dark-mode .text-navy      { color: #e8e2da; }
+
+html.dark-mode .text-navy\/20 { color: rgba(240, 235, 227, 0.20); }
+html.dark-mode .text-navy\/25 { color: rgba(240, 235, 227, 0.25); }
+html.dark-mode .text-navy\/30 { color: rgba(240, 235, 227, 0.30); }
+html.dark-mode .text-navy\/35 { color: rgba(240, 235, 227, 0.35); }
+html.dark-mode .text-navy\/40 { color: rgba(240, 235, 227, 0.40); }
+html.dark-mode .text-navy\/45 { color: rgba(240, 235, 227, 0.45); }
+html.dark-mode .text-navy\/50 { color: rgba(240, 235, 227, 0.50); }
+html.dark-mode .text-navy\/55 { color: rgba(240, 235, 227, 0.55); }
+html.dark-mode .text-navy\/60 { color: rgba(240, 235, 227, 0.60); }
+html.dark-mode .text-navy\/70 { color: rgba(240, 235, 227, 0.70); }
+html.dark-mode .text-navy\/80 { color: rgba(240, 235, 227, 0.80); }
+
+html.dark-mode .text-sage { color: var(--sage-light); }
+
+html.dark-mode .border-cream-mid      { border-color: rgba(245, 240, 232, 0.09); }
+html.dark-mode .border-cream-mid\/60  { border-color: rgba(245, 240, 232, 0.06); }
+html.dark-mode :where(.divide-cream-mid > :not(:last-child)) {
+  border-color: rgba(245, 240, 232, 0.09);
+}
+
+/* ─── Dark mode: hover state overrides ────────────────────────────────── */
+/* hover:border-navy/30 and group-hover:border-navy/30 are invisible on    */
+/* dark backgrounds — remap to a visible cream tint instead.               */
+
+html.dark-mode .hover\:border-navy\/30:hover                       { border-color: rgba(240, 235, 227, 0.30); }
+html.dark-mode .group:hover .group-hover\:border-navy\/30          { border-color: rgba(240, 235, 227, 0.30); }
+html.dark-mode .group:hover .group-hover\:text-navy                { color: #f0ebe3; }
+html.dark-mode.high-contrast .hover\:border-navy\/30:hover         { border-color: rgba(240, 235, 227, 0.45); }
+html.dark-mode.high-contrast .group:hover .group-hover\:border-navy\/30 { border-color: rgba(240, 235, 227, 0.45); }
+
+/* ─── Dark mode: additional component overrides ───────────────────────── */
+
+/* Members page — Discord / navy-mid muted text */
+html.dark-mode .text-navy-mid\/60 { color: rgba(240, 235, 227, 0.60); }
+
+/* Dashboard — scalloped cream frame edges */
+html.dark-mode .frame-scalloped-cream { --sc: rgba(245, 240, 232, 0.07); }
+
+/* Reservations — bookable hour label (text-navy/65) */
+html.dark-mode .text-navy\/65 { color: rgba(240, 235, 227, 0.72); }
+
+/* Tournaments — active badge */
+html.dark-mode .bg-sage\/15 { background-color: rgba(122, 158, 104, 0.22); }
+
+/* FullCalendar dark mode */
+html.dark-mode .fc {
+  --fc-border-color: rgba(245, 240, 232, 0.09);
+  --fc-today-bg-color: rgba(184, 150, 60, 0.06);
+  --fc-neutral-bg-color: #122318;
+  --fc-page-bg-color: #0c1b10;
+}
+html.dark-mode .fc .fc-scrollgrid    { border-color: rgba(245, 240, 232, 0.09); }
+html.dark-mode .fc .fc-col-header-cell { background-color: #172e1d; }
+html.dark-mode .fc .fc-daygrid-day   { background-color: #122318; }
+html.dark-mode .fc .fc-day-other     { background-color: #0f2016; }
+html.dark-mode .fc .fc-toolbar-title { color: #e8e2da; }
+html.dark-mode .fc .fc-daygrid-day-number { color: rgba(240, 235, 227, 0.55); }
+html.dark-mode .fc .fc-col-header-cell-cushion { color: var(--sage-light); }
+
+/* ─── High contrast mode on top of dark mode ──────────────────────────── */
+/* Boosts muted cream text to meet contrast ratios in dark context.        */
+
+html.dark-mode.high-contrast .text-navy\/20 { color: rgba(240, 235, 227, 0.55); }
+html.dark-mode.high-contrast .text-navy\/25 { color: rgba(240, 235, 227, 0.60); }
+html.dark-mode.high-contrast .text-navy\/30 { color: rgba(240, 235, 227, 0.65); }
+html.dark-mode.high-contrast .text-navy\/35 { color: rgba(240, 235, 227, 0.70); }
+html.dark-mode.high-contrast .text-navy\/40 { color: rgba(240, 235, 227, 0.78); }
+html.dark-mode.high-contrast .text-navy\/45 { color: rgba(240, 235, 227, 0.84); }
+html.dark-mode.high-contrast .text-navy\/50 { color: rgba(240, 235, 227, 0.90); }
+html.dark-mode.high-contrast .text-navy\/60 { color: rgba(240, 235, 227, 0.96); }
+html.dark-mode.high-contrast .text-navy\/70 { color: rgba(240, 235, 227, 0.97); }
+html.dark-mode.high-contrast .text-navy\/80 { color: rgba(240, 235, 227, 1.00); }
+html.dark-mode.high-contrast .text-navy\/65 { color: rgba(240, 235, 227, 0.94); }
+html.dark-mode.high-contrast .text-navy-mid\/60 { color: rgba(240, 235, 227, 0.80); }
+html.dark-mode.high-contrast .border-cream-mid { border-color: rgba(245, 240, 232, 0.22); }
+html.dark-mode.high-contrast :where(.divide-cream-mid > :not(:last-child)) {
+  border-color: rgba(245, 240, 232, 0.22);
+}
+
+/* ─── High contrast mode ─────────────────────────────────────────────── */
+/* Applied as a class on the member layout wrapper when the member has    */
+/* high_contrast enabled in their account settings. Boosts muted text     */
+/* opacity so all copy meets WCAG AA contrast ratios.                     */
+
+html.high-contrast .text-navy\/20 { color: color-mix(in srgb, var(--navy) 55%, transparent); }
+html.high-contrast .text-navy\/25 { color: color-mix(in srgb, var(--navy) 58%, transparent); }
+html.high-contrast .text-navy\/30 { color: color-mix(in srgb, var(--navy) 62%, transparent); }
+html.high-contrast .text-navy\/35 { color: color-mix(in srgb, var(--navy) 65%, transparent); }
+html.high-contrast .text-navy\/40 { color: color-mix(in srgb, var(--navy) 70%, transparent); }
+html.high-contrast .text-navy\/45 { color: color-mix(in srgb, var(--navy) 75%, transparent); }
+html.high-contrast .text-navy\/50 { color: color-mix(in srgb, var(--navy) 82%, transparent); }
+html.high-contrast .text-navy\/60 { color: color-mix(in srgb, var(--navy) 88%, transparent); }
+
+html.high-contrast .text-cream\/40 { color: color-mix(in srgb, var(--cream) 78%, transparent); }
+
+html.high-contrast .text-gold\/70 { color: color-mix(in srgb, var(--gold) 90%, transparent); }
+html.high-contrast .text-gold\/35 { color: color-mix(in srgb, var(--gold) 70%, transparent); }
+
+html.high-contrast .border-cream-mid {
+  border-color: color-mix(in srgb, var(--cream-mid) 50%, var(--navy));
+}
+html.high-contrast .border-cream-mid\/60 {
+  border-color: color-mix(in srgb, var(--cream-mid) 40%, var(--navy));
+}
+
+html.high-contrast .hover\:border-navy\/30:hover              { border-color: rgba(0, 66, 37, 0.55); }
+html.high-contrast .group:hover .group-hover\:border-navy\/30 { border-color: rgba(0, 66, 37, 0.55); }
