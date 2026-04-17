@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getTours, getTournaments, getEventLeaderboards } from '@/lib/sgt/queries'
 import { EventLeaderboard } from '@/components/sgt/event-leaderboard'
+import { getMemberNamesBySgtUsername } from '@/lib/supabase/queries/members'
 import type { SgtTour, SgtTournament } from '@/lib/sgt/types'
 
 type Props = {
@@ -14,10 +15,11 @@ export default async function EventLeaderboardPage({ params }: Props) {
 
   if (isNaN(tourId) || isNaN(eventId)) return null
 
-  const [tours, tournaments, leaderboards] = await Promise.all([
+  const [tours, tournaments, leaderboards, memberNames] = await Promise.all([
     getTours().catch(() => [] as SgtTour[]),
     getTournaments(tourId).catch(() => [] as SgtTournament[]),
     getEventLeaderboards(eventId).catch(() => ({ gross: [], net: [] })),
+    getMemberNamesBySgtUsername().catch(() => ({} as Record<string, string>)),
   ])
 
   const tour = tours.find((t) => t.tourId === tourId)
@@ -92,6 +94,7 @@ export default async function EventLeaderboardPage({ params }: Props) {
             gross={grossLeaderboard}
             net={netLeaderboard}
             roundCount={roundCount}
+            memberNames={memberNames}
           />
         </div>
       </div>

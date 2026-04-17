@@ -404,6 +404,7 @@ export async function approveJoinRequestAction(
       full_name: req.full_name,
       phone: req.phone,
       discord: req.discord,
+      sgt_username: req.sgt_username,
       member_since: req.member_since,
     })
 
