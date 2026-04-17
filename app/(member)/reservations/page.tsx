@@ -15,10 +15,11 @@ export default async function ReservationsPage() {
   } = await supabase.auth.getUser()
 
   const today = new Date()
-  const [bays, initialBookings, blackoutPeriods] = await Promise.all([
+  const [bays, initialBookings, blackoutPeriods, memberRow] = await Promise.all([
     getActiveBays(),
     getBookingsForDate(today),
     getUpcomingBlackoutPeriods(),
+    user ? supabase.from('members').select('is_admin').eq('id', user.id).single().then(r => r.data) : null,
   ])
 
   return (
@@ -36,6 +37,7 @@ export default async function ReservationsPage() {
         initialBookings={initialBookings}
         userId={user?.id ?? ''}
         blackoutPeriods={blackoutPeriods}
+        isAdmin={memberRow?.is_admin ?? false}
       />
     </div>
   )
