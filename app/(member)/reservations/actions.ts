@@ -21,12 +21,22 @@ export async function createBookingAction(input: NewBookingInput): Promise<Creat
 
   if (!user) return { error: 'You must be signed in to book a bay.' }
 
+  const { data: member } = await supabase.from('members').select('is_admin').eq('id', user.id).single()
+  const isAdmin = member?.is_admin ?? false
+
   const parsed = newBookingSchema.safeParse(input)
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
+    // Admins may submit longer durations — validate separately
+    if (!isAdmin) return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
+    const { bay_id: b, start_time: s, duration_minutes: d, guests: g } = input
+    if (!b || !s || !d || d <= 0 || d % 30 !== 0 || d > 840) {
+      return { error: 'Invalid booking input.' }
+    }
   }
 
-  const { bay_id, start_time, duration_minutes, guests } = parsed.data
+  const { bay_id, start_time, duration_minutes, guests } = parsed.success
+    ? parsed.data
+    : { bay_id: input.bay_id, start_time: input.start_time, duration_minutes: input.duration_minutes, guests: input.guests ?? [] }
 
   const startTime = new Date(start_time)
 

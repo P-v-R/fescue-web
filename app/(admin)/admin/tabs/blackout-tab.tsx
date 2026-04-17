@@ -45,6 +45,8 @@ export function BlackoutDatesTab({
   const [allBays, setAllBays] = useState(true);
   const [selectedBayIds, setSelectedBayIds] = useState<string[]>([]);
   const [reason, setReason] = useState('');
+  const [addToCalendar, setAddToCalendar] = useState(false);
+  const [calendarTitle, setCalendarTitle] = useState('');
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
@@ -64,12 +66,16 @@ export function BlackoutDatesTab({
     fd.set('end_time', allDay ? '' : endTime);
     fd.set('bay_ids', JSON.stringify(allBays ? [] : selectedBayIds));
     fd.set('reason', reason);
+    fd.set('add_to_calendar', String(addToCalendar));
+    fd.set('calendar_event_title', calendarTitle);
     run(async () => {
       const result = await createBlackoutAction(fd);
       if (!result.error) {
         setDate('');
         setReason('');
         setSelectedBayIds([]);
+        setAddToCalendar(false);
+        setCalendarTitle('');
       }
       return result;
     });
@@ -193,6 +199,31 @@ export function BlackoutDatesTab({
               placeholder='e.g. Holiday party, Bay maintenance…'
               className={inputCls}
             />
+          </div>
+
+          {/* Add to calendar */}
+          <div>
+            <FieldLabel help='Creates a non-RSVP event on the member calendar showing this blackout.'>
+              Calendar
+            </FieldLabel>
+            <label className='flex items-center gap-2.5 cursor-pointer mb-3'>
+              <input
+                type='checkbox'
+                checked={addToCalendar}
+                onChange={(e) => setAddToCalendar(e.target.checked)}
+                className='accent-navy w-4 h-4'
+              />
+              <span className='font-sans text-sm text-navy'>Add event to member calendar</span>
+            </label>
+            {addToCalendar && (
+              <input
+                type='text'
+                value={calendarTitle}
+                onChange={(e) => setCalendarTitle(e.target.value)}
+                placeholder={reason || 'Bay Unavailable'}
+                className={inputCls}
+              />
+            )}
           </div>
 
           <button

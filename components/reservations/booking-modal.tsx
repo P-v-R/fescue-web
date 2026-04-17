@@ -19,20 +19,35 @@ type Props = {
   onClose: () => void;
   onSuccess: (booking: Booking) => void;
   userId: string;
+  isAdmin?: boolean;
 };
 
 type GuestEntry = { name: string; email: string };
 
-const DURATIONS = [
+
+const MEMBER_DURATIONS = [
   { value: 30, label: '30 min' },
   { value: 60, label: '1 hour' },
   { value: 90, label: '1.5 hrs' },
   { value: 120, label: '2 hours' },
 ] as const;
 
-type Duration = 30 | 60 | 90 | 120;
+const ADMIN_DURATIONS = [
+  { value: 30,  label: '30 min' },
+  { value: 60,  label: '1 hr' },
+  { value: 90,  label: '1.5 hrs' },
+  { value: 120, label: '2 hrs' },
+  { value: 180, label: '3 hrs' },
+  { value: 240, label: '4 hrs' },
+  { value: 360, label: '6 hrs' },
+  { value: 480, label: '8 hrs' },
+  { value: 840, label: 'Full day' },
+] as const;
 
-export function BookingModal({ slot, onClose, onSuccess }: Props) {
+type Duration = 30 | 60 | 90 | 120 | 180 | 240 | 360 | 480 | 840;
+
+
+export function BookingModal({ slot, onClose, onSuccess, isAdmin = false }: Props) {
   const [duration, setDuration] = useState<Duration>(60);
   const [guests, setGuests] = useState<GuestEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -70,8 +85,8 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
 
     for (let i = 0; i < guests.length; i++) {
       const g = guests[i];
-      if (!g.name.trim() || !g.email.trim()) {
-        setError(`Please complete name and email for guest ${i + 1}.`);
+      if (!g.name.trim()) {
+        setError(`Please enter a name for guest ${i + 1}.`);
         return;
       }
     }
@@ -85,7 +100,7 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
       duration_minutes: duration,
       guests: guests.map((g) => ({
         name: g.name.trim(),
-        email: g.email.trim(),
+        ...(g.email.trim() ? { email: g.email.trim() } : {}),
       })),
     });
 
@@ -166,25 +181,34 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
             <p className='font-mono text-label uppercase tracking-[0.28em] text-sage mb-3'>
               Duration
             </p>
-            <div className='flex gap-2'>
-              {DURATIONS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => {
-                    setDuration(value);
-                    setError(null);
-                  }}
-                  className={[
-                    'flex-1 py-2.5 font-mono text-label uppercase tracking-[0.18em] border transition-all duration-150',
-                    duration === value
-                      ? 'bg-navy text-cream border-navy shadow-[inset_0_0_0_1px_rgba(184,150,60,0.3)]'
-                      : 'bg-transparent text-navy border-cream-mid hover:border-navy/40',
-                  ].join(' ')}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {isAdmin ? (
+              <select
+                value={duration}
+                onChange={(e) => { setDuration(Number(e.target.value) as Duration); setError(null); }}
+                className='w-full bg-cream border border-cream-mid px-3 py-2.5 font-mono text-sm text-navy focus:outline-none focus:border-gold transition-colors'
+              >
+                {ADMIN_DURATIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            ) : (
+              <div className='flex gap-2'>
+                {MEMBER_DURATIONS.map(({ value, label }) => (
+                  <button
+                    key={value}
+                    onClick={() => { setDuration(value); setError(null); }}
+                    className={[
+                      'flex-1 py-2.5 font-mono text-label uppercase tracking-[0.18em] border transition-all duration-150',
+                      duration === value
+                        ? 'bg-navy text-cream border-navy shadow-[inset_0_0_0_1px_rgba(184,150,60,0.3)]'
+                        : 'bg-transparent text-navy border-cream-mid hover:border-navy/40',
+                    ].join(' ')}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className='mt-2 flex flex-col gap-1'>
               <p
                 className={[
@@ -197,8 +221,8 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
                   : `Ends at ${format(endTime, 'h:mm a')}`}
               </p>
               {duration === 120 && (
-                <p className='font-mono text-label tracking-[0.1em] text-navy'>
-                  2+ players required for this duration
+                <p className='font-mono text-label tracking-[0.1em] text-sand'>
+                  2-hour sessions are intended for 2+ players
                 </p>
               )}
             </div>
@@ -254,7 +278,7 @@ export function BookingModal({ slot, onClose, onSuccess }: Props) {
                       placeholder='Jane Smith'
                     />
                     <Input
-                      label='Email'
+                      label='Email (optional)'
                       type='email'
                       value={guest.email}
                       onChange={(e) => updateGuest(i, 'email', e.target.value)}
