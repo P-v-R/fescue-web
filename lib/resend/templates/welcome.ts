@@ -29,6 +29,19 @@ export function welcomeEmailHtml({ loginUrl, recipientName }: WelcomeEmailData):
           with the club.
         </p>
 
+        <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom:24px;">
+          <tr>
+            <td bgcolor="#f5f0e8" style="background-color:#f5f0e8;border-left:3px solid #B8963C;padding:14px 20px;">
+              <p style="margin:0 0 4px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:0.2em;color:#B8963C;text-transform:uppercase;">
+                Note
+              </p>
+              <p style="margin:0;font-family:Georgia,serif;font-size:13px;color:#2a2a2a;line-height:1.6;font-weight:300;">
+                The portal will be fully live and functional by <strong>5am PT on April 18th</strong>. We expect a brief maintenance period starting the evening of April 17th. If you try to sign in before then and run into any issues, sit tight — everything will be up shortly.
+              </p>
+            </td>
+          </tr>
+        </table>
+
         <table role="presentation" cellspacing="0" cellpadding="0">
           <tr>
             <td bgcolor="#004225" style="background-color:#004225;box-shadow:inset 0 -2px 0 0 rgba(184,150,60,0.5);">
@@ -60,6 +73,8 @@ You're in. Welcome to Fescue Golf Club.
 
 Your membership request has been approved. Sign in to the member portal here:
 ${loginUrl}
+
+Note: The portal will be fully live by 5am PT on April 18th. We expect a brief maintenance period starting the evening of April 17th — if you run into issues before then, everything will be up shortly.
 
 Use the email and password you set when you applied.
 
