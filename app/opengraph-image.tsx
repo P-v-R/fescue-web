@@ -9,7 +9,7 @@ export const contentType = 'image/png';
 
 export default function Image() {
   const logoBuffer = readFileSync(
-    join(process.cwd(), 'public', 'logo-badge.png'),
+    join(process.cwd(), 'public', 'Logo-no-border.png'),
   );
   const logoSrc = `data:image/png;base64,${logoBuffer.toString('base64')}`;
 
@@ -39,8 +39,8 @@ export default function Image() {
 
       <img
         src={logoSrc}
-        width={680}
-        height={680}
+        width={480}
+        height={480}
         style={{ objectFit: 'contain', marginBottom: 28 }}
       />
 
