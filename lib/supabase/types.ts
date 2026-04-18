@@ -34,7 +34,7 @@ export type Bay = {
 
 export type BookingGuest = {
   name: string
-  email: string
+  email?: string
 }
 
 export type Booking = {
@@ -42,7 +42,7 @@ export type Booking = {
   member_id: string
   bay_id: string
   start_time: string
-  duration_minutes: 30 | 60 | 90 | 120
+  duration_minutes: number
   end_time: string
   guests: BookingGuest[]
   cancelled_at: string | null
@@ -69,7 +69,7 @@ export type NewBooking = {
   member_id: string
   bay_id: string
   start_time: string
-  duration_minutes: 30 | 60 | 90 | 120
+  duration_minutes: number
   guests: BookingGuest[]
 }
 

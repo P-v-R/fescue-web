@@ -5,7 +5,7 @@ type BookingConfirmationData = {
   bayName: string
   startTime: Date
   durationMinutes: number
-  guests: { name: string; email: string }[]
+  guests: { name: string; email?: string }[]
 }
 
 function formatDate(date: Date): string {

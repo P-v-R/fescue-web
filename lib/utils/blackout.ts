@@ -20,8 +20,15 @@ export function findBlackout(
 ): BlackoutPeriod | null {
   const slotHHMM = `${String(slotTime.getHours()).padStart(2, '0')}:${String(slotTime.getMinutes()).padStart(2, '0')}`
 
+  const slotDate = [
+    slotTime.getFullYear(),
+    String(slotTime.getMonth() + 1).padStart(2, '0'),
+    String(slotTime.getDate()).padStart(2, '0'),
+  ].join('-')
+
   return (
     periods.find((p) => {
+      if (p.date !== slotDate) return false
       const bayMatch = p.all_bays || p.bay_ids.includes(bayId)
       if (!bayMatch) return false
       if (!p.start_time || !p.end_time) return true // all day
