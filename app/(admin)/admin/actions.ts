@@ -403,6 +403,7 @@ export async function approveJoinRequestAction(
     // If an auth user already exists (e.g. signed up via Google OAuth before approval),
     // reuse that account rather than failing.
     let authUser: { id: string } | null = null
+    let isNewAuthUser = false
 
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: req.email,
@@ -412,16 +413,18 @@ export async function approveJoinRequestAction(
 
     if (authError) {
       if (authError.message.includes('already been registered') || authError.message.includes('already registered')) {
-        // Find the existing auth user by email
-        const { data: { users } } = await supabase.auth.admin.listUsers({ perPage: 1000 })
-        const existing = users.find((u) => u.email === req.email)
+        // Find the existing auth user by email — note: perPage: 1000 is sufficient for club scale
+        const { data: listData, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+        if (listError) throw new Error(`Failed to look up existing auth user: ${listError.message}`)
+        const existing = listData.users.find((u) => u.email === req.email)
         if (!existing) throw new Error(`Auth user already exists for ${req.email} but could not be located.`)
         authUser = existing
       } else {
         throw new Error(`Failed to create auth user: ${authError.message}`)
       }
     } else {
-      authUser = authData.user
+      authUser = authData?.user ?? null
+      isNewAuthUser = true
     }
 
     if (!authUser) throw new Error('Auth user creation returned no user.')
@@ -438,8 +441,8 @@ export async function approveJoinRequestAction(
     })
 
     if (memberError) {
-      // Roll back auth user on member insert failure
-      await supabase.auth.admin.deleteUser(authUser.id)
+      // Only roll back if we created the auth user — don't delete a pre-existing OAuth account
+      if (isNewAuthUser) await supabase.auth.admin.deleteUser(authUser.id)
       throw new Error(`Failed to create member profile: ${memberError.message}`)
     }
 

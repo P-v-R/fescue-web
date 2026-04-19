@@ -159,11 +159,27 @@ describe('approveJoinRequestAction', () => {
       })
       mockAdminClient.auth.admin.listUsers.mockResolvedValue({
         data: { users: [] }, // not found
+        error: null,
       })
 
       const result = await approveJoinRequestAction('req-1')
 
       expect(result.error).toMatch(/could not be located/)
+    })
+
+    it('returns error if listUsers itself fails', async () => {
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: null,
+        error: { message: 'A user with this email address has already been registered' },
+      })
+      mockAdminClient.auth.admin.listUsers.mockResolvedValue({
+        data: null,
+        error: { message: 'Service unavailable' },
+      })
+
+      const result = await approveJoinRequestAction('req-1')
+
+      expect(result.error).toMatch(/Failed to look up existing auth user/)
     })
 
     it('does not delete the existing auth user if member insert fails', async () => {
@@ -178,9 +194,25 @@ describe('approveJoinRequestAction', () => {
 
       const result = await approveJoinRequestAction('req-1')
 
-      // Should error but NOT have deleted the pre-existing auth user
+      // Should error but must NOT delete the pre-existing OAuth account
       expect(result.error).toBeTruthy()
-      expect(mockAdminClient.auth.admin.deleteUser).toHaveBeenCalledWith('existing-uuid')
+      expect(mockAdminClient.auth.admin.deleteUser).not.toHaveBeenCalled()
+    })
+
+    it('uses the existing auth user ID (not a new one) when creating the member row', async () => {
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: null,
+        error: { message: 'A user with this email address has already been registered' },
+      })
+      mockAdminClient.auth.admin.listUsers.mockResolvedValue({
+        data: { users: [{ id: 'existing-uuid', email: fakeRequest.email }] },
+      })
+      const mockInsert = vi.fn().mockResolvedValue({ error: null })
+      mockAdminClient.from.mockReturnValue({ insert: mockInsert })
+
+      await approveJoinRequestAction('req-1')
+
+      expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ id: 'existing-uuid' }))
     })
   })
 
