@@ -33,6 +33,11 @@ export const emailShell = (body: string) => `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light only" />
+  <style>
+    :root { color-scheme: light only; }
+  </style>
 </head>
 <body style="margin:0;padding:0;background-color:#F5F0E8;font-family:Georgia,serif;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" bgcolor="#F5F0E8" style="background-color:#F5F0E8;padding:40px 16px;">
