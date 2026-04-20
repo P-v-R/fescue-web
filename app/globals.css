@@ -268,6 +268,18 @@ html.dark-mode .frame-scalloped-cream { --sc: rgba(245, 240, 232, 0.07); }
 /* Reservations — bookable hour label (text-navy/65) */
 html.dark-mode .text-navy\/65 { color: rgba(240, 235, 227, 0.72); }
 
+/* Reservations — booked slots (other members' bookings) */
+html.dark-mode .bg-navy\/\[0\.22\] { background-color: rgba(0, 80, 45, 0.55); }
+html.dark-mode .text-navy\/55     { color: rgba(240, 235, 227, 0.60); }
+html.dark-mode.high-contrast .bg-navy\/\[0\.22\] { background-color: rgba(0, 90, 50, 0.70); }
+html.dark-mode.high-contrast .text-navy\/55     { color: rgba(240, 235, 227, 0.80); }
+
+/* Reservations — my booking cell: gold in dark mode for clear distinction */
+html.dark-mode .booking-mine                     { background-color: #B8963C; }
+html.dark-mode .booking-mine:hover               { background-color: #a07c2e; }
+html.dark-mode .booking-mine .text-cream\/90     { color: rgba(10, 30, 15, 0.95); }
+html.dark-mode .booking-mine .text-cream\/60     { color: rgba(10, 30, 15, 0.65); }
+
 /* Tournaments — active badge */
 html.dark-mode .bg-sage\/15 { background-color: rgba(122, 158, 104, 0.22); }
 
