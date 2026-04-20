@@ -33,10 +33,10 @@ export const emailShell = (body: string) => `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light only" />
-  <meta name="supported-color-schemes" content="light only" />
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
   <style>
-    :root { color-scheme: light only; }
+    :root { color-scheme: only light; }
   </style>
 </head>
 <body style="margin:0;padding:0;background-color:#F5F0E8;font-family:Georgia,serif;">
