@@ -399,21 +399,38 @@ export async function approveJoinRequestAction(
 
     const supabase = createAdminClient()
 
-    // 2. Create Supabase auth user with the member's chosen password
+    // 2. Create Supabase auth user with the member's chosen password.
+    // If an auth user already exists (e.g. signed up via Google OAuth before approval),
+    // reuse that account rather than failing.
+    let authUser: { id: string } | null = null
+    let isNewAuthUser = false
+
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: req.email,
       password: req.password,
       email_confirm: true,
     })
+
     if (authError) {
-      throw new Error(
-        authError.message.includes('already registered')
-          ? `An account already exists for ${req.email}. If this person should have access, activate their existing account.`
-          : `Failed to create auth user: ${authError.message}`,
-      )
+      if (authError.message.includes('already been registered') || authError.message.includes('already registered')) {
+        // Find the existing auth user by email — note: perPage: 1000 is sufficient for club scale
+        const { data: listData, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+        if (listError) throw new Error(`Failed to look up existing auth user: ${listError.message}`)
+        const normalizedEmail = req.email.trim().toLowerCase()
+        const existing = (listData?.users ?? []).find((u) => (u.email ?? '').trim().toLowerCase() === normalizedEmail)
+        if (!existing) throw new Error(`Auth user already exists for ${req.email} but could not be located.`)
+        // Set password so they can sign in via email/password in addition to Google OAuth
+        const { error: updateUserError } = await supabase.auth.admin.updateUserById(existing.id, { password: req.password })
+        if (updateUserError) throw new Error(`Failed to set password for existing auth user: ${updateUserError.message}`)
+        authUser = existing
+      } else {
+        throw new Error(`Failed to create auth user: ${authError.message}`)
+      }
+    } else {
+      authUser = authData?.user ?? null
+      isNewAuthUser = true
     }
 
-    const authUser = authData.user
     if (!authUser) throw new Error('Auth user creation returned no user.')
 
     // 3. Insert member row
@@ -428,8 +445,8 @@ export async function approveJoinRequestAction(
     })
 
     if (memberError) {
-      // Roll back auth user on member insert failure
-      await supabase.auth.admin.deleteUser(authUser.id)
+      // Only roll back if we created the auth user — don't delete a pre-existing OAuth account
+      if (isNewAuthUser) await supabase.auth.admin.deleteUser(authUser.id)
       throw new Error(`Failed to create member profile: ${memberError.message}`)
     }
 

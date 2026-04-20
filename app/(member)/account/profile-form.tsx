@@ -235,14 +235,13 @@ export function EmailPreferencesSection({
           onToggle={() => handleToggle('booking')}
         />
         <div className="border-t border-cream-mid/60 pt-5 space-y-5">
-          {/* TODO: re-enable dark mode toggle post-launch */}
-          {/* <PreferenceRow
+          <PreferenceRow
             label="Dark mode"
             description="Switches the member portal to a deep forest dark theme"
             checked={dark}
             disabled={saving}
             onToggle={() => handleToggle('dark')}
-          /> */}
+          />
           <PreferenceRow
             label="High contrast"
             description="Increases text contrast for easier reading — works in both light and dark"
