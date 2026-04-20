@@ -40,7 +40,8 @@ function ReachOutModal({ request }: { request: MembershipRequest }) {
   const [contacted, setContacted] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const firstName = request.full_name.split(' ')[0] ?? request.full_name;
+  const trimmed = request.full_name.trim();
+  const firstName = trimmed.split(/\s+/)[0] || trimmed;
   const subject = 'Fescue Golf Club — Membership Inquiry';
   const body = `Hey ${firstName},
 
@@ -145,7 +146,7 @@ Fescue Golf Club`;
                 <a
                   href={gmailUrl}
                   target='_blank'
-                  rel='noreferrer'
+                  rel='noopener noreferrer'
                   className='bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.2em] px-5 py-2.5 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity'
                 >
                   Open in Gmail →

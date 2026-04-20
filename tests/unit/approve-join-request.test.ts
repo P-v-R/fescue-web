@@ -95,6 +95,7 @@ beforeEach(() => {
   mockAdminAuth()
   mockGetJoinRequest.mockResolvedValue(fakeRequest)
   mockMarkApproved.mockResolvedValue(undefined)
+  mockAdminClient.auth.admin.updateUserById.mockResolvedValue({ error: null })
 })
 
 describe('approveJoinRequestAction', () => {
@@ -235,6 +236,23 @@ describe('approveJoinRequestAction', () => {
         'existing-uuid',
         expect.objectContaining({ password: fakeRequest.password }),
       )
+    })
+
+    it('returns error if updateUserById fails', async () => {
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: null,
+        error: { message: 'A user with this email address has already been registered' },
+      })
+      mockAdminClient.auth.admin.listUsers.mockResolvedValue({
+        data: { users: [{ id: 'existing-uuid', email: fakeRequest.email }] },
+      })
+      mockAdminClient.auth.admin.updateUserById.mockResolvedValue({
+        error: { message: 'Password too weak' },
+      })
+
+      const result = await approveJoinRequestAction('req-1')
+
+      expect(result.error).toMatch(/Failed to set password for existing auth user/)
     })
   })
 
