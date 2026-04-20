@@ -416,8 +416,10 @@ export async function approveJoinRequestAction(
         // Find the existing auth user by email — note: perPage: 1000 is sufficient for club scale
         const { data: listData, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 })
         if (listError) throw new Error(`Failed to look up existing auth user: ${listError.message}`)
-        const existing = listData.users.find((u) => u.email === req.email)
+        const existing = listData.users.find((u) => u.email?.toLowerCase() === req.email.toLowerCase())
         if (!existing) throw new Error(`Auth user already exists for ${req.email} but could not be located.`)
+        // Set password so they can sign in via email/password in addition to Google OAuth
+        await supabase.auth.admin.updateUserById(existing.id, { password: req.password })
         authUser = existing
       } else {
         throw new Error(`Failed to create auth user: ${authError.message}`)

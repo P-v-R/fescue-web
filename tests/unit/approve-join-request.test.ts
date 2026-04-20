@@ -32,6 +32,7 @@ const mockAdminClient = {
       createUser: vi.fn(),
       listUsers: vi.fn(),
       deleteUser: vi.fn(),
+      updateUserById: vi.fn(),
     },
   },
   from: vi.fn(),
@@ -113,6 +114,8 @@ describe('approveJoinRequestAction', () => {
         expect.objectContaining({ email: fakeRequest.email, email_confirm: true }),
       )
       expect(mockMarkApproved).toHaveBeenCalledWith('req-1')
+      // New user: password is set at creation, not via updateUserById
+      expect(mockAdminClient.auth.admin.updateUserById).not.toHaveBeenCalled()
     })
   })
 
@@ -213,6 +216,25 @@ describe('approveJoinRequestAction', () => {
       await approveJoinRequestAction('req-1')
 
       expect(mockInsert).toHaveBeenCalledWith(expect.objectContaining({ id: 'existing-uuid' }))
+    })
+
+    it('sets password on existing OAuth user so they can also sign in via email/password', async () => {
+      mockAdminClient.auth.admin.createUser.mockResolvedValue({
+        data: null,
+        error: { message: 'A user with this email address has already been registered' },
+      })
+      mockAdminClient.auth.admin.listUsers.mockResolvedValue({
+        data: { users: [{ id: 'existing-uuid', email: fakeRequest.email }] },
+      })
+      mockAdminClient.auth.admin.updateUserById.mockResolvedValue({ error: null })
+      mockMembersInsert(null)
+
+      await approveJoinRequestAction('req-1')
+
+      expect(mockAdminClient.auth.admin.updateUserById).toHaveBeenCalledWith(
+        'existing-uuid',
+        expect.objectContaining({ password: fakeRequest.password }),
+      )
     })
   })
 
