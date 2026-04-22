@@ -1,8 +1,11 @@
-'use client'
-
 import Script from 'next/script'
 
+// Meta pixel IDs are always numeric strings (15-16 digits)
+const PIXEL_ID_RE = /^\d{15,16}$/
+
 export function MetaPixel({ pixelId }: { pixelId: string }) {
+  if (!PIXEL_ID_RE.test(pixelId)) return null
+
   return (
     <>
       <Script
