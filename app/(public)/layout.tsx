@@ -43,7 +43,8 @@ export default function PublicLayout({
                 aria-label='Follow @fescuegolfclub on Instagram'
                 className='opacity-30 hover:opacity-60 transition-opacity'
               >
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src='/Instagram_Glyph_Black.svg'
                   alt='Instagram'
                   width={20}
