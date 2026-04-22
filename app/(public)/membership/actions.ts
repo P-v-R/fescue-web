@@ -68,6 +68,7 @@ export async function submitMembershipRequestAction(
       resend.emails.send({
         from: FROM_ADDRESSES.noreply,
         to: OWNER_EMAIL,
+        cc: ['zmasi21@gmail.com'],
         subject,
         html,
       }).catch((err) => console.error('[membership notification]', err))
