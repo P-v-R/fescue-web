@@ -122,38 +122,41 @@ Copy `.env.example` to `.env.local`. Key groups:
 
 ## Git & Release Flow
 
+Trunk-based development: `main` is the single integration branch. There is no `staging` branch.
+
 ### Branches
-- `feat/*` / `fix/*` — all development work. Never commit directly to `staging`.
-- `staging` — integration branch. Only receives squash-merges from feature branches. Deploys to Railway staging automatically.
-- `main` — production only. **Never push directly to main.**
+- `feat/*` / `fix/*` / `chore/*` — all development work
+- `main` — the trunk. PRs merge here. Auto-deploys to Railway staging and runs staging migrations on every push.
 
 ### Day-to-day
-Always work on a feature branch, then squash-merge into `staging` when the feature is complete:
+Work on a feature branch and open a PR to `main`. Use `/staging-pr` to create it:
 
 ```bash
 git checkout -b feat/my-feature
 # ... do work, commit freely ...
-git checkout staging
-git merge --squash feat/my-feature
-git commit -m "feat: describe the feature"
-git push origin staging
-git branch -d feat/my-feature
+# When ready:
+/staging-pr   # opens PR → main; merges deploy to Railway staging
 ```
 
-Pushing to `staging` deploys to Railway staging and runs migrations against the staging DB automatically.
-
 ### Releasing to production
-When staging is ready to ship:
+When `main` (staging environment) looks good, cut a version tag. Use `/release-pr` to do it:
 
-1. Open a PR from `staging` → `main`
-2. Merge it → Railway deploys production, `migrate-prod.yml` runs migrations against the production DB
+```bash
+/release-pr   # determines next version, creates + pushes v* tag
+```
+
+Pushing a `v*` tag triggers two things automatically:
+1. **Railway** deploys the tagged commit to the production environment
+2. **`migrate-prod.yml`** runs Supabase migrations against the production DB
+
+> **One-time Railway setup required:** In the Railway production service settings, set the deployment source to trigger on tags matching `v*` (instead of branch pushes). The staging service should watch the `main` branch.
 
 ### GitHub Actions workflows
 | File | Trigger | What it does |
 |------|---------|--------------|
-| `ci.yml` | push to `staging`/`feat/**`/`fix/**`, PR to `staging`/`main` | Type check, lint, test, build |
-| `migrate.yml` | push to `staging` | Runs `supabase db push` against staging DB |
-| `migrate-prod.yml` | push to `main` | Runs `supabase db push` against production DB |
+| `ci.yml` | push to `main`/`feat/**`/`fix/**`/`chore/**`, PR to `main` | Type check, lint, test, build |
+| `migrate.yml` | push to `main` | Runs `supabase db push` against staging DB |
+| `migrate-prod.yml` | push to tag `v*` | Runs `supabase db push` against production DB |
 
 ### Required GitHub secrets
 | Secret | Used by |
@@ -165,9 +168,9 @@ When staging is ready to ship:
 | `SUPABASE_DB_PASSWORD` | `migrate-prod.yml` |
 
 ### Never
-- Push directly to `main`
+- Push directly to `main` — always use a PR
 - Use `--force` on `main`
-- Run `supabase db push` against production manually (`migrate-prod.yml` handles it)
+- Run `supabase db push` against production manually (`migrate-prod.yml` handles it on tag push)
 
 ## Build Progress
 
