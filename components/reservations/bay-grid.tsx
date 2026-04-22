@@ -149,7 +149,7 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingCl
                           className={[
                             'px-2 py-1 border-r border-sand/35 last:border-r-0 border-b border-b-sand/20',
                             'align-top text-center',
-                            isMine ? 'bg-navy' : 'bg-navy/[0.22]',
+                            isMine ? 'booking-mine bg-navy' : 'bg-navy/[0.22]',
                             isMine && onBookingClick ? 'cursor-pointer hover:bg-navy-mid transition-colors' : '',
                           ].join(' ')}
                         >
@@ -227,7 +227,7 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingCl
       {/* Legend */}
       <div className='flex flex-wrap items-center gap-6 px-4 py-2.5 bg-cream border-t border-sand/30'>
         <LegendItem color='bg-white border border-sand/40' label='Available' />
-        <LegendItem color='bg-navy' label='My booking' />
+        <LegendItem color='booking-mine bg-navy' label='My booking' />
         <LegendItem color='bg-navy/[0.22] border border-navy/20' label='Booked' />
         <LegendItem color='bg-navy/[0.08] border border-sand/35' label='Past' />
         <LegendItem color='bg-gold/25 border border-gold/40' label='Blocked' />

@@ -22,9 +22,10 @@ type Props = {
   initialBookings: BookingWithMember[]
   userId: string
   blackoutPeriods: BlackoutPeriod[]
+  isAdmin?: boolean
 }
 
-export function ReservationsClient({ bays, initialBookings, userId, blackoutPeriods: initialBlackoutPeriods }: Props) {
+export function ReservationsClient({ bays, initialBookings, userId, blackoutPeriods: initialBlackoutPeriods, isAdmin = false }: Props) {
   const [date, setDate] = useState<Date>(startOfDay(new Date()))
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
   const [blackoutPeriods, setBlackoutPeriods] = useState<BlackoutPeriod[]>(initialBlackoutPeriods)
@@ -265,6 +266,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
         <BookingModal
           slot={selectedSlot}
           userId={userId}
+          isAdmin={isAdmin}
           onClose={() => setSelectedSlot(null)}
           onSuccess={(booking) => {
             const slot = selectedSlot

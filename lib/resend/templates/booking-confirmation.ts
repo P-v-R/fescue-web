@@ -5,7 +5,7 @@ type BookingConfirmationData = {
   bayName: string
   startTime: Date
   durationMinutes: number
-  guests: { name: string; email: string }[]
+  guests: { name: string; email?: string }[]
 }
 
 function formatDate(date: Date): string {
@@ -14,7 +14,7 @@ function formatDate(date: Date): string {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
-    timeZone: 'America/New_York',
+    timeZone: 'America/Los_Angeles',
   })
 }
 
@@ -23,7 +23,7 @@ function formatTime(date: Date): string {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
-    timeZone: 'America/New_York',
+    timeZone: 'America/Los_Angeles',
   })
 }
 

@@ -208,9 +208,27 @@ export async function createBlackoutAction(
     if (!allDay && startTime! >= endTime!) return { error: 'End time must be after start time.' }
 
     await createBlackoutPeriod({ date, start_time: startTime, end_time: endTime, all_bays: allBays, bay_ids: bayIds, reason, created_by: adminId })
+
+    const addToCalendar = formData.get('add_to_calendar') === 'true'
+    if (addToCalendar) {
+      const eventTitle = (formData.get('calendar_event_title') as string | null)?.trim() || reason || 'Bay Unavailable'
+      const eventDescription = (formData.get('calendar_event_description') as string | null)?.trim() || undefined
+      const startsAt = allDay ? `${date}T08:00:00` : `${date}T${startTime}`
+      const endsAt = allDay ? `${date}T22:00:00` : `${date}T${endTime}`
+      await createEvent({
+        title: eventTitle,
+        description: eventDescription,
+        starts_at: new Date(startsAt).toISOString(),
+        ends_at: new Date(endsAt).toISOString(),
+        rsvp_enabled: false,
+        created_by: adminId,
+      })
+      revalidatePath('/calendar')
+    }
+
     revalidatePath('/admin')
     revalidatePath('/reservations')
-    return { success: 'Blackout period saved.' }
+    return { success: addToCalendar ? 'Blackout period saved and added to calendar.' : 'Blackout period saved.' }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to create blackout.' }
   }
@@ -246,7 +264,7 @@ export async function createBookingForMemberAction(
     if (!memberId || !bayId || !startTime || !duration) {
       return { error: 'All fields are required.' }
     }
-    if (![60, 90, 120].includes(duration)) {
+    if (duration <= 0 || duration % 30 !== 0 || duration > 840) {
       return { error: 'Invalid duration.' }
     }
 
@@ -254,7 +272,7 @@ export async function createBookingForMemberAction(
       member_id: memberId,
       bay_id: bayId,
       start_time: startTime,
-      duration_minutes: duration as 60 | 90 | 120,
+      duration_minutes: duration,
       guests: [],
     })
 
@@ -381,21 +399,38 @@ export async function approveJoinRequestAction(
 
     const supabase = createAdminClient()
 
-    // 2. Create Supabase auth user with the member's chosen password
+    // 2. Create Supabase auth user with the member's chosen password.
+    // If an auth user already exists (e.g. signed up via Google OAuth before approval),
+    // reuse that account rather than failing.
+    let authUser: { id: string } | null = null
+    let isNewAuthUser = false
+
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: req.email,
       password: req.password,
       email_confirm: true,
     })
+
     if (authError) {
-      throw new Error(
-        authError.message.includes('already registered')
-          ? `An account already exists for ${req.email}. If this person should have access, activate their existing account.`
-          : `Failed to create auth user: ${authError.message}`,
-      )
+      if (authError.message.includes('already been registered') || authError.message.includes('already registered')) {
+        // Find the existing auth user by email — note: perPage: 1000 is sufficient for club scale
+        const { data: listData, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+        if (listError) throw new Error(`Failed to look up existing auth user: ${listError.message}`)
+        const normalizedEmail = req.email.trim().toLowerCase()
+        const existing = (listData?.users ?? []).find((u) => (u.email ?? '').trim().toLowerCase() === normalizedEmail)
+        if (!existing) throw new Error(`Auth user already exists for ${req.email} but could not be located.`)
+        // Set password so they can sign in via email/password in addition to Google OAuth
+        const { error: updateUserError } = await supabase.auth.admin.updateUserById(existing.id, { password: req.password })
+        if (updateUserError) throw new Error(`Failed to set password for existing auth user: ${updateUserError.message}`)
+        authUser = existing
+      } else {
+        throw new Error(`Failed to create auth user: ${authError.message}`)
+      }
+    } else {
+      authUser = authData?.user ?? null
+      isNewAuthUser = true
     }
 
-    const authUser = authData.user
     if (!authUser) throw new Error('Auth user creation returned no user.')
 
     // 3. Insert member row
@@ -410,8 +445,8 @@ export async function approveJoinRequestAction(
     })
 
     if (memberError) {
-      // Roll back auth user on member insert failure
-      await supabase.auth.admin.deleteUser(authUser.id)
+      // Only roll back if we created the auth user — don't delete a pre-existing OAuth account
+      if (isNewAuthUser) await supabase.auth.admin.deleteUser(authUser.id)
       throw new Error(`Failed to create member profile: ${memberError.message}`)
     }
 
