@@ -36,6 +36,30 @@ export default function PublicLayout({
                 © {new Date().getFullYear()} Fescue Golf Club. All rights
                 reserved.
               </p>
+              <a
+                href='https://www.instagram.com/fescuegolfclub'
+                target='_blank'
+                rel='noopener noreferrer'
+                aria-label='Follow us on Instagram'
+                className='text-navy/30 hover:text-navy/60 transition-colors'
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='20'
+                  height='20'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='1.5'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  aria-hidden='true'
+                >
+                  <rect width='20' height='20' x='2' y='2' rx='5' ry='5' />
+                  <circle cx='12' cy='12' r='4' />
+                  <circle cx='17.5' cy='6.5' r='0.5' fill='currentColor' stroke='none' />
+                </svg>
+              </a>
             </div>
           </footer>
         </div>
