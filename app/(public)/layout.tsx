@@ -40,25 +40,15 @@ export default function PublicLayout({
                 href='https://www.instagram.com/fescuegolfclub'
                 target='_blank'
                 rel='noopener noreferrer'
-                aria-label='Follow us on Instagram'
-                className='text-navy/30 hover:text-navy/60 transition-colors'
+                aria-label='Follow @fescuegolfclub on Instagram'
+                className='opacity-30 hover:opacity-60 transition-opacity'
               >
-                <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  width='20'
-                  height='20'
-                  viewBox='0 0 24 24'
-                  fill='none'
-                  stroke='currentColor'
-                  strokeWidth='1.5'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  aria-hidden='true'
-                >
-                  <rect width='20' height='20' x='2' y='2' rx='5' ry='5' />
-                  <circle cx='12' cy='12' r='4' />
-                  <circle cx='17.5' cy='6.5' r='0.5' fill='currentColor' stroke='none' />
-                </svg>
+                <Image
+                  src='/Instagram_Glyph_Black.svg'
+                  alt='Instagram'
+                  width={20}
+                  height={20}
+                />
               </a>
             </div>
           </footer>
