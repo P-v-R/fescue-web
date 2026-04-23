@@ -5,6 +5,7 @@ import type { NextRequest } from 'next/server'
 const MEMBER_ROUTES = ['/dashboard', '/calendar', '/reservations', '/account', '/tournaments']
 const ADMIN_ROUTES = ['/admin', '/studio']
 const AUTH_ROUTES = ['/login', '/forgot-password']
+const MARKETING_ROUTES = ['/', '/about', '/membership', '/contact', '/location', '/shop']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -37,6 +38,9 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const isAuthRoute = AUTH_ROUTES.some((r) => pathname.startsWith(r))
+  const isMarketingRoute = MARKETING_ROUTES.some((r) =>
+    r === '/' ? pathname === '/' : pathname === r || pathname.startsWith(r + '/'),
+  )
   const isAdminRoute = ADMIN_ROUTES.some((r) => pathname.startsWith(r))
   // Exclude the reset-password page — recovery token arrives in the URL hash (client-side only)
   // so the server sees no session and would incorrectly redirect to /login
@@ -51,8 +55,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Has session — redirect away from auth pages
-  if (user && isAuthRoute) {
+  // Has session — redirect away from auth pages and marketing site
+  // Admins are exempt from the marketing redirect so they can preview the public site
+  if (user && (isAuthRoute || isMarketingRoute)) {
+    if (isMarketingRoute) {
+      const { data: member } = await supabase
+        .from('members')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+      if (member?.is_admin) return supabaseResponse
+    }
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
