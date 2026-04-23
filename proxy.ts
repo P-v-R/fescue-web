@@ -56,7 +56,16 @@ export async function proxy(request: NextRequest) {
   }
 
   // Has session — redirect away from auth pages and marketing site
+  // Admins are exempt from the marketing redirect so they can preview the public site
   if (user && (isAuthRoute || isMarketingRoute)) {
+    if (isMarketingRoute) {
+      const { data: member } = await supabase
+        .from('members')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+      if (member?.is_admin) return supabaseResponse
+    }
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
