@@ -33,7 +33,6 @@ export function MemberNav({ memberName, isAdmin }: Props) {
   const allLinks = [
     ...NAV_LINKS,
     ...(isAdmin ? [{ href: '/admin', label: 'Admin' }] : []),
-    ...(isAdmin ? [{ href: '/', label: 'View Site' }] : []),
   ];
 
   return (
@@ -89,17 +88,6 @@ export function MemberNav({ memberName, isAdmin }: Props) {
               ].join(' ')}
             >
               Admin
-            </Link>
-          )}
-          {isAdmin && (
-            <Link
-              href='/'
-              className='font-mono text-label uppercase tracking-[0.2em] text-cream/30 hover:text-cream/60 transition-colors duration-200 flex items-center gap-1'
-            >
-              View Site
-              <svg width='10' height='10' viewBox='0 0 10 10' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' strokeLinejoin='round'>
-                <path d='M1.5 8.5l7-7M4 1.5h4.5V6' />
-              </svg>
             </Link>
           )}
         </div>
