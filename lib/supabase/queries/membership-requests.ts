@@ -8,7 +8,7 @@ export async function getMembershipRequests(): Promise<MembershipRequest[]> {
 
   const { data, error } = await supabase
     .from('membership_requests')
-    .select('*')
+    .select('*, contacted_by_member:members!contacted_by(full_name)')
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(`getMembershipRequests: ${error.message}`)
@@ -73,12 +73,13 @@ export async function getMembershipRequestByEmailAdmin(
 export async function updateMembershipRequestStatus(
   id: string,
   status: 'pending' | 'contacted' | 'invited' | 'declined' | 'onboarded',
+  meta?: { contacted_by?: string; contacted_at?: string },
 ): Promise<void> {
   const supabase = await createServerClient()
 
   const { error } = await supabase
     .from('membership_requests')
-    .update({ status })
+    .update({ status, ...meta })
     .eq('id', id)
 
   if (error) throw new Error(`updateMembershipRequestStatus: ${error.message}`)

@@ -62,6 +62,9 @@ export type MembershipRequest = {
   message: string | null
   sgt_username: string | null
   status: 'pending' | 'contacted' | 'invited' | 'declined' | 'onboarded'
+  contacted_by: string | null
+  contacted_at: string | null
+  contacted_by_member: { full_name: string } | null
   created_at: string
 }
 

@@ -12,7 +12,9 @@ const OWNER_EMAIL = process.env.OWNER_EMAIL
 
 export async function submitMembershipRequestAction(
   input: unknown,
+  honeypot = '',
 ): Promise<{ error?: string; success?: string; duplicate?: boolean }> {
+  if (honeypot) return { success: "Thank you — we'll be in touch soon." }
   const parsed = membershipRequestSchema.safeParse(input)
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
