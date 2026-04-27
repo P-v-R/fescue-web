@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 vi.mock('@/app/(public)/membership/actions', () => ({
@@ -127,5 +127,24 @@ describe('MembershipForm', () => {
     await waitFor(() => {
       expect(onSubmitted).toHaveBeenCalledOnce()
     })
+  })
+
+  it('shows success without calling action when honeypot is filled', async () => {
+    const onSubmitted = vi.fn()
+    render(<MembershipForm onSubmitted={onSubmitted} />)
+    const user = userEvent.setup()
+
+    // Simulate a bot filling the hidden honeypot field
+    const honeypot = document.getElementById('website') as HTMLInputElement
+    fireEvent.change(honeypot, { target: { value: 'http://spam.example.com' } })
+
+    await fillRequiredFields(user)
+    await user.click(screen.getByRole('button', { name: /apply/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText("Thank you — we'll be in touch soon.")).toBeInTheDocument()
+    })
+    expect(mockSubmit).not.toHaveBeenCalled()
+    expect(onSubmitted).toHaveBeenCalledOnce()
   })
 })
