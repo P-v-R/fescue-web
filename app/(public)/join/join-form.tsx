@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { joinRequestSchema, type JoinRequestInput } from '@/lib/validations/join-request'
@@ -16,6 +16,7 @@ const memberYears = Array.from({ length: currentYear - FOUNDING_YEAR + 1 }, (_, 
 export function JoinForm() {
   const [submitted, setSubmitted] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const honeypotRef = useRef<HTMLInputElement>(null)
 
   const {
     register,
@@ -27,8 +28,12 @@ export function JoinForm() {
   })
 
   async function onSubmit(data: JoinRequestInput) {
+    if (honeypotRef.current?.value) {
+      setSubmitted(true)
+      return
+    }
     setServerError(null)
-    const result = await submitJoinRequestAction(data)
+    const result = await submitJoinRequestAction(data, honeypotRef.current?.value ?? '')
     if (result?.error) {
       setServerError(result.error)
     } else {
@@ -56,6 +61,19 @@ export function JoinForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className='flex flex-col gap-6'>
+      {/* Honeypot — hidden from real users, bots fill it */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+        <label htmlFor="join_website">Website</label>
+        <input
+          ref={honeypotRef}
+          id="join_website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
+
       <Input
         label='Full Name'
         type='text'
