@@ -20,8 +20,8 @@ const validInput = {
   discord: 'johndoe#1234',
   sgt_username: undefined,
   member_since: 2024,
-  password: 'supersecret123',
-  confirm_password: 'supersecret123',
+  password: 'supersecret123', // pragma: allowlist secret
+  confirm_password: 'supersecret123', // pragma: allowlist secret
 }
 
 beforeEach(() => {
