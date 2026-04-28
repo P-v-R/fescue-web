@@ -303,7 +303,7 @@ export async function sendIntroEmailAction(
   fullName: string,
 ): Promise<{ error?: string; success?: string }> {
   try {
-    await requireAdmin()
+    const adminId = await requireAdmin()
 
     const firstName = fullName.split(' ')[0] ?? fullName
     const scheduleUrl = process.env.NEXT_PUBLIC_SCHEDULE_URL ?? 'https://calendly.com/fescuegolfclub'
@@ -323,7 +323,10 @@ export async function sendIntroEmailAction(
       })
     }
 
-    await updateMembershipRequestStatus(requestId, 'contacted')
+    await updateMembershipRequestStatus(requestId, 'contacted', {
+      contacted_by: adminId,
+      contacted_at: new Date().toISOString(),
+    })
     revalidatePath('/admin')
     return { success: `Intro email sent to ${email}.` }
   } catch (err) {
@@ -335,8 +338,11 @@ export async function markContactedAction(
   requestId: string,
 ): Promise<{ error?: string; success?: string }> {
   try {
-    await requireAdmin()
-    await updateMembershipRequestStatus(requestId, 'contacted')
+    const adminId = await requireAdmin()
+    await updateMembershipRequestStatus(requestId, 'contacted', {
+      contacted_by: adminId,
+      contacted_at: new Date().toISOString(),
+    })
     revalidatePath('/admin')
     return { success: 'Marked as contacted.' }
   } catch (err) {

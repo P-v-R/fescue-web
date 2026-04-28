@@ -139,4 +139,25 @@ describe('submitMembershipRequestAction', () => {
       }),
     )
   })
+
+  describe('honeypot spam filter', () => {
+    it('returns success without creating a record when honeypot is filled', async () => {
+      const result = await submitMembershipRequestAction(validInput, 'spambot-value')
+
+      expect(result.success).toBeTruthy()
+      expect(result.error).toBeUndefined()
+      expect(mockCreate).not.toHaveBeenCalled()
+      expect(mockGetByEmail).not.toHaveBeenCalled()
+    })
+
+    it('proceeds normally when honeypot is empty string', async () => {
+      mockGetByEmail.mockResolvedValue(null)
+      mockCreate.mockResolvedValue({ id: '123' })
+
+      const result = await submitMembershipRequestAction(validInput, '')
+
+      expect(result.success).toBeTruthy()
+      expect(mockCreate).toHaveBeenCalledOnce()
+    })
+  })
 })

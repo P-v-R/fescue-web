@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { membershipRequestSchema, type MembershipRequestInput } from '@/lib/validations/membership-request'
@@ -19,6 +19,7 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
   const [successMessage, setSuccessMessage] = useState('')
   const [serverError, setServerError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const honeypotRef = useRef<HTMLInputElement>(null)
 
   const {
     register,
@@ -33,10 +34,17 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
   const hasMembershipOrg = watch('has_membership_org')
 
   function onSubmit(data: MembershipRequestInput) {
+    // Honeypot: bots fill hidden fields, humans don't
+    if (honeypotRef.current?.value) {
+      setSuccessMessage("Thank you — we'll be in touch soon.")
+      setSubmitted(true)
+      onSubmitted?.()
+      return
+    }
     setServerError(null)
     startTransition(async () => {
       try {
-        const result = await submitMembershipRequestAction(data)
+        const result = await submitMembershipRequestAction(data, honeypotRef.current?.value ?? '')
         if (result.error) {
           setServerError(result.error)
         } else if (result.success) {
@@ -66,6 +74,19 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
+      {/* Honeypot — hidden from real users, bots fill it */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+        <label htmlFor="website">Website</label>
+        <input
+          ref={honeypotRef}
+          id="website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
 
       {/* Name */}
       <div>

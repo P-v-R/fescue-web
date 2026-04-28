@@ -6,7 +6,9 @@ import { encryptPassword } from '@/lib/utils/crypto'
 
 export async function submitJoinRequestAction(
   input: JoinRequestInput,
+  honeypot = '',
 ): Promise<{ error?: string }> {
+  if (honeypot) return {}
   const parsed = joinRequestSchema.safeParse(input)
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
