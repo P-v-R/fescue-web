@@ -28,12 +28,8 @@ export function JoinForm() {
   })
 
   async function onSubmit(data: JoinRequestInput) {
-    if (honeypotRef.current?.value) {
-      setSubmitted(true)
-      return
-    }
     setServerError(null)
-    const result = await submitJoinRequestAction(data, honeypotRef.current?.value ?? '')
+    const result = await submitJoinRequestAction(data)
     if (result?.error) {
       setServerError(result.error)
     } else {
@@ -60,7 +56,18 @@ export function JoinForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className='flex flex-col gap-6'>
+    <form
+      onSubmit={(e) => {
+        if (honeypotRef.current?.value) {
+          e.preventDefault()
+          setSubmitted(true)
+          return
+        }
+        void handleSubmit(onSubmit)(e)
+      }}
+      noValidate
+      className='flex flex-col gap-6'
+    >
       {/* Honeypot — hidden from real users, bots fill it */}
       <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
         <label htmlFor="join_website">Website</label>
