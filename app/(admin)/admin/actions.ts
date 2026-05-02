@@ -430,7 +430,7 @@ export async function scheduleTourAction(
           {
             filename: 'fescue-tour.ics',
             content: Buffer.from(icsContent).toString('base64'),
-            contentType: 'text/calendar',
+            contentType: 'text/calendar; method=REQUEST; charset=UTF-8',
           },
         ],
       })
