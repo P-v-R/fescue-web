@@ -423,7 +423,7 @@ export async function scheduleTourAction(
         to: prospectEmail,
         ...(adminEmail ? { cc: adminEmail } : {}),
         ...(process.env.ASST_GM_EMAIL ? { bcc: process.env.ASST_GM_EMAIL } : {}),
-        subject: `Your Tour at Fescue Golf Club — ${format(tourDate, 'MMMM d')}`,
+        subject: `Fescue Golf Club — Your Visit on ${format(tourDate, 'MMMM d')}`,
         html: tourInviteHtml({ firstName, tourDateFormatted }),
         text: tourInviteText({ firstName, tourDateFormatted }),
         attachments: [

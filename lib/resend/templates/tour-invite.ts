@@ -1,11 +1,14 @@
-import { emailShell } from './shared'
+import { emailShell } from './shared';
 
 interface TourInviteParams {
-  firstName: string
-  tourDateFormatted: string // e.g. "Wednesday, May 15 at 10:00 AM"
+  firstName: string;
+  tourDateFormatted: string; // e.g. "Wednesday, May 15 at 10:00 AM"
 }
 
-export function tourInviteHtml({ firstName, tourDateFormatted }: TourInviteParams): string {
+export function tourInviteHtml({
+  firstName,
+  tourDateFormatted,
+}: TourInviteParams): string {
   return emailShell(`
   <!-- Body -->
   <tr>
@@ -45,7 +48,7 @@ export function tourInviteHtml({ firstName, tourDateFormatted }: TourInviteParam
         A calendar invite is attached to this email. Please add it to your calendar so you don&rsquo;t forget.
       </p>
       <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:15px;color:#3D3530;line-height:1.7;">
-        Looking forward to showing you the facility. If you have any questions or need to reschedule, reply to this email or reach out to us at
+        Looking forward to showing you the facility. If you have any questions or need to reschedule, please reach out to Sean directly at
         <a href="mailto:sean@fescuegolfclub.com" style="color:#004225;">sean@fescuegolfclub.com</a>.
       </p>
     </td>
@@ -63,10 +66,13 @@ export function tourInviteHtml({ firstName, tourDateFormatted }: TourInviteParam
       </p>
     </td>
   </tr>
-  `)
+  `);
 }
 
-export function tourInviteText({ firstName, tourDateFormatted }: TourInviteParams): string {
+export function tourInviteText({
+  firstName,
+  tourDateFormatted,
+}: TourInviteParams): string {
   return `Hi ${firstName},
 
 Your tour of Fescue Golf Club is confirmed for:
@@ -76,11 +82,11 @@ Location: 12211 W Washington Blvd, Los Angeles, CA 90067
 
 A calendar invite is attached to this email.
 
-If you have any questions or need to reschedule, reach out at sean@fescuegolfclub.com.
+If you have any questions or need to reschedule, please reach out sean@fescuegolfclub.com directly.
 
 Warm regards,
 Sean Gilmore
-Fescue Golf Club`
+Fescue Golf Club`;
 }
 
 /** Generates a .ics (iCalendar) file content string for the tour. */
@@ -90,22 +96,22 @@ export function tourInviteIcs({
   prospectEmail,
   prospectName,
 }: {
-  requestId: string
-  tourDatetimeLocal: string
-  prospectEmail: string
-  prospectName: string
+  requestId: string;
+  tourDatetimeLocal: string;
+  prospectEmail: string;
+  prospectName: string;
 }): string {
   // Format "2026-05-15T10:00" → "20260515T100000"
-  const [datePart, timePart] = tourDatetimeLocal.split('T')
-  const icsDate = `${datePart.replace(/-/g, '')}T${timePart.replace(':', '')}00`
+  const [datePart, timePart] = tourDatetimeLocal.split('T');
+  const icsDate = `${datePart.replace(/-/g, '')}T${timePart.replace(':', '')}00`;
 
-  const now = new Date()
-  const dtstamp = now.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z'
+  const now = new Date();
+  const dtstamp = now.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
 
-  const uid = `tour-${requestId}-${Date.now()}@fescuegolfclub.com`
+  const uid = `tour-${requestId}-${Date.now()}@fescuegolfclub.com`;
 
   // Escape commas in location per iCalendar spec
-  const location = '12211 W Washington Blvd\\, Los Angeles\\, CA 90067'
+  const location = '12211 W Washington Blvd\\, Los Angeles\\, CA 90067';
 
   return [
     'BEGIN:VCALENDAR',
@@ -126,5 +132,5 @@ export function tourInviteIcs({
     'STATUS:CONFIRMED',
     'END:VEVENT',
     'END:VCALENDAR',
-  ].join('\r\n')
+  ].join('\r\n');
 }
