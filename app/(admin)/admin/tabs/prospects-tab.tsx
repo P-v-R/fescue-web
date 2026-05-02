@@ -165,11 +165,15 @@ Fescue Golf Club`;
 }
 
 function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; onClose: () => void }) {
-  const [tourDatetime, setTourDatetime] = useState('');
+  const [tourDate, setTourDate] = useState('');
+  const [tourTime, setTourTime] = useState('');
   const [isPending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pipelineDone, setPipelineDone] = useState(false);
+
+  // Combine into "YYYY-MM-DDTHH:MM" for the server action
+  const tourDatetime = tourDate && tourTime ? `${tourDate}T${tourTime}` : '';
 
   const firstName = request.full_name.trim().split(/\s+/)[0] || request.full_name;
 
@@ -239,13 +243,21 @@ function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; o
               <p className='font-mono text-[9px] uppercase tracking-[0.2em] text-navy/40'>
                 Tour Date &amp; Time (LA Time)
               </p>
-              <input
-                type='datetime-local'
-                step={900}
-                value={tourDatetime}
-                onChange={(e) => setTourDatetime(e.target.value)}
-                className='w-full border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
-              />
+              <div className='flex gap-2'>
+                <input
+                  type='date'
+                  value={tourDate}
+                  onChange={(e) => setTourDate(e.target.value)}
+                  className='flex-1 border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
+                />
+                <input
+                  type='time'
+                  step={900}
+                  value={tourTime}
+                  onChange={(e) => setTourTime(e.target.value)}
+                  className='w-32 border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
+                />
+              </div>
               <p className='font-mono text-[10px] text-navy/40 leading-relaxed'>
                 A 45-minute calendar invite (.ics) will be emailed to {firstName} and the club admin.
               </p>
