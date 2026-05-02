@@ -256,7 +256,7 @@ function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; o
                   className='w-36 border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
                 >
                   <option value=''>Time</option>
-                  {Array.from({ length: 24 }, (_, h) =>
+                  {Array.from({ length: 13 }, (_, i) => i + 8).map((h) =>
                     ['00', '15', '30', '45'].map((m) => {
                       const val = `${String(h).padStart(2, '0')}:${m}`;
                       const label = `${((h % 12) || 12)}:${m} ${h < 12 ? 'AM' : 'PM'}`;
