@@ -20,8 +20,6 @@ import { welcomeEmailHtml, welcomeEmailText } from '@/lib/resend/templates/welco
 import { tourInviteHtml, tourInviteText, tourInviteIcs } from '@/lib/resend/templates/tour-invite'
 import { notifyNewEvent } from '@/lib/discord/notify'
 
-// Hardcoded BCC for all tour invite emails
-const TOUR_BCC = 'zach@fescuegolfclub.com'
 
 // ─── Auth guard helper ────────────────────────────────────────────────────────
 
@@ -424,7 +422,7 @@ export async function scheduleTourAction(
         from: FROM_ADDRESSES.hello,
         to: prospectEmail,
         ...(adminEmail ? { cc: adminEmail } : {}),
-        bcc: TOUR_BCC,
+        ...(process.env.TOUR_BCC_EMAIL ? { bcc: process.env.TOUR_BCC_EMAIL } : {}),
         subject: `Your Tour at Fescue Golf Club — ${format(tourDate, 'MMMM d')}`,
         html: tourInviteHtml({ firstName, tourDateFormatted }),
         text: tourInviteText({ firstName, tourDateFormatted }),
