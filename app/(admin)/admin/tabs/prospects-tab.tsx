@@ -572,10 +572,22 @@ function RequestActionsDropdown({
           disabled={isPending}
           className='font-mono text-[10px] uppercase tracking-[0.15em] border border-cream-mid text-navy/60 px-3 py-1.5 hover:border-navy hover:text-navy transition-colors disabled:opacity-50 flex items-center gap-1.5'
         >
-          Actions
-          <svg width='8' height='5' viewBox='0 0 8 5' fill='none' className={`transition-transform ${open ? 'rotate-180' : ''}`}>
-            <path d='M1 1l3 3 3-3' stroke='currentColor' strokeWidth='1.2' strokeLinecap='round' strokeLinejoin='round' />
-          </svg>
+          {isPending ? (
+            <>
+              <svg className='animate-spin w-3 h-3 text-navy/40' viewBox='0 0 24 24' fill='none'>
+                <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z' />
+              </svg>
+              Saving…
+            </>
+          ) : (
+            <>
+              Actions
+              <svg width='8' height='5' viewBox='0 0 8 5' fill='none' className={`transition-transform ${open ? 'rotate-180' : ''}`}>
+                <path d='M1 1l3 3 3-3' stroke='currentColor' strokeWidth='1.2' strokeLinecap='round' strokeLinejoin='round' />
+              </svg>
+            </>
+          )}
         </button>
 
         {open && (
@@ -587,14 +599,18 @@ function RequestActionsDropdown({
                 </p>
                 <div className='flex gap-2'>
                   <button
+                    disabled={isPending}
                     onClick={() => { run(() => inviteFromRequestAction(request.id, request.email)); close(); }}
-                    className='flex-1 bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:opacity-90 transition-opacity'
+                    className='flex-1 bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5'
                   >
-                    Yes, Send
+                    {isPending ? (
+                      <><svg className='animate-spin w-3 h-3' viewBox='0 0 24 24' fill='none'><circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' /><path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z' /></svg>Sending…</>
+                    ) : 'Yes, Send'}
                   </button>
                   <button
+                    disabled={isPending}
                     onClick={() => setConfirming(null)}
-                    className='flex-1 border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:border-navy/30 transition-colors'
+                    className='flex-1 border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:border-navy/30 transition-colors disabled:opacity-40'
                   >
                     Cancel
                   </button>
@@ -607,14 +623,18 @@ function RequestActionsDropdown({
                 </p>
                 <div className='flex gap-2'>
                   <button
+                    disabled={isPending}
                     onClick={() => { run(() => declineRequestAction(request.id)); close(); }}
-                    className='flex-1 bg-red-700 text-white font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:opacity-90 transition-opacity'
+                    className='flex-1 bg-red-700 text-white font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5'
                   >
-                    Yes, Decline
+                    {isPending ? (
+                      <><svg className='animate-spin w-3 h-3' viewBox='0 0 24 24' fill='none'><circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' /><path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z' /></svg>Declining…</>
+                    ) : 'Yes, Decline'}
                   </button>
                   <button
+                    disabled={isPending}
                     onClick={() => setConfirming(null)}
-                    className='flex-1 border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:border-navy/30 transition-colors'
+                    className='flex-1 border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:border-navy/30 transition-colors disabled:opacity-40'
                   >
                     Cancel
                   </button>
