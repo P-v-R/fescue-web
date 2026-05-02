@@ -21,8 +21,8 @@ function EventRow({ event, tourId }: { event: SgtTournament; tourId: number }) {
   const isPlayable = event.status === 'In Progress' || event.status === 'Completed'
 
   return (
-    <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-cream-mid last:border-0">
-      <div className="flex-1 min-w-0">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-6 py-4 border-b border-cream-mid last:border-0">
+      <div className="min-w-0">
         <p className="font-serif text-base font-light text-navy leading-snug">
           {event.name}
         </p>
