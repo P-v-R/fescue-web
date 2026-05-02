@@ -2,8 +2,8 @@ name: Migrate Production
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - production
 
 jobs:
   migrate:
