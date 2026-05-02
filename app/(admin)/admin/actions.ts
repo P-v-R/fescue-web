@@ -17,7 +17,11 @@ import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/re
 import { inviteEmailHtml, inviteEmailText } from '@/lib/resend/templates/invite'
 import { introEmailHtml, introEmailText } from '@/lib/resend/templates/intro'
 import { welcomeEmailHtml, welcomeEmailText } from '@/lib/resend/templates/welcome'
+import { tourInviteHtml, tourInviteText, tourInviteIcs } from '@/lib/resend/templates/tour-invite'
 import { notifyNewEvent } from '@/lib/discord/notify'
+
+// Hardcoded BCC for all tour invite emails
+const TOUR_BCC = 'zach@fescuegolfclub.com'
 
 // ─── Auth guard helper ────────────────────────────────────────────────────────
 
@@ -389,6 +393,73 @@ export async function markPendingAction(
     return { success: 'Moved back to pending.' }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to update request.' }
+  }
+}
+
+export async function scheduleTourAction(
+  requestId: string,
+  prospectEmail: string,
+  prospectName: string,
+  tourDatetimeLocal: string, // "YYYY-MM-DDTHH:MM" in LA time from datetime-local input
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+
+    const firstName = prospectName.trim().split(/\s+/)[0] || prospectName
+
+    // Format for display: "Wednesday, May 15 at 10:00 AM"
+    // tourDatetimeLocal is like "2026-05-15T10:00" — parse as local time
+    const tourDate = new Date(tourDatetimeLocal)
+    const tourDateFormatted = format(tourDate, "EEEE, MMMM d 'at' h:mm a")
+
+    const icsContent = tourInviteIcs({ requestId, tourDatetimeLocal, prospectEmail, prospectName })
+    const adminEmail = process.env.OWNER_EMAIL
+
+    if (!isResendConfigured()) {
+      console.log(`[DEV] Tour invite to ${prospectEmail} for ${tourDateFormatted}`)
+      console.log('[DEV] ICS:\n', icsContent)
+    } else {
+      const resend = createResendClient()
+      await resend.emails.send({
+        from: FROM_ADDRESSES.hello,
+        to: prospectEmail,
+        ...(adminEmail ? { cc: adminEmail } : {}),
+        bcc: TOUR_BCC,
+        subject: `Your Tour at Fescue Golf Club — ${format(tourDate, 'MMMM d')}`,
+        html: tourInviteHtml({ firstName, tourDateFormatted }),
+        text: tourInviteText({ firstName, tourDateFormatted }),
+        attachments: [
+          {
+            filename: 'fescue-tour.ics',
+            content: Buffer.from(icsContent).toString('base64'),
+            contentType: 'text/calendar',
+          },
+        ],
+      })
+    }
+
+    revalidatePath('/admin')
+    return { success: `Tour invite sent to ${prospectEmail}.` }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to send tour invite.' }
+  }
+}
+
+export async function markPipelineAction(
+  requestId: string,
+  tourDatetimeLocal: string, // "YYYY-MM-DDTHH:MM" in LA time
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    // Store as UTC ISO string in the DB
+    const tourDate = new Date(tourDatetimeLocal)
+    await updateMembershipRequestStatus(requestId, 'pipeline', {
+      tour_date: tourDate.toISOString(),
+    })
+    revalidatePath('/admin')
+    return { success: 'Marked as pipeline.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to update status.' }
   }
 }
 

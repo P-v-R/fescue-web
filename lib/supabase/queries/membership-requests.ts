@@ -72,8 +72,8 @@ export async function getMembershipRequestByEmailAdmin(
 // Admin only — update request status.
 export async function updateMembershipRequestStatus(
   id: string,
-  status: 'pending' | 'contacted' | 'invited' | 'declined' | 'onboarded',
-  meta?: { contacted_by?: string; contacted_at?: string },
+  status: 'pending' | 'contacted' | 'pipeline' | 'invited' | 'declined' | 'onboarded',
+  meta?: { contacted_by?: string; contacted_at?: string; tour_date?: string },
 ): Promise<void> {
   const supabase = await createServerClient()
 
