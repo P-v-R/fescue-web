@@ -2,8 +2,9 @@ name: Migrate Production
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - production
+  workflow_dispatch:
 
 jobs:
   migrate:

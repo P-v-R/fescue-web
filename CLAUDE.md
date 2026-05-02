@@ -139,24 +139,22 @@ git checkout -b feat/my-feature
 ```
 
 ### Releasing to production
-When `main` (staging environment) looks good, cut a version tag. Use `/release-pr` to do it:
+When `main` (staging environment) looks good, run `/deploy-prod`:
 
 ```bash
-/release-pr   # determines next version, creates + pushes v* tag
+/deploy-prod   # fast-forwards production branch to main
 ```
 
-Pushing a `v*` tag triggers two things automatically:
-1. **Railway** deploys the tagged commit to the production environment
+Pushing to the `production` branch triggers two things automatically:
+1. **Railway** deploys the production environment (watches the `production` branch)
 2. **`migrate-prod.yml`** runs Supabase migrations against the production DB
-
-> **One-time Railway setup required:** In the Railway production service settings, set the deployment source to trigger on tags matching `v*` (instead of branch pushes). The staging service should watch the `main` branch.
 
 ### GitHub Actions workflows
 | File | Trigger | What it does |
 |------|---------|--------------|
 | `ci.yml` | push to `main`/`feat/**`/`fix/**`/`chore/**`, PR to `main` | Type check, lint, test, build |
 | `migrate.yml` | push to `main` | Runs `supabase db push` against staging DB |
-| `migrate-prod.yml` | push to tag `v*` | Runs `supabase db push` against production DB |
+| `migrate-prod.yml` | push to `production` branch | Runs `supabase db push` against production DB |
 
 ### Required GitHub secrets
 | Secret | Used by |
