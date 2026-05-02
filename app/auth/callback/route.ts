@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // Supabase PKCE auth callback — exchanges the one-time code for a session,
 // then redirects to the originally requested page (e.g. /account/reset-password).
@@ -17,8 +18,29 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
+    const { data: sessionData, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error && sessionData.user) {
+      const user = sessionData.user
+
+      // For OAuth sign-ins, verify the user has an existing member record.
+      // Password-based flows (invite, password reset) are exempt — they already
+      // require a prior member record to get the link.
+      const isOAuth = user.app_metadata?.provider !== 'email'
+      if (isOAuth) {
+        const admin = createAdminClient()
+        const { data: member } = await admin
+          .from('members')
+          .select('id')
+          .eq('email', user.email!)
+          .maybeSingle()
+
+        if (!member) {
+          // No membership found — delete the auth user and reject the sign-in
+          await admin.auth.admin.deleteUser(user.id)
+          return NextResponse.redirect(`${origin}/login?error=not_a_member`)
+        }
+      }
+
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
