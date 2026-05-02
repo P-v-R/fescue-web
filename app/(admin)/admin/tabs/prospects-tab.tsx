@@ -241,6 +241,7 @@ function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; o
               </p>
               <input
                 type='datetime-local'
+                step={900}
                 value={tourDatetime}
                 onChange={(e) => setTourDatetime(e.target.value)}
                 className='w-full border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
