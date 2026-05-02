@@ -250,13 +250,20 @@ function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; o
                   onChange={(e) => setTourDate(e.target.value)}
                   className='flex-1 border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
                 />
-                <input
-                  type='time'
-                  step={900}
+                <select
                   value={tourTime}
                   onChange={(e) => setTourTime(e.target.value)}
-                  className='w-32 border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
-                />
+                  className='w-36 border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
+                >
+                  <option value=''>Time</option>
+                  {Array.from({ length: 24 }, (_, h) =>
+                    ['00', '15', '30', '45'].map((m) => {
+                      const val = `${String(h).padStart(2, '0')}:${m}`;
+                      const label = `${((h % 12) || 12)}:${m} ${h < 12 ? 'AM' : 'PM'}`;
+                      return <option key={val} value={val}>{label}</option>;
+                    })
+                  )}
+                </select>
               </div>
               <p className='font-mono text-[10px] text-navy/40 leading-relaxed'>
                 A 45-minute calendar invite (.ics) will be emailed to {firstName} and the club admin.
