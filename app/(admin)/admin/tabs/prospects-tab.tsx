@@ -257,7 +257,7 @@ function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; o
                 >
                   <option value=''>Time</option>
                   {Array.from({ length: 13 }, (_, i) => i + 8).map((h) =>
-                    ['00', '15', '30', '45'].map((m) => {
+                    ['00', '30'].map((m) => {
                       const val = `${String(h).padStart(2, '0')}:${m}`;
                       const label = `${((h % 12) || 12)}:${m} ${h < 12 ? 'AM' : 'PM'}`;
                       return <option key={val} value={val}>{label}</option>;
