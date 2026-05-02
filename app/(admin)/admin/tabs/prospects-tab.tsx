@@ -16,6 +16,7 @@ import {
   declineRequestAction,
   markContactedAction,
   markPendingAction,
+  scheduleTourAction,
 } from '../actions';
 
 function CopyEmailButton({ email }: { email: string }) {
@@ -162,13 +163,152 @@ Fescue Golf Club`;
   );
 }
 
+function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; onClose: () => void }) {
+  const [tourDate, setTourDate] = useState('');
+  const [tourTime, setTourTime] = useState('');
+  const [isPending, startTransition] = useTransition();
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Combine into "YYYY-MM-DDTHH:MM" for the server action
+  const tourDatetime = tourDate && tourTime ? `${tourDate}T${tourTime}` : '';
+
+  const firstName = request.full_name.trim().split(/\s+/)[0] || request.full_name;
+
+  function handleSend() {
+    if (!tourDatetime) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await scheduleTourAction(request.id, request.email, request.full_name, tourDatetime);
+      if (res.error) setError(res.error);
+      else setSent(true);
+    });
+  }
+
+  return (
+    <div
+      className='fixed inset-0 z-50 flex items-center justify-center p-4'
+      onClick={() => !isPending && onClose()}
+    >
+      <div className='absolute inset-0 bg-navy-dark/60 backdrop-blur-[2px]' />
+
+      <div
+        className='relative w-full max-w-md bg-cream border border-cream-mid shadow-2xl'
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Corner ticks */}
+        <span className='absolute top-0 left-0 w-4 h-4 border-t border-l border-gold/40' />
+        <span className='absolute top-0 right-0 w-4 h-4 border-t border-r border-gold/40' />
+        <span className='absolute bottom-0 left-0 w-4 h-4 border-b border-l border-gold/40' />
+        <span className='absolute bottom-0 right-0 w-4 h-4 border-b border-r border-gold/40' />
+
+        {/* Header */}
+        <div className='flex items-start justify-between px-7 pt-7 pb-4'>
+          <div>
+            <p className='font-mono text-[9px] uppercase tracking-[0.28em] text-gold mb-1'>
+              Schedule Tour
+            </p>
+            <h2 className='font-serif text-xl font-light text-navy leading-snug'>
+              {request.full_name}
+            </h2>
+            <p className='font-mono text-[10px] text-navy/40 mt-0.5'>{request.email}</p>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={isPending}
+            aria-label='Close'
+            className='w-8 h-8 flex items-center justify-center text-navy/30 hover:text-navy transition-colors -mt-1 -mr-1'
+          >
+            <svg width='12' height='12' viewBox='0 0 12 12' fill='none'>
+              <path d='M1 1l10 10M11 1L1 11' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
+            </svg>
+          </button>
+        </div>
+
+        <div className='w-8 h-px bg-gold mx-7 mb-5' />
+
+        <div className='px-7 pb-7 space-y-4'>
+          {!sent ? (
+            <>
+              <p className='font-mono text-[9px] uppercase tracking-[0.2em] text-navy/40'>
+                Tour Date &amp; Time (LA Time)
+              </p>
+              <div className='flex gap-2'>
+                <input
+                  type='date'
+                  value={tourDate}
+                  onChange={(e) => setTourDate(e.target.value)}
+                  className='flex-1 border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
+                />
+                <select
+                  value={tourTime}
+                  onChange={(e) => setTourTime(e.target.value)}
+                  className='w-36 border border-cream-mid bg-white px-3 py-2 font-mono text-sm text-navy focus:outline-none focus:border-navy transition-colors'
+                >
+                  <option value=''>Time</option>
+                  {Array.from({ length: 13 }, (_, i) => i + 8).map((h) =>
+                    ['00', '30'].map((m) => {
+                      const val = `${String(h).padStart(2, '0')}:${m}`;
+                      const label = `${((h % 12) || 12)}:${m} ${h < 12 ? 'AM' : 'PM'}`;
+                      return <option key={val} value={val}>{label}</option>;
+                    })
+                  )}
+                </select>
+              </div>
+              <p className='font-mono text-[10px] text-navy/40 leading-relaxed'>
+                A 45-minute calendar invite (.ics) will be emailed to {firstName} and the club admin.
+              </p>
+
+              {error && (
+                <p className='font-mono text-[10px] text-red-600 tracking-[0.1em]'>{error}</p>
+              )}
+
+              <div className='flex gap-3 pt-1'>
+                <button
+                  onClick={handleSend}
+                  disabled={isPending || !tourDatetime}
+                  className='bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.2em] px-5 py-2.5 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity disabled:opacity-40'
+                >
+                  {isPending ? 'Sending…' : 'Send Calendar Invite →'}
+                </button>
+                <button
+                  onClick={onClose}
+                  disabled={isPending}
+                  className='border border-cream-mid text-navy/40 font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-2 hover:border-navy/30 hover:text-navy transition-colors disabled:opacity-50'
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className='font-mono text-[10px] text-sage tracking-[0.1em]'>
+                ✓ Calendar invite sent · Marked as pipeline
+              </p>
+              <div className='flex gap-2 pt-1'>
+                <button
+                  onClick={onClose}
+                  className='bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.2em] px-5 py-2.5 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity'
+                >
+                  Close
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Visual pipeline indicator
 function PipelineSteps() {
   const steps = [
     { label: 'Pending', num: '1', desc: 'Submitted form' },
     { label: 'Contacted', num: '2', desc: 'You reached out' },
-    { label: 'Invited', num: '3', desc: 'Invite sent' },
-    { label: 'Member', num: '4', desc: 'Joined the club' },
+    { label: 'Pipeline', num: '3', desc: 'Tour scheduled' },
+    { label: 'Invited', num: '4', desc: 'Invite sent' },
+    { label: 'Member', num: '5', desc: 'Joined the club' },
   ];
   return (
     <div className='flex items-start gap-2 flex-wrap mb-6'>
@@ -250,7 +390,7 @@ function RequestsTab({ requests }: { requests: MembershipRequest[] }) {
   const [showArchived, setShowArchived] = useState(false);
 
   const active = requests.filter(
-    (r) => r.status === 'pending' || r.status === 'contacted',
+    (r) => r.status === 'pending' || r.status === 'contacted' || r.status === 'pipeline',
   );
   const invited = requests.filter((r) => r.status === 'invited');
   const archived = requests.filter(
@@ -358,6 +498,7 @@ function RequestActionsDropdown({
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState<'invite' | 'decline' | null>(null);
   const [reachOut, setReachOut] = useState(false);
+  const [scheduleTour, setScheduleTour] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -386,16 +527,33 @@ function RequestActionsDropdown({
         <ReachOutModal request={request} onClose={() => setReachOut(false)} />
       )}
 
+      {/* Schedule Tour modal — triggered from dropdown */}
+      {scheduleTour && (
+        <ScheduleTourModal request={request} onClose={() => setScheduleTour(false)} />
+      )}
+
       <div ref={ref} className='relative'>
         <button
           onClick={() => { setOpen((v) => !v); setConfirming(null); }}
           disabled={isPending}
           className='font-mono text-[10px] uppercase tracking-[0.15em] border border-cream-mid text-navy/60 px-3 py-1.5 hover:border-navy hover:text-navy transition-colors disabled:opacity-50 flex items-center gap-1.5'
         >
-          Actions
-          <svg width='8' height='5' viewBox='0 0 8 5' fill='none' className={`transition-transform ${open ? 'rotate-180' : ''}`}>
-            <path d='M1 1l3 3 3-3' stroke='currentColor' strokeWidth='1.2' strokeLinecap='round' strokeLinejoin='round' />
-          </svg>
+          {isPending ? (
+            <>
+              <svg className='animate-spin w-3 h-3 text-navy/40' viewBox='0 0 24 24' fill='none'>
+                <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z' />
+              </svg>
+              Saving…
+            </>
+          ) : (
+            <>
+              Actions
+              <svg width='8' height='5' viewBox='0 0 8 5' fill='none' className={`transition-transform ${open ? 'rotate-180' : ''}`}>
+                <path d='M1 1l3 3 3-3' stroke='currentColor' strokeWidth='1.2' strokeLinecap='round' strokeLinejoin='round' />
+              </svg>
+            </>
+          )}
         </button>
 
         {open && (
@@ -407,14 +565,18 @@ function RequestActionsDropdown({
                 </p>
                 <div className='flex gap-2'>
                   <button
+                    disabled={isPending}
                     onClick={() => { run(() => inviteFromRequestAction(request.id, request.email)); close(); }}
-                    className='flex-1 bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:opacity-90 transition-opacity'
+                    className='flex-1 bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5'
                   >
-                    Yes, Send
+                    {isPending ? (
+                      <><svg className='animate-spin w-3 h-3' viewBox='0 0 24 24' fill='none'><circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' /><path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z' /></svg>Sending…</>
+                    ) : 'Yes, Send'}
                   </button>
                   <button
+                    disabled={isPending}
                     onClick={() => setConfirming(null)}
-                    className='flex-1 border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:border-navy/30 transition-colors'
+                    className='flex-1 border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:border-navy/30 transition-colors disabled:opacity-40'
                   >
                     Cancel
                   </button>
@@ -427,14 +589,18 @@ function RequestActionsDropdown({
                 </p>
                 <div className='flex gap-2'>
                   <button
+                    disabled={isPending}
                     onClick={() => { run(() => declineRequestAction(request.id)); close(); }}
-                    className='flex-1 bg-red-700 text-white font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:opacity-90 transition-opacity'
+                    className='flex-1 bg-red-700 text-white font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-1.5'
                   >
-                    Yes, Decline
+                    {isPending ? (
+                      <><svg className='animate-spin w-3 h-3' viewBox='0 0 24 24' fill='none'><circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' /><path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z' /></svg>Declining…</>
+                    ) : 'Yes, Decline'}
                   </button>
                   <button
+                    disabled={isPending}
                     onClick={() => setConfirming(null)}
-                    className='flex-1 border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:border-navy/30 transition-colors'
+                    className='flex-1 border border-cream-mid text-navy/50 font-mono text-[10px] uppercase tracking-[0.15em] py-1.5 hover:border-navy/30 transition-colors disabled:opacity-40'
                   >
                     Cancel
                   </button>
@@ -470,10 +636,20 @@ function RequestActionsDropdown({
                   <CopyEmailDropdownItem email={request.email} onCopy={close} />
                 </Tip>
 
+                {/* Schedule Tour */}
+                <Tip tip='Send the prospect a 45-min calendar invite for a facility tour. You&apos;ll be prompted to mark them as Pipeline.'>
+                  <button
+                    onClick={() => { setScheduleTour(true); close(); }}
+                    className='w-full text-left px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-navy/70 hover:bg-cream-mid hover:text-navy transition-colors'
+                  >
+                    Schedule Tour
+                  </button>
+                </Tip>
+
                 <div className='border-t border-cream-mid my-1' />
 
                 {/* Mark as Contacted */}
-                {request.status !== 'contacted' && (
+                {request.status !== 'contacted' && request.status !== 'pipeline' && (
                   <Tip tip='Log that you have reached out to this prospect. Records who contacted them and when.'>
                     <button
                       onClick={() => { run(() => markContactedAction(request.id)); close(); }}
@@ -485,8 +661,8 @@ function RequestActionsDropdown({
                 )}
 
                 {/* Mark as Pending */}
-                {request.status === 'contacted' && (
-                  <Tip tip='Move this prospect back to pending, e.g. if they were contacted in error.'>
+                {(request.status === 'contacted' || request.status === 'pipeline') && (
+                  <Tip tip='Move this prospect back to pending.'>
                     <button
                       onClick={() => { run(() => markPendingAction(request.id)); close(); }}
                       className='w-full text-left px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.15em] text-navy/70 hover:bg-cream-mid hover:text-navy transition-colors'
@@ -590,6 +766,11 @@ function RequestCard({
                 <span> by {request.contacted_by_member.full_name.split(' ')[0]}</span>
               )}
               {' '}on {format(new Date(request.contacted_at), 'MMM d, yyyy')}
+            </p>
+          )}
+          {request.status === 'pipeline' && request.tour_date && (
+            <p className='font-mono text-[10px] text-navy mt-0.5'>
+              Tour: {format(new Date(request.tour_date), "MMM d, yyyy 'at' h:mm a")}
             </p>
           )}
           {request.message && (

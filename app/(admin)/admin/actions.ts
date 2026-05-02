@@ -17,7 +17,9 @@ import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/re
 import { inviteEmailHtml, inviteEmailText } from '@/lib/resend/templates/invite'
 import { introEmailHtml, introEmailText } from '@/lib/resend/templates/intro'
 import { welcomeEmailHtml, welcomeEmailText } from '@/lib/resend/templates/welcome'
+import { tourInviteHtml, tourInviteText, tourInviteIcs } from '@/lib/resend/templates/tour-invite'
 import { notifyNewEvent } from '@/lib/discord/notify'
+
 
 // ─── Auth guard helper ────────────────────────────────────────────────────────
 
@@ -307,8 +309,6 @@ export async function sendIntroEmailAction(
 
     const firstName = fullName.split(' ')[0] ?? fullName
     const scheduleUrl = process.env.NEXT_PUBLIC_SCHEDULE_URL ?? 'https://calendly.com/fescuegolfclub'
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    void appUrl
 
     if (!isResendConfigured()) {
       console.log(`[DEV] Intro email to ${email} (${firstName}) — schedule: ${scheduleUrl}`)
@@ -389,6 +389,69 @@ export async function markPendingAction(
     return { success: 'Moved back to pending.' }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to update request.' }
+  }
+}
+
+export async function scheduleTourAction(
+  requestId: string,
+  prospectEmail: string,
+  prospectName: string,
+  tourDatetimeLocal: string, // "YYYY-MM-DDTHH:MM" in LA time from datetime-local input
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+
+    // Validate format before passing to new Date() — an invalid string would
+    // produce Invalid Date and corrupt the ICS or throw inside date-fns.
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(tourDatetimeLocal)) {
+      return { error: 'Invalid tour date format.' }
+    }
+    const tourDate = new Date(tourDatetimeLocal)
+    if (isNaN(tourDate.getTime())) {
+      return { error: 'Invalid tour date.' }
+    }
+
+    const firstName = prospectName.trim().split(/\s+/)[0] || prospectName
+
+    // Format for display: "Wednesday, May 15 at 10:00 AM"
+    const tourDateFormatted = format(tourDate, "EEEE, MMMM d 'at' h:mm a")
+
+    const icsContent = tourInviteIcs({ requestId, tourDatetimeLocal, prospectEmail, prospectName })
+    const adminEmail = process.env.OWNER_EMAIL
+
+    if (!isResendConfigured()) {
+      console.log(`[DEV] Tour invite to ${prospectEmail} for ${tourDateFormatted}`)
+      console.log('[DEV] ICS:\n', icsContent)
+    } else {
+      const resend = createResendClient()
+      await resend.emails.send({
+        from: FROM_ADDRESSES.hello,
+        to: prospectEmail,
+        ...(adminEmail ? { cc: adminEmail } : {}),
+        ...(process.env.ASST_GM_EMAIL ? { bcc: process.env.ASST_GM_EMAIL } : {}),
+        subject: `Fescue Golf Club — Your Visit on ${format(tourDate, 'MMMM d')}`,
+        html: tourInviteHtml({ firstName, tourDateFormatted }),
+        text: tourInviteText({ firstName, tourDateFormatted }),
+        attachments: [
+          {
+            filename: 'fescue-tour.ics',
+            content: Buffer.from(icsContent).toString('base64'),
+            contentType: 'text/calendar; method=REQUEST; charset=UTF-8',
+          },
+        ],
+      })
+    }
+
+    // Always persist the pipeline status and tour date — even in dev mode.
+    // If the email send threw, we'd have returned above via the catch block.
+    await updateMembershipRequestStatus(requestId, 'pipeline', {
+      tour_date: tourDate.toISOString(),
+    })
+
+    revalidatePath('/admin')
+    return { success: `Tour invite sent to ${prospectEmail} for ${tourDateFormatted}.` }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to send tour invite.' }
   }
 }
 

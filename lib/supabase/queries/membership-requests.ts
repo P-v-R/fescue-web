@@ -69,11 +69,17 @@ export async function getMembershipRequestByEmailAdmin(
   return (data as MembershipRequest | null) ?? null
 }
 
+type MembershipRequestStatus = 'pending' | 'contacted' | 'pipeline' | 'invited' | 'declined' | 'onboarded'
+
 // Admin only — update request status.
+// Overloads enforce that meta fields match the target status.
+export async function updateMembershipRequestStatus(id: string, status: 'contacted', meta: { contacted_by: string; contacted_at: string }): Promise<void>
+export async function updateMembershipRequestStatus(id: string, status: 'pipeline', meta: { tour_date: string }): Promise<void>
+export async function updateMembershipRequestStatus(id: string, status: Exclude<MembershipRequestStatus, 'contacted' | 'pipeline'>): Promise<void>
 export async function updateMembershipRequestStatus(
   id: string,
-  status: 'pending' | 'contacted' | 'invited' | 'declined' | 'onboarded',
-  meta?: { contacted_by?: string; contacted_at?: string },
+  status: MembershipRequestStatus,
+  meta?: { contacted_by?: string; contacted_at?: string; tour_date?: string },
 ): Promise<void> {
   const supabase = await createServerClient()
 

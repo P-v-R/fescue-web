@@ -178,6 +178,7 @@ export function StatusPill({ status }: { status: string }) {
   const styles: Record<string, string> = {
     pending: 'text-gold bg-gold/10',
     contacted: 'text-navy bg-navy/10',
+    pipeline: 'text-white bg-navy',
     invited: 'text-sage bg-sage/10',
     approved: 'text-sage bg-sage/10',
     onboarded: 'text-sage bg-sage/10',

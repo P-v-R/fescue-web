@@ -61,10 +61,11 @@ export type MembershipRequest = {
   membership_org_names: string | null
   message: string | null
   sgt_username: string | null
-  status: 'pending' | 'contacted' | 'invited' | 'declined' | 'onboarded'
+  status: 'pending' | 'contacted' | 'pipeline' | 'invited' | 'declined' | 'onboarded'
   contacted_by: string | null
   contacted_at: string | null
   contacted_by_member: { full_name: string } | null
+  tour_date: string | null
   created_at: string
 }
 
