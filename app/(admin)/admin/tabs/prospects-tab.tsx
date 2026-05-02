@@ -17,7 +17,6 @@ import {
   markContactedAction,
   markPendingAction,
   scheduleTourAction,
-  markPipelineAction,
 } from '../actions';
 
 function CopyEmailButton({ email }: { email: string }) {
@@ -170,7 +169,6 @@ function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; o
   const [isPending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pipelineDone, setPipelineDone] = useState(false);
 
   // Combine into "YYYY-MM-DDTHH:MM" for the server action
   const tourDatetime = tourDate && tourTime ? `${tourDate}T${tourTime}` : '';
@@ -184,14 +182,6 @@ function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; o
       const res = await scheduleTourAction(request.id, request.email, request.full_name, tourDatetime);
       if (res.error) setError(res.error);
       else setSent(true);
-    });
-  }
-
-  function handleMarkPipeline() {
-    startTransition(async () => {
-      const res = await markPipelineAction(request.id, tourDatetime);
-      if (res.error) setError(res.error);
-      else { setPipelineDone(true); setTimeout(() => onClose(), 700); }
     });
   }
 
@@ -293,40 +283,16 @@ function ScheduleTourModal({ request, onClose }: { request: MembershipRequest; o
           ) : (
             <>
               <p className='font-mono text-[10px] text-sage tracking-[0.1em]'>
-                ✓ Calendar invite sent to {firstName}
+                ✓ Calendar invite sent · Marked as pipeline
               </p>
-              {!pipelineDone ? (
-                <>
-                  <div className='bg-white border border-navy/10 px-4 py-3'>
-                    <p className='font-mono text-[10px] text-navy/60 leading-relaxed mb-3'>
-                      Mark {firstName} as <strong>Pipeline</strong>? This tracks that a tour has been scheduled.
-                    </p>
-                    <div className='flex gap-2'>
-                      <button
-                        onClick={handleMarkPipeline}
-                        disabled={isPending}
-                        className='bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-1.5 hover:opacity-90 transition-opacity disabled:opacity-40'
-                      >
-                        {isPending ? 'Saving…' : 'Yes, Mark as Pipeline'}
-                      </button>
-                      <button
-                        onClick={onClose}
-                        disabled={isPending}
-                        className='border border-cream-mid text-navy/40 font-mono text-[10px] uppercase tracking-[0.15em] px-4 py-1.5 hover:border-navy/30 hover:text-navy transition-colors disabled:opacity-50'
-                      >
-                        Skip
-                      </button>
-                    </div>
-                  </div>
-                  {error && (
-                    <p className='font-mono text-[10px] text-red-600 tracking-[0.1em]'>{error}</p>
-                  )}
-                </>
-              ) : (
-                <p className='font-mono text-[10px] text-sage tracking-[0.1em]'>
-                  ✓ Marked as pipeline
-                </p>
-              )}
+              <div className='flex gap-2 pt-1'>
+                <button
+                  onClick={onClose}
+                  className='bg-navy text-cream font-mono text-[10px] uppercase tracking-[0.2em] px-5 py-2.5 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity'
+                >
+                  Close
+                </button>
+              </div>
             </>
           )}
         </div>

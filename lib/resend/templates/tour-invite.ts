@@ -1,5 +1,29 @@
 import { emailShell } from './shared';
 
+/** Escapes a string for safe use in an HTML email body. */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
+/**
+ * Escapes a value for safe interpolation into an iCalendar TEXT property.
+ * Strips newlines (which would inject new property lines) and escapes
+ * backslash, semicolon, and comma per RFC 5545 §3.3.11.
+ */
+function escapeIcsText(str: string): string {
+  return str
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .slice(0, 200)
+}
+
 interface TourInviteParams {
   firstName: string;
   tourDateFormatted: string; // e.g. "Wednesday, May 15 at 10:00 AM"
@@ -17,7 +41,7 @@ export function tourInviteHtml({
         Tour Confirmation
       </p>
       <h1 style="margin:0 0 24px;font-family:Georgia,serif;font-size:24px;font-weight:normal;color:#004225;line-height:1.3;">
-        We&rsquo;ll see you soon,<br />${firstName}.
+        We&rsquo;ll see you soon,<br />${escapeHtml(firstName)}.
       </h1>
       <p style="margin:0 0 20px;font-family:Georgia,serif;font-size:15px;color:#3D3530;line-height:1.7;">
         Your tour of Fescue Golf Club is confirmed for:
@@ -82,7 +106,7 @@ Location: 12211 W Washington Blvd, Los Angeles, CA 90067
 
 A calendar invite is attached to this email.
 
-If you have any questions or need to reschedule, please reach out sean@fescuegolfclub.com directly.
+If you have any questions or need to reschedule, please reach out to sean@fescuegolfclub.com directly.
 
 Warm regards,
 Sean Gilmore
@@ -101,9 +125,13 @@ export function tourInviteIcs({
   prospectEmail: string;
   prospectName: string;
 }): string {
-  // Parse as local time (server runs TZ=America/Los_Angeles) and convert to UTC
+  // Parse as local time (server runs TZ=America/Los_Angeles) and convert to UTC.
   // Using UTC format with Z suffix is unambiguous across all calendar clients —
   // TZID requires an embedded VTIMEZONE block to work correctly in Google Calendar.
+  // Requires TZ=America/Los_Angeles in the server environment (see .env.example).
+  if (process.env.NODE_ENV !== 'test' && process.env.TZ !== 'America/Los_Angeles') {
+    console.warn('[tour-invite] TZ env var is not America/Los_Angeles — ICS event times may be incorrect')
+  }
   const tourDate = new Date(tourDatetimeLocal);
   const icsDate = tourDate.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
 
@@ -127,10 +155,10 @@ export function tourInviteIcs({
     `DTSTART:${icsDate}`,
     'DURATION:PT45M',
     'SUMMARY:Tour — Fescue Golf Club',
-    `DESCRIPTION:Tour at Fescue Golf Club for ${prospectName}`,
+    `DESCRIPTION:Tour at Fescue Golf Club for ${escapeIcsText(prospectName)}`,
     `LOCATION:${location}`,
     `ORGANIZER;CN=Fescue Golf Club:mailto:noreply@mail.fescuegolfclub.com`,
-    `ATTENDEE;CN=${prospectName};ROLE=REQ-PARTICIPANT:mailto:${prospectEmail}`,
+    `ATTENDEE;CN=${escapeIcsText(prospectName)};ROLE=REQ-PARTICIPANT:mailto:${prospectEmail.replace(/[\r\n]/g, '')}`,
     'STATUS:CONFIRMED',
     'END:VEVENT',
     'END:VCALENDAR',

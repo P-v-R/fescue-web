@@ -309,8 +309,6 @@ export async function sendIntroEmailAction(
 
     const firstName = fullName.split(' ')[0] ?? fullName
     const scheduleUrl = process.env.NEXT_PUBLIC_SCHEDULE_URL ?? 'https://calendly.com/fescuegolfclub'
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    void appUrl
 
     if (!isResendConfigured()) {
       console.log(`[DEV] Intro email to ${email} (${firstName}) — schedule: ${scheduleUrl}`)
@@ -403,11 +401,19 @@ export async function scheduleTourAction(
   try {
     await requireAdmin()
 
+    // Validate format before passing to new Date() — an invalid string would
+    // produce Invalid Date and corrupt the ICS or throw inside date-fns.
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(tourDatetimeLocal)) {
+      return { error: 'Invalid tour date format.' }
+    }
+    const tourDate = new Date(tourDatetimeLocal)
+    if (isNaN(tourDate.getTime())) {
+      return { error: 'Invalid tour date.' }
+    }
+
     const firstName = prospectName.trim().split(/\s+/)[0] || prospectName
 
     // Format for display: "Wednesday, May 15 at 10:00 AM"
-    // tourDatetimeLocal is like "2026-05-15T10:00" — parse as local time
-    const tourDate = new Date(tourDatetimeLocal)
     const tourDateFormatted = format(tourDate, "EEEE, MMMM d 'at' h:mm a")
 
     const icsContent = tourInviteIcs({ requestId, tourDatetimeLocal, prospectEmail, prospectName })
@@ -436,28 +442,16 @@ export async function scheduleTourAction(
       })
     }
 
-    revalidatePath('/admin')
-    return { success: `Tour invite sent to ${prospectEmail}.` }
-  } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to send tour invite.' }
-  }
-}
-
-export async function markPipelineAction(
-  requestId: string,
-  tourDatetimeLocal: string, // "YYYY-MM-DDTHH:MM" in LA time
-): Promise<{ error?: string; success?: string }> {
-  try {
-    await requireAdmin()
-    // Store as UTC ISO string in the DB
-    const tourDate = new Date(tourDatetimeLocal)
+    // Always persist the pipeline status and tour date — even in dev mode.
+    // If the email send threw, we'd have returned above via the catch block.
     await updateMembershipRequestStatus(requestId, 'pipeline', {
       tour_date: tourDate.toISOString(),
     })
+
     revalidatePath('/admin')
-    return { success: 'Marked as pipeline.' }
+    return { success: `Tour invite sent to ${prospectEmail} for ${tourDateFormatted}.` }
   } catch (err) {
-    return { error: err instanceof Error ? err.message : 'Failed to update status.' }
+    return { error: err instanceof Error ? err.message : 'Failed to send tour invite.' }
   }
 }
 

@@ -27,11 +27,18 @@ export async function GET(request: NextRequest) {
       // require a prior member record to get the link.
       const isOAuth = user.app_metadata?.provider !== 'email'
       if (isOAuth) {
+        // Some OAuth providers (e.g. Apple) omit the email on repeat sign-ins.
+        // Treat a missing email as no match — delete the auth entry and reject.
+        if (!user.email) {
+          const admin = createAdminClient()
+          await admin.auth.admin.deleteUser(user.id)
+          return NextResponse.redirect(`${origin}/login?error=not_a_member`)
+        }
         const admin = createAdminClient()
         const { data: member } = await admin
           .from('members')
           .select('id')
-          .eq('email', user.email!)
+          .eq('email', user.email)
           .maybeSingle()
 
         if (!member) {
