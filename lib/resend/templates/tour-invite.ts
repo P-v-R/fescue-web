@@ -101,9 +101,11 @@ export function tourInviteIcs({
   prospectEmail: string;
   prospectName: string;
 }): string {
-  // Format "2026-05-15T10:00" → "20260515T100000"
-  const [datePart, timePart] = tourDatetimeLocal.split('T');
-  const icsDate = `${datePart.replace(/-/g, '')}T${timePart.replace(':', '')}00`;
+  // Parse as local time (server runs TZ=America/Los_Angeles) and convert to UTC
+  // Using UTC format with Z suffix is unambiguous across all calendar clients —
+  // TZID requires an embedded VTIMEZONE block to work correctly in Google Calendar.
+  const tourDate = new Date(tourDatetimeLocal);
+  const icsDate = tourDate.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
 
   const now = new Date();
   const dtstamp = now.toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
@@ -122,7 +124,7 @@ export function tourInviteIcs({
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${dtstamp}`,
-    `DTSTART;TZID=America/Los_Angeles:${icsDate}`,
+    `DTSTART:${icsDate}`,
     'DURATION:PT45M',
     'SUMMARY:Tour — Fescue Golf Club',
     `DESCRIPTION:Tour at Fescue Golf Club for ${prospectName}`,
