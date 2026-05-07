@@ -44,9 +44,17 @@ function useNextAvailable(
   return useMemo(() => {
     const now = new Date()
     const slots = generateTimeSlots(date)
-    const bookedKeys = new Set(
-      bookings.map((b) => `${b.bay_id}-${new Date(b.start_time).getTime()}`),
-    )
+
+    // Mark all slots covered by each booking (start + continuations)
+    const bookedKeys = new Set<string>()
+    for (const b of bookings) {
+      const startIdx = timeToSlotIndex(new Date(b.start_time))
+      const span = durationToSpan(b.duration_minutes)
+      for (let i = 0; i < span; i++) {
+        const slot = slots[startIdx + i]
+        if (slot) bookedKeys.add(`${b.bay_id}-${slot.getTime()}`)
+      }
+    }
 
     const available: SelectedSlot[] = []
 
