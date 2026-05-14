@@ -120,6 +120,15 @@ export type JoinRequest = {
   created_at: string
 }
 
+export type WorkbenchPledge = {
+  id: string
+  discord_user_id: string
+  discord_username: string
+  amount: number
+  note: string | null
+  created_at: string
+}
+
 // Booking with bay name joined (from getMemberBookings)
 export type BookingWithBay = Booking & {
   bays: { name: string } | null
