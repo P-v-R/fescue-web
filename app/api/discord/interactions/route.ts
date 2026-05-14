@@ -15,14 +15,6 @@ const CHANNEL_MESSAGE_WITH_SOURCE = 4
 
 // ---- Signature verification ----
 
-function hexToBytes(hex: string): Uint8Array {
-  const arr = new Uint8Array(hex.length / 2)
-  for (let i = 0; i < hex.length; i += 2) {
-    arr[i / 2] = parseInt(hex.slice(i, i + 2), 16)
-  }
-  return arr
-}
-
 async function verifySignature(req: NextRequest, rawBody: string): Promise<boolean> {
   const signature = req.headers.get('x-signature-ed25519')
   const timestamp = req.headers.get('x-signature-timestamp')
@@ -31,7 +23,7 @@ async function verifySignature(req: NextRequest, rawBody: string): Promise<boole
   try {
     const key = await crypto.subtle.importKey(
       'raw',
-      hexToBytes(PUBLIC_KEY),
+      Buffer.from(PUBLIC_KEY, 'hex'),
       { name: 'Ed25519' },
       false,
       ['verify'],
@@ -39,7 +31,7 @@ async function verifySignature(req: NextRequest, rawBody: string): Promise<boole
     return crypto.subtle.verify(
       'Ed25519',
       key,
-      hexToBytes(signature),
+      Buffer.from(signature, 'hex'),
       new TextEncoder().encode(timestamp + rawBody),
     )
   } catch {
