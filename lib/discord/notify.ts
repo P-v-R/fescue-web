@@ -1,5 +1,6 @@
 const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL
 const SUGGESTIONS_WEBHOOK_URL = process.env.DISCORD_SUGGESTIONS_WEBHOOK_URL
+const WORKBENCH_WEBHOOK_URL = process.env.DISCORD_WORKBENCH_WEBHOOK_URL
 
 export async function notifyNewEvent(event: {
   id: string
@@ -90,4 +91,60 @@ export async function notifySuggestion({
     }),
   })
   if (!res.ok) throw new Error(`Discord webhook returned ${res.status}`)
+}
+
+export async function notifyWorkbenchPledge({
+  memberName,
+  amount,
+  note,
+  total,
+  goal,
+  pledgeCount,
+  topPledges,
+}: {
+  memberName: string
+  amount: number
+  note?: string
+  total: number
+  goal: number
+  pledgeCount: number
+  topPledges: { displayName: string; amount: number }[]
+}) {
+  if (!WORKBENCH_WEBHOOK_URL) return
+
+  const pct = Math.min(100, Math.round((total / goal) * 100))
+  const filled = Math.min(13, Math.round((total / goal) * 13))
+  const bar = '█'.repeat(filled) + '░'.repeat(13 - filled)
+  const progressValue = `$${total.toLocaleString()} / $${goal.toLocaleString()}  ${bar}  ${pct}%`
+
+  const topValue = topPledges
+    .slice(0, 5)
+    .map((p, i) => `${i + 1}. ${p.displayName} — $${p.amount.toLocaleString()}`)
+    .join('\n')
+
+  await fetch(WORKBENCH_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: 'Fescue Bot',
+      embeds: [
+        {
+          color: 5763719,
+          author: { name: 'New pledge received' },
+          title: `${memberName} pledged $${amount.toLocaleString()}`,
+          description: note || undefined,
+          fields: [
+            { name: 'Progress', value: progressValue },
+            { name: 'Top pledges', value: topValue || 'No pledges yet' },
+          ],
+          footer: {
+            text: `${pledgeCount} member${pledgeCount !== 1 ? 's' : ''} pledged · fescuegolfclub.com`,
+          },
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    }),
+  }).catch((err) => {
+    console.error('[discord] failed to send workbench pledge notification:', err)
+  })
 }
