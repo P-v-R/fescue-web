@@ -21,10 +21,10 @@ const commands = [
     options: [
       {
         name: 'amount',
-        description: 'Amount to pledge in dollars (min $10, max $2,500)',
+        description: 'Amount to pledge in dollars (max $2,500)',
         type: 4, // INTEGER
         required: true,
-        min_value: 10,
+        min_value: 1,
         max_value: 2500,
       },
       {
