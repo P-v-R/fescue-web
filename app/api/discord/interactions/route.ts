@@ -106,8 +106,8 @@ async function handlePledge(interaction: DiscordInteraction) {
   const noteRaw = options.find((o) => o.name === 'note')?.value as string | undefined
   const note = noteRaw?.trim().slice(0, 280) || null
 
-  if (!amount || amount < 10 || amount > 2500) {
-    return ephemeral('Amount must be between $10 and $2,500.')
+  if (!amount || amount <= 0 || amount > 2500) {
+    return ephemeral('Amount must be between $1 and $2,500.')
   }
 
   const supabase = createAdminClient()
@@ -116,9 +116,6 @@ async function handlePledge(interaction: DiscordInteraction) {
     .insert({ discord_user_id: discordUserId, discord_username: discordUsername, amount, note })
 
   if (error) {
-    if (error.code === '23505') {
-      return ephemeral("You've already pledged — each member can only pledge once.")
-    }
     console.error('[discord bot] pledge insert error:', error)
     return ephemeral('Something went wrong. Please try again.')
   }
@@ -146,18 +143,32 @@ async function handleWorkbench(interaction: DiscordInteraction) {
 
   const rows = pledges ?? []
   const total = rows.reduce((sum, p) => sum + p.amount, 0)
-  const pledgeCount = rows.length
   const pct = Math.min(100, Math.round((total / GOAL) * 100))
   const remaining = Math.max(0, GOAL - total)
   const bar = progressBar(total, GOAL)
 
-  const top5 = rows.slice(0, 5)
-  const overflow = rows.slice(5)
-  const overflowTotal = overflow.reduce((sum, p) => sum + p.amount, 0)
+  // Aggregate by user for leaderboard
+  const byUser = new Map<string, { username: string; total: number }>()
+  for (const p of rows) {
+    const existing = byUser.get(p.discord_user_id)
+    if (existing) {
+      existing.total += p.amount
+    } else {
+      byUser.set(p.discord_user_id, { username: p.discord_username, total: p.amount })
+    }
+  }
+  const aggregated = [...byUser.entries()]
+    .map(([id, v]) => ({ id, username: v.username, total: v.total }))
+    .sort((a, b) => b.total - a.total)
+
+  const memberCount = aggregated.length
+  const top5 = aggregated.slice(0, 5)
+  const overflow = aggregated.slice(5)
+  const overflowTotal = overflow.reduce((sum, p) => sum + p.total, 0)
 
   const leaderboardLines = top5.map((p, i) => {
-    const star = p.discord_user_id === user.id ? ' ★' : ''
-    return `${i + 1}. ${p.discord_username}${star} — $${p.amount.toLocaleString()}`
+    const star = p.id === user.id ? ' ★' : ''
+    return `${i + 1}. ${p.username}${star} — $${p.total.toLocaleString()}`
   })
   if (overflow.length > 0) {
     leaderboardLines.push(`+ ${overflow.length} more — $${overflowTotal.toLocaleString()}`)
@@ -176,10 +187,10 @@ async function handleWorkbench(interaction: DiscordInteraction) {
     timestamp: new Date().toISOString(),
   }
 
-  if (pledgeCount > 0) {
+  if (memberCount > 0) {
     embed.fields = [
       {
-        name: `PLEDGES (${pledgeCount} ${pledgeCount === 1 ? 'MEMBER' : 'MEMBERS'})`,
+        name: `PLEDGES (${memberCount} ${memberCount === 1 ? 'MEMBER' : 'MEMBERS'})`,
         value: leaderboardLines.join('\n'),
       },
     ]
@@ -196,7 +207,7 @@ function handleHelp() {
       {
         name: '/pledge amount:<dollars> [note:<text>]',
         value:
-          'Pledge an amount toward the club workbench. Min $10, max $2,500. One pledge per member.',
+          'Pledge an amount toward the club workbench. Max $2,500.',
       },
       {
         name: '/workbench',
