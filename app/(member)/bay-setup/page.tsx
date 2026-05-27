@@ -1,5 +1,9 @@
 import Image from 'next/image'
 
+export const metadata = {
+  title: 'Bay Setup Guide — Fescue',
+}
+
 type StepMedia = {
   src: string
   alt: string
