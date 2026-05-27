@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 type StepMedia = {
   src: string
   alt: string
@@ -149,9 +151,11 @@ export default function BaySetupPage() {
                         {step.text}
                       </p>
                       {step.media ? (
-                        <img
+                        <Image
                           src={step.media.src}
                           alt={step.media.alt}
+                          width={800}
+                          height={500}
                           className="mt-4 w-full border border-cream-mid"
                         />
                       ) : null}
@@ -178,7 +182,7 @@ export default function BaySetupPage() {
           </p>
           <div className="bg-white border border-cream-mid px-6 py-6">
             <p className="font-sans text-sm font-light text-navy/70 leading-relaxed">
-              Don't hesitate to call:
+              Don&apos;t hesitate to call:
             </p>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div>
