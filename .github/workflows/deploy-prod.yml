@@ -1,0 +1,46 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm production deployment'
+        required: true
+
+jobs:
+  deploy:
+    name: Fast-forward production branch to main
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'deploy'
+
+    steps:
+      - name: Verify CI is passing on main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          STATUS=$(gh run list --repo ${{ github.repository }} --branch main --workflow ci.yml --limit 1 --json conclusion --jq '.[0].conclusion')
+          if [ "$STATUS" != "success" ]; then
+            echo "❌ Latest CI run on main is not passing (status: $STATUS). Aborting."
+            exit 1
+          fi
+          echo "✅ CI is passing on main"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fast-forward production to main
+        run: |
+          git push origin origin/main:refs/heads/production
+          echo "✅ Production branch updated to $(git rev-parse origin/main)"
+
+      - name: Summary
+        run: |
+          echo "### 🚀 Production deployment triggered" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** $(git rev-parse --short origin/main)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Watch for:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Migrate Production** workflow for DB migrations" >> $GITHUB_STEP_SUMMARY
+          echo "- **Railway** production environment for the deploy" >> $GITHUB_STEP_SUMMARY
