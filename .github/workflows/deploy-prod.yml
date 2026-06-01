@@ -7,33 +7,40 @@ on:
         description: 'Type "deploy" to confirm production deployment'
         required: true
 
+# Prevent concurrent deploys
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
 jobs:
   deploy:
-    name: Fast-forward production branch to main
+    name: Deploy to production
     runs-on: ubuntu-latest
     if: github.event.inputs.confirm == 'deploy'
 
     steps:
-      - name: Verify CI is passing on main
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          STATUS=$(gh run list --repo ${{ github.repository }} --branch main --workflow ci.yml --limit 1 --json conclusion --jq '.[0].conclusion')
-          if [ "$STATUS" != "success" ]; then
-            echo "❌ Latest CI run on main is not passing (status: $STATUS). Aborting."
-            exit 1
-          fi
-          echo "✅ CI is passing on main"
-
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fast-forward production to main
+      - name: Verify CI is passing on main HEAD
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
         run: |
-          git push origin origin/main:refs/heads/production
-          echo "✅ Production branch updated to $(git rev-parse origin/main)"
+          MAIN_SHA=$(git rev-parse origin/main)
+          STATUS=$(gh run list --repo "$REPO" --branch main --workflow ci.yml --json headSha,conclusion --jq "[.[] | select(.headSha == \"$MAIN_SHA\")] | .[0].conclusion")
+          if [ "$STATUS" != "success" ]; then
+            echo "CI is not passing for main HEAD ($MAIN_SHA) — status: $STATUS. Aborting."
+            exit 1
+          fi
+
+      - name: Fast-forward production to main
+        run: git push origin origin/main:refs/heads/production
 
       - name: Summary
         run: |
