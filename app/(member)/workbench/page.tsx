@@ -5,6 +5,35 @@ export const metadata = {
   title: 'Workbench Fund — Fescue',
 }
 
+const GOAL = parseInt(process.env.WORKBENCH_GOAL ?? '2500', 10)
+
+const EQUIPMENT = [
+  'Loft / Lie Machine',
+  'Bench Vise',
+  'Club Ruler',
+  'Iron Bend Machine',
+  'Grip Station',
+  'Sand and Cut Station',
+  'Dedicated Workbench and Portable Bench',
+] as const
+
+const CAPABILITIES = [
+  'Loft and lie adjustments',
+  'Regripping',
+  'Shaft installation and removal',
+  'Swing weight measurement and tuning',
+  'General club repair and maintenance',
+  'Club experimentation, tinkering, and education',
+] as const
+
+const OPERATIONS = [
+  'Shared club resource available to all members',
+  'Usage guidelines established prior to launch',
+  'Certain procedures may require experienced assistance',
+  'Safety and liability addressed before use',
+  'Tools organized, maintained, and stored on-site',
+] as const
+
 function ProgressBar({ total, goal }: { total: number; goal: number }) {
   const pct = Math.min(100, Math.round((total / goal) * 100))
   return (
@@ -28,37 +57,31 @@ function ProgressBar({ total, goal }: { total: number; goal: number }) {
   )
 }
 
+function BulletList({ items }: { items: readonly string[] }) {
+  return (
+    <ul className="space-y-2.5">
+      {items.map((item) => (
+        <li key={item} className="flex items-start gap-3">
+          <span aria-hidden="true" className="mt-1.5 w-1 h-1 rounded-full bg-navy/25 shrink-0" />
+          <span className="font-sans text-sm font-light text-navy/70">{item}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export default async function WorkbenchPage() {
   const supabase = await createClient()
 
   const { data: pledges } = await supabase
     .from('workbench_pledges')
-    .select('id, discord_user_id, discord_username, amount, note, created_at')
+    .select('id, discord_username, amount, note, created_at')
     .order('amount', { ascending: false })
+    .limit(200)
 
   const rows = (pledges ?? []) as WorkbenchPledge[]
-  const goal = parseInt(process.env.WORKBENCH_GOAL ?? '2500', 10)
   const total = rows.reduce((sum, p) => sum + p.amount, 0)
   const pledgeCount = rows.length
-
-  const equipment = [
-    'Loft / Lie Machine',
-    'Bench Vise',
-    'Club Ruler',
-    'Iron Bend Machine',
-    'Grip Station',
-    'Sand and Cut Station',
-    'Dedicated Workbench and Portable Bench',
-  ]
-
-  const capabilities = [
-    'Loft and lie adjustments',
-    'Regripping',
-    'Shaft installation and removal',
-    'Swing weight measurement and tuning',
-    'General club repair and maintenance',
-    'Club experimentation, tinkering, and education',
-  ]
 
   return (
     <div className="max-w-2xl space-y-12">
@@ -80,7 +103,7 @@ export default async function WorkbenchPage() {
 
       {/* Progress */}
       <div className="bg-white border border-cream-mid px-6 py-6">
-        <ProgressBar total={total} goal={goal} />
+        <ProgressBar total={total} goal={GOAL} />
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40 mt-4">
           {pledgeCount} {pledgeCount === 1 ? 'member' : 'members'} pledged
         </p>
@@ -89,39 +112,25 @@ export default async function WorkbenchPage() {
       {/* Equipment + Capabilities */}
       <div className="grid sm:grid-cols-2 gap-6">
         <div className="bg-white border border-cream-mid px-6 py-6">
-          <p className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-5">
+          <h2 className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-5">
             Equipment
-          </p>
-          <ul className="space-y-2.5">
-            {equipment.map((item) => (
-              <li key={item} className="flex items-start gap-3">
-                <span className="mt-1.5 w-1 h-1 rounded-full bg-navy/25 shrink-0" />
-                <span className="font-sans text-sm font-light text-navy/75">{item}</span>
-              </li>
-            ))}
-          </ul>
+          </h2>
+          <BulletList items={EQUIPMENT} />
         </div>
         <div className="bg-white border border-cream-mid px-6 py-6">
-          <p className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-5">
+          <h2 className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-5">
             Capabilities
-          </p>
-          <ul className="space-y-2.5">
-            {capabilities.map((item) => (
-              <li key={item} className="flex items-start gap-3">
-                <span className="mt-1.5 w-1 h-1 rounded-full bg-navy/25 shrink-0" />
-                <span className="font-sans text-sm font-light text-navy/75">{item}</span>
-              </li>
-            ))}
-          </ul>
+          </h2>
+          <BulletList items={CAPABILITIES} />
         </div>
       </div>
 
       {/* Budget + Operations */}
       <div className="grid sm:grid-cols-2 gap-6">
         <div className="bg-white border border-cream-mid px-6 py-6">
-          <p className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-4">
+          <h2 className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-4">
             Budget
-          </p>
+          </h2>
           <p className="font-sans text-sm font-light text-navy/70 leading-relaxed">
             The fundraising goal reflects the estimated cost of acquiring the equipment and
             supplies for a functional workshop. Should contributions exceed the goal, additional
@@ -129,32 +138,19 @@ export default async function WorkbenchPage() {
           </p>
         </div>
         <div className="bg-white border border-cream-mid px-6 py-6">
-          <p className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-4">
+          <h2 className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-4">
             Operations
-          </p>
-          <ul className="space-y-2.5">
-            {[
-              'Shared club resource available to all members',
-              'Usage guidelines established prior to launch',
-              'Certain procedures may require experienced assistance',
-              'Safety and liability addressed before use',
-              'Tools organized, maintained, and stored on-site',
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-3">
-                <span className="mt-1.5 w-1 h-1 rounded-full bg-navy/25 shrink-0" />
-                <span className="font-sans text-sm font-light text-navy/70">{item}</span>
-              </li>
-            ))}
-          </ul>
+          </h2>
+          <BulletList items={OPERATIONS} />
         </div>
       </div>
 
       {/* Pledge board */}
       {rows.length > 0 && (
         <div>
-          <p className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-5">
+          <h2 className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-5">
             Pledge Board
-          </p>
+          </h2>
           <div className="bg-white border border-cream-mid divide-y divide-cream-mid">
             {rows.map((pledge, i) => (
               <div key={pledge.id} className="flex items-center gap-4 px-6 py-4">
@@ -181,9 +177,9 @@ export default async function WorkbenchPage() {
       {/* How to pledge + important note */}
       <div className="grid sm:grid-cols-2 gap-6">
         <div className="bg-white border border-cream-mid px-6 py-6">
-          <p className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-4">
+          <h2 className="font-mono text-label uppercase tracking-[0.28em] text-sage mb-4">
             How to Pledge
-          </p>
+          </h2>
           <p className="font-sans text-sm font-light text-navy/70 leading-relaxed">
             Use{' '}
             <span className="font-mono text-[12px] text-navy">/pledge</span> on the club Discord
@@ -193,9 +189,9 @@ export default async function WorkbenchPage() {
           </p>
         </div>
         <div className="bg-white border border-cream-mid px-6 py-6">
-          <p className="font-mono text-label uppercase tracking-[0.28em] text-gold mb-4">
+          <h2 className="font-mono text-label uppercase tracking-[0.28em] text-gold mb-4">
             Important Note
-          </p>
+          </h2>
           <p className="font-sans text-sm font-light text-navy/70 leading-relaxed">
             A pledge is an expression of interest and support — no payment is required at the
             time of pledging. The goal is to track progress transparently and determine whether

@@ -122,7 +122,6 @@ export type JoinRequest = {
 
 export type WorkbenchPledge = {
   id: string
-  discord_user_id: string
   discord_username: string
   amount: number
   note: string | null
