@@ -237,6 +237,7 @@ html.dark-mode .text-navy\/50 { color: rgba(240, 235, 227, 0.50); }
 html.dark-mode .text-navy\/55 { color: rgba(240, 235, 227, 0.55); }
 html.dark-mode .text-navy\/60 { color: rgba(240, 235, 227, 0.60); }
 html.dark-mode .text-navy\/70 { color: rgba(240, 235, 227, 0.70); }
+html.dark-mode .text-navy\/75 { color: rgba(240, 235, 227, 0.75); }
 html.dark-mode .text-navy\/80 { color: rgba(240, 235, 227, 0.80); }
 
 html.dark-mode .text-sage { color: var(--sage-light); }
@@ -310,6 +311,7 @@ html.dark-mode.high-contrast .text-navy\/45 { color: rgba(240, 235, 227, 0.84); 
 html.dark-mode.high-contrast .text-navy\/50 { color: rgba(240, 235, 227, 0.90); }
 html.dark-mode.high-contrast .text-navy\/60 { color: rgba(240, 235, 227, 0.96); }
 html.dark-mode.high-contrast .text-navy\/70 { color: rgba(240, 235, 227, 0.97); }
+html.dark-mode.high-contrast .text-navy\/75 { color: rgba(240, 235, 227, 0.98); }
 html.dark-mode.high-contrast .text-navy\/80 { color: rgba(240, 235, 227, 1.00); }
 html.dark-mode.high-contrast .text-navy\/65 { color: rgba(240, 235, 227, 0.94); }
 html.dark-mode.high-contrast .text-navy-mid\/60 { color: rgba(240, 235, 227, 0.80); }
