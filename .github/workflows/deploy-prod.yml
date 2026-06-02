@@ -40,7 +40,9 @@ jobs:
           fi
 
       - name: Fast-forward production to main
-        run: git push origin origin/main:refs/heads/production
+        run: |
+          git fetch origin production
+          git push origin origin/main:refs/heads/production
 
       - name: Summary
         run: |
