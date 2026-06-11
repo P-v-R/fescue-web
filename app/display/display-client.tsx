@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useEffect, useCallback } from 'react'
 import type { Bay, BookingWithMember, Event } from '@/lib/supabase/types'
 import type { BulletinPost } from '@/lib/sanity/types'
 import { BayStatusView } from './bay-status-view'
@@ -12,21 +11,21 @@ type Props = {
   initialBookings: BookingWithMember[]
   posts: BulletinPost[]
   events: Event[]
+  token: string
 }
 
 const BAYS_DURATION = 60_000   // 1 minute
 const CONTENT_DURATION = 15_000 // 15 seconds
 const FADE_DURATION = 700       // ms for opacity transition
+const POLL_INTERVAL = 30_000    // 30 seconds
 
 type Phase = 'bays' | 'content'
 
-export function DisplayClient({ bays, initialBookings, posts, events }: Props) {
+export function DisplayClient({ bays, initialBookings, posts, events, token }: Props) {
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
   const [phase, setPhase] = useState<Phase>('bays')
   const [contentIdx, setContentIdx] = useState(0)
   const [visible, setVisible] = useState(true)
-
-  const supabaseRef = useRef(createClient())
 
   // Build flat content array: interleave posts and events
   const contentItems: DisplayContentItem[] = [
@@ -34,37 +33,22 @@ export function DisplayClient({ bays, initialBookings, posts, events }: Props) {
     ...events.map((e): DisplayContentItem => ({ kind: 'event', data: e })),
   ]
 
-  // Fetch today's bookings from the client side (for realtime refresh)
+  // Poll the server-side API route — bypasses RLS via admin client
   const fetchBookings = useCallback(async () => {
-    const supabase = supabaseRef.current
-    const now = new Date()
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
-    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
-
-    const { data } = await supabase
-      .from('bookings')
-      .select('*, members(full_name)')
-      .gte('start_time', start)
-      .lte('start_time', end)
-      .is('cancelled_at', null)
-      .order('start_time', { ascending: true })
-
-    if (data) setBookings(data as BookingWithMember[])
-  }, [])
-
-  // Realtime subscription — same pattern as reservations-client.tsx
-  useEffect(() => {
-    const supabase = supabaseRef.current
-    const channel = supabase
-      .channel('display-bookings')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-        fetchBookings()
-      })
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
+    try {
+      const res = await fetch(`/api/display/bookings?token=${token}`)
+      if (!res.ok) return
+      const data = await res.json()
+      setBookings(data as BookingWithMember[])
+    } catch {
+      // silently ignore — keep showing stale data
     }
+  }, [token])
+
+  // Poll every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchBookings, POLL_INTERVAL)
+    return () => clearInterval(interval)
   }, [fetchBookings])
 
   // Cycling loop

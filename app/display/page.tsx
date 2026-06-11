@@ -42,6 +42,7 @@ export default async function DisplayPage({ searchParams }: Props) {
       initialBookings={bookings}
       posts={posts}
       events={events}
+      token={token!}
     />
   )
 }
