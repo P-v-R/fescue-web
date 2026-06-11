@@ -89,14 +89,14 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
       <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-gold/30' />
 
       {/* Club logo — top center */}
-      <div className='absolute top-4 left-1/2 -translate-x-1/2'>
+      <div className='absolute top-3 left-1/2 -translate-x-1/2 overflow-hidden rounded-full' style={{ width: 64, height: 64 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src='/Logo-no-border.png'
           alt='Fescue Golf Club'
-          width={56}
-          height={56}
-          style={{ filter: 'brightness(0) invert(1)', opacity: 0.35 }}
+          width={64}
+          height={64}
+          style={{ opacity: 0.9, objectFit: 'cover' }}
         />
       </div>
 
