@@ -83,14 +83,14 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   return (
     <div className='fixed inset-0 bg-navy-dark overflow-hidden'>
       {/* Subtle corner decorations */}
-      <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-gold/20' />
-      <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-gold/20' />
-      <span className='absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-gold/20' />
-      <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-gold/20' />
+      <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-gold/30' />
+      <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-gold/30' />
+      <span className='absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-gold/30' />
+      <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-gold/30' />
 
       {/* Fescue wordmark — top center */}
       <div className='absolute top-6 left-1/2 -translate-x-1/2'>
-        <p className='font-mono text-[10px] uppercase tracking-[0.45em] text-cream/20'>
+        <p className='font-mono text-[10px] uppercase tracking-[0.45em] text-white/30'>
           Fescue Golf Club
         </p>
       </div>
