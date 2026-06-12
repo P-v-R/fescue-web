@@ -23,14 +23,14 @@ export async function getDisplayBookingsForToday(): Promise<BookingWithMember[]>
 
   const { data, error } = await supabase
     .from('bookings')
-    .select('*, members(full_name)')
+    .select('id, bay_id, start_time, end_time, members(full_name)')
     .gte('start_time', startOfDay(now).toISOString())
     .lte('start_time', endOfDay(now).toISOString())
     .is('cancelled_at', null)
     .order('start_time', { ascending: true })
 
   if (error) throw new Error(`getDisplayBookingsForToday: ${error.message}`)
-  return (data ?? []) as BookingWithMember[]
+  return (data ?? []) as unknown as BookingWithMember[]
 }
 
 export async function getDisplayUpcomingEvents(): Promise<Event[]> {

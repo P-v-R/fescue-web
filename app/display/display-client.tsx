@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Bay, BookingWithMember, Event } from '@/lib/supabase/types'
 import type { BulletinPost } from '@/lib/sanity/types'
 import { BayStatusView } from './bay-status-view'
 import { ContentSlide, type DisplayContentItem } from './content-slide'
+import { DisplayErrorBoundary } from './display-error-boundary'
 
 type Props = {
   bays: Bay[]
@@ -26,8 +27,9 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   const [phase, setPhase] = useState<Phase>('bays')
   const [contentIdx, setContentIdx] = useState(0)
   const [visible, setVisible] = useState(true)
+  const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Build flat content array: interleave posts and events
+  // Build flat content array: posts first, then events
   const contentItems: DisplayContentItem[] = [
     ...posts.map((p): DisplayContentItem => ({ kind: 'post', data: p })),
     ...events.map((e): DisplayContentItem => ({ kind: 'event', data: e })),
@@ -36,7 +38,9 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   // Poll the server-side API route — bypasses RLS via admin client
   const fetchBookings = useCallback(async () => {
     try {
-      const res = await fetch(`/api/display/bookings?token=${token}`)
+      const res = await fetch('/api/display/bookings', {
+        headers: { Authorization: token },
+      })
       if (!res.ok) return
       const data = await res.json()
       setBookings(data as BookingWithMember[])
@@ -60,7 +64,7 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
       setVisible(false)
 
       // After fade, advance state and fade back in
-      setTimeout(() => {
+      fadeTimerRef.current = setTimeout(() => {
         if (phase === 'bays') {
           if (contentItems.length > 0) {
             setPhase('content')
@@ -75,7 +79,10 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
       }, FADE_DURATION)
     }, duration)
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      if (fadeTimerRef.current) clearTimeout(fadeTimerRef.current)
+    }
   }, [phase, contentIdx, contentItems.length])
 
   const currentItem = contentItems[contentIdx] ?? null
@@ -89,14 +96,14 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
       <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-gold/30' />
 
       {/* Club logo — top center */}
-      <div className='absolute top-3 left-1/2 -translate-x-1/2 overflow-hidden rounded-full' style={{ width: 64, height: 64 }}>
+      <div className='absolute top-4 left-1/2 -translate-x-1/2'>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src='/Logo-no-border.png'
+          src='/quail-alt.png'
           alt='Fescue Golf Club'
-          width={64}
-          height={64}
-          style={{ opacity: 0.9, objectFit: 'cover' }}
+          width={48}
+          height={48}
+          style={{ objectFit: 'contain' }}
         />
       </div>
 
@@ -108,13 +115,15 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
           transitionDuration: `${FADE_DURATION}ms`,
         }}
       >
-        {phase === 'bays' ? (
-          <div className='h-full pt-10'>
-            <BayStatusView bays={bays} bookings={bookings} />
-          </div>
-        ) : currentItem ? (
-          <ContentSlide item={currentItem} />
-        ) : null}
+        <DisplayErrorBoundary>
+          {phase === 'bays' ? (
+            <div className='h-full pt-10'>
+              <BayStatusView bays={bays} bookings={bookings} />
+            </div>
+          ) : currentItem ? (
+            <ContentSlide item={currentItem} />
+          ) : null}
+        </DisplayErrorBoundary>
       </div>
     </div>
   )

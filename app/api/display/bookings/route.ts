@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getDisplayBookingsForToday } from '@/lib/supabase/queries/display'
 
 export async function GET(request: NextRequest) {
-  const token = request.nextUrl.searchParams.get('token')
+  const token = request.headers.get('authorization')
 
   if (!process.env.DISPLAY_TOKEN || token !== process.env.DISPLAY_TOKEN) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })

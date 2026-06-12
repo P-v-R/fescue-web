@@ -14,9 +14,8 @@ function firstName(fullName: string | null | undefined): string {
 }
 
 function getBayStatus(bay: Bay, bookings: BookingWithMember[], now: Date) {
-  const bayBookings = bookings
-    .filter((b) => b.bay_id === bay.id)
-    .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+  // Query already returns bookings ordered by start_time asc; filter preserves that order
+  const bayBookings = bookings.filter((b) => b.bay_id === bay.id)
 
   const current = bayBookings.find(
     (b) => new Date(b.start_time) <= now && now < new Date(b.end_time),
@@ -64,7 +63,7 @@ export function BayStatusView({ bays, bookings }: Props) {
       {/* Bay columns */}
       <div
         className='flex-1 grid gap-4'
-        style={{ gridTemplateColumns: `repeat(${activeBays.length}, 1fr)` }}
+        style={{ gridTemplateColumns: `repeat(${Math.max(activeBays.length, 1)}, 1fr)` }}
       >
         {activeBays.map((bay) => {
           const { current, next } = getBayStatus(bay, bookings, now)
@@ -104,59 +103,55 @@ export function BayStatusView({ bays, bookings }: Props) {
 
               {/* NOW PLAYING — flex-1 so it fills top space */}
               <div
-                className='flex-1 flex flex-col justify-center px-6 pb-7'
+                className='flex-1 flex flex-col justify-end px-6 pb-7'
                 style={{ borderBottom: '1px solid rgba(255,255,255,0.09)' }}
               >
                 <p className='font-mono text-[11px] uppercase tracking-[0.28em] text-white/40 mb-5'>
                   Now Playing
                 </p>
-                {current ? (
-                  <>
-                    <p
-                      className='font-serif font-light leading-[0.9] text-white'
-                      style={{ fontSize: 'clamp(3rem, 4.8vw, 5.5rem)' }}
-                    >
-                      {firstName(current.members?.full_name)}
-                    </p>
-                    <p className='font-mono text-base text-white/50 mt-4 tracking-[0.10em]'>
-                      until {formatTime(new Date(current.end_time))}
-                    </p>
-                  </>
-                ) : (
-                  <p
-                    className='font-serif font-light leading-none text-white/12 italic'
-                    style={{ fontSize: 'clamp(3rem, 4.8vw, 5.5rem)' }}
-                  >
-                    —
-                  </p>
-                )}
+                {/* Name — always same font size so block height is consistent */}
+                <p
+                  className='font-serif font-light leading-[0.9]'
+                  style={{
+                    fontSize: 'clamp(3rem, 4.8vw, 5.5rem)',
+                    color: current ? 'white' : 'rgba(255,255,255,0.12)',
+                    fontStyle: current ? 'normal' : 'italic',
+                  }}
+                >
+                  {current ? firstName(current.members?.full_name) : '—'}
+                </p>
+                {/* Time — always rendered to keep block height consistent; invisible when empty */}
+                <p
+                  className='font-mono text-base mt-4 tracking-[0.10em]'
+                  style={{ color: current ? 'rgba(255,255,255,0.5)' : 'transparent' }}
+                >
+                  {current ? `until ${formatTime(new Date(current.end_time))}` : 'until —'}
+                </p>
               </div>
 
               {/* UP NEXT */}
-              <div className='px-6 py-6'>
+              <div className='px-6 py-6 shrink-0'>
                 <p className='font-mono text-[11px] uppercase tracking-[0.28em] text-white/40 mb-4'>
                   Up Next
                 </p>
-                {next ? (
-                  <>
-                    <p
-                      className='font-serif font-light leading-none text-white/75'
-                      style={{ fontSize: 'clamp(1.6rem, 2.6vw, 3rem)' }}
-                    >
-                      {firstName(next.members?.full_name)}
-                    </p>
-                    <p className='font-mono text-sm text-white/40 mt-2 tracking-[0.10em]'>
-                      at {formatTime(new Date(next.start_time))}
-                    </p>
-                  </>
-                ) : (
-                  <p
-                    className='font-serif font-light leading-none text-white/12 italic'
-                    style={{ fontSize: 'clamp(1.6rem, 2.6vw, 3rem)' }}
-                  >
-                    —
-                  </p>
-                )}
+                {/* Name — always same font size so block height is consistent */}
+                <p
+                  className='font-serif font-light leading-none'
+                  style={{
+                    fontSize: 'clamp(1.6rem, 2.6vw, 3rem)',
+                    color: next ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.12)',
+                    fontStyle: next ? 'normal' : 'italic',
+                  }}
+                >
+                  {next ? firstName(next.members?.full_name) : '—'}
+                </p>
+                {/* Time — always rendered to keep block height consistent; invisible when empty */}
+                <p
+                  className='font-mono text-sm mt-2 tracking-[0.10em]'
+                  style={{ color: next ? 'rgba(255,255,255,0.4)' : 'transparent' }}
+                >
+                  {next ? `at ${formatTime(new Date(next.start_time))}` : 'at —'}
+                </p>
               </div>
             </div>
           )
