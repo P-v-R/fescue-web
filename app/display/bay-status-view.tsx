@@ -6,6 +6,11 @@ import type { Bay, BookingWithMember } from '@/lib/supabase/types';
 import { SLOT_MINUTES } from '@/lib/utils/time-slots';
 import { getWindowSlots, formatTimeLabel } from '@/lib/utils/display';
 
+type Props = {
+  bays: Bay[];
+  bookings: BookingWithMember[];
+};
+
 export function BayStatusView({ bays, bookings }: Props) {
   const [now, setNow] = useState(() => new Date());
 
