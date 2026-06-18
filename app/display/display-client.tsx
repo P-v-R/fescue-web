@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { Bay, BookingWithMember, Event } from '@/lib/supabase/types'
 import type { BulletinPost } from '@/lib/sanity/types'
+import { interleaveItems } from '@/lib/utils/display'
 import { BayStatusView } from './bay-status-view'
 import { ContentSlide, type DisplayContentItem } from './content-slide'
 import { DisplayErrorBoundary } from './display-error-boundary'
@@ -29,11 +30,10 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   const [visible, setVisible] = useState(true)
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Build flat content array: posts first, then events
-  const contentItems: DisplayContentItem[] = [
-    ...posts.map((p): DisplayContentItem => ({ kind: 'post', data: p })),
-    ...events.map((e): DisplayContentItem => ({ kind: 'event', data: e })),
-  ]
+  // Interleave posts and events so rotation alternates: post → event → post → event …
+  const postItems = posts.map((p): DisplayContentItem => ({ kind: 'post', data: p }))
+  const eventItems = events.map((e): DisplayContentItem => ({ kind: 'event', data: e }))
+  const contentItems = interleaveItems(postItems, eventItems)
 
   // Poll the server-side API route — bypasses RLS via admin client
   const fetchBookings = useCallback(async () => {
@@ -88,24 +88,12 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   const currentItem = contentItems[contentIdx] ?? null
 
   return (
-    <div className='fixed inset-0 bg-navy-dark overflow-hidden'>
+    <div className='fixed inset-0 bg-cream overflow-hidden'>
       {/* Subtle corner decorations */}
-      <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-gold/30' />
-      <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-gold/30' />
-      <span className='absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-gold/30' />
-      <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-gold/30' />
-
-      {/* Club logo — top center */}
-      <div className='absolute top-4 left-1/2 -translate-x-1/2'>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src='/quail-alt.png'
-          alt='Fescue Golf Club'
-          width={48}
-          height={48}
-          style={{ objectFit: 'contain' }}
-        />
-      </div>
+      <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-navy/15' />
+      <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-navy/15' />
+      <span className='absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-navy/15' />
+      <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-navy/15' />
 
       {/* Main content with fade transition */}
       <div
@@ -117,7 +105,7 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
       >
         <DisplayErrorBoundary>
           {phase === 'bays' ? (
-            <div className='h-full pt-10'>
+            <div className='h-full'>
               <BayStatusView bays={bays} bookings={bookings} />
             </div>
           ) : currentItem ? (
