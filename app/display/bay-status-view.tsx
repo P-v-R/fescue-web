@@ -1,169 +1,264 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import type { Bay, BookingWithMember } from '@/lib/supabase/types'
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { addMinutes } from 'date-fns';
+import type { Bay, BookingWithMember } from '@/lib/supabase/types';
+import { SLOT_MINUTES } from '@/lib/utils/time-slots';
+import { getWindowSlots, formatTimeLabel } from '@/lib/utils/display';
 
 type Props = {
-  bays: Bay[]
-  bookings: BookingWithMember[]
-}
-
-function firstName(fullName: string | null | undefined): string {
-  if (!fullName) return ''
-  return fullName.split(' ')[0]
-}
-
-function getBayStatus(bay: Bay, bookings: BookingWithMember[], now: Date) {
-  // Query already returns bookings ordered by start_time asc; filter preserves that order
-  const bayBookings = bookings.filter((b) => b.bay_id === bay.id)
-
-  const current = bayBookings.find(
-    (b) => new Date(b.start_time) <= now && now < new Date(b.end_time),
-  )
-  const next = bayBookings.find((b) => new Date(b.start_time) > now)
-
-  return { current, next }
-}
-
-function formatTime(date: Date) {
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-}
+  bays: Bay[];
+  bookings: BookingWithMember[];
+};
 
 export function BayStatusView({ bays, bookings }: Props) {
-  const [now, setNow] = useState(() => new Date())
+  const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000)
-    return () => clearInterval(id)
-  }, [])
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
-  const activeBays = bays.filter((b) => b.is_active)
-  const clockStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  const gridRef = useRef<HTMLDivElement>(null);
+  const theadRef = useRef<HTMLTableSectionElement>(null);
+  const [nowLineTop, setNowLineTop] = useState<number | null>(null);
+
+  const activeBays = useMemo(() => bays.filter((b) => b.is_active), [bays]);
+  const slots = useMemo(() => getWindowSlots(now), [now]);
+
+  const clockStr = useMemo(
+    () => now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+    [now],
+  );
+  const dateStr = useMemo(
+    () => now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+    [now],
+  );
+
+  const nowSlotIdx = useMemo(
+    () => slots.findIndex((s) => s.getTime() <= now.getTime() && now.getTime() < addMinutes(s, SLOT_MINUTES).getTime()),
+    [slots, now],
+  );
+
+  const { cellMap, continuations } = useMemo(() => {
+    const cellMap = new Map<
+      string,
+      { booking: BookingWithMember; span: number }
+    >();
+    const continuations = new Set<string>();
+
+    for (const booking of bookings) {
+      const bayIdx = activeBays.findIndex((b) => b.id === booking.bay_id);
+      if (bayIdx === -1) continue;
+
+      const bookingStart = new Date(booking.start_time);
+      const bookingEnd = new Date(booking.end_time);
+
+      let firstVisibleIdx = -1;
+      let visibleSpan = 0;
+
+      for (let i = 0; i < slots.length; i++) {
+        const slotStart = slots[i];
+        const slotEnd = addMinutes(slotStart, SLOT_MINUTES);
+        if (slotEnd <= bookingStart) continue;
+        if (slotStart >= bookingEnd) break;
+        if (firstVisibleIdx === -1) firstVisibleIdx = i;
+        visibleSpan++;
+      }
+
+      if (firstVisibleIdx === -1) continue;
+
+      cellMap.set(`${firstVisibleIdx}-${bayIdx}`, {
+        booking,
+        span: visibleSpan,
+      });
+      for (let i = 1; i < visibleSpan; i++) {
+        continuations.add(`${firstVisibleIdx + i}-${bayIdx}`);
+      }
+    }
+
+    return { cellMap, continuations };
+  }, [bookings, activeBays, slots]);
+
+  // Recompute the floating NOW line position every time `now` ticks
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    const thead = theadRef.current;
+    if (!grid || !thead || nowSlotIdx < 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setNowLineTop(null);
+      return;
+    }
+    const theadHeight = thead.clientHeight;
+    const tbodyHeight = grid.clientHeight - theadHeight;
+    const rowHeight = tbodyHeight / slots.length;
+    const minutesFraction = (now.getMinutes() % 30) / 30;
+    setNowLineTop(theadHeight + (nowSlotIdx + minutesFraction) * rowHeight);
+  }, [now, nowSlotIdx, slots.length]);
 
   return (
-    <div className='flex flex-col h-full px-10 py-8'>
-      {/* Header */}
-      <div className='flex items-center justify-between mb-5'>
-        <p className='font-mono text-sm uppercase tracking-[0.30em] text-gold'>
-          Bay Status
-        </p>
-        <div className='flex items-center gap-6'>
-          <p className='font-mono text-sm uppercase tracking-[0.18em] text-white/45'>
-            {dateStr}
-          </p>
-          <p className='font-mono text-2xl font-medium tracking-[0.06em] text-white/75 tabular-nums'>
+    <div className='flex flex-col h-full'>
+      {/* Page header */}
+      <div className='flex items-center justify-between px-12 py-5 border-b border-sand/30'>
+        <div className='flex items-center gap-4'>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src='/quail-alt.png'
+            alt='Fescue Golf Club'
+            width={52}
+            height={52}
+            style={{ objectFit: 'contain' }}
+          />
+          <div>
+            <p className='font-serif text-navy text-3xl leading-none tracking-wide'>
+              Fescue Golf Club
+            </p>
+            <p className='font-mono text-[11px] uppercase tracking-[0.28em] text-sand mt-1.5'>
+              Bay Schedule
+            </p>
+          </div>
+        </div>
+        <div className='text-right'>
+          <p className='font-mono text-4xl font-medium tracking-[0.04em] text-navy tabular-nums'>
             {clockStr}
+          </p>
+          <p className='font-mono text-[11px] uppercase tracking-[0.22em] text-sand mt-1'>
+            {dateStr}
           </p>
         </div>
       </div>
 
-      <div className='w-full h-px bg-gold/25 mb-5' />
+      {/* Grid */}
+      <div className='flex-1 overflow-hidden relative' ref={gridRef}>
+        {/* Floating NOW line — absolutely positioned at exact current time */}
+        {nowLineTop !== null && (
+          <div
+            className='absolute left-0 right-0 pointer-events-none z-10 h-[2px]'
+            style={{
+              top: nowLineTop,
+              background: 'var(--color-gold)',
+              opacity: 0.3,
+            }}
+          />
+        )}
+        <table
+          className='w-full border-collapse'
+          style={{ height: '100%', tableLayout: 'fixed' }}
+        >
+          <colgroup>
+            <col style={{ width: '108px' }} />
+            {activeBays.map((bay) => (
+              <col key={bay.id} />
+            ))}
+          </colgroup>
 
-      {/* Bay columns */}
-      <div
-        className='flex-1 grid gap-4'
-        style={{ gridTemplateColumns: `repeat(${Math.max(activeBays.length, 1)}, 1fr)` }}
-      >
-        {activeBays.map((bay) => {
-          const { current, next } = getBayStatus(bay, bookings, now)
-          const isOccupied = !!current
-
-          return (
-            <div
-              key={bay.id}
-              className='relative flex flex-col overflow-hidden'
-              style={{
-                background: isOccupied ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.18)',
-                border: isOccupied ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              {/* Gold top accent on occupied bays */}
-              {isOccupied && (
-                <div className='absolute top-0 inset-x-0 h-[3px] bg-gold' />
-              )}
-
-              {/* Bay header */}
-              <div className='flex items-center justify-between px-6 pt-6 pb-5'>
-                <p
-                  className='font-mono text-sm uppercase tracking-[0.28em]'
-                  style={{ color: isOccupied ? '#b8963c' : 'rgba(255,255,255,0.28)' }}
+          {/* Column headers */}
+          <thead ref={theadRef}>
+            <tr>
+              <th className='bg-navy-dark px-4 py-4 text-left font-mono text-sm uppercase tracking-[0.28em] text-cream/40 border-r border-cream/10'>
+                Time
+              </th>
+              {activeBays.map((bay, i) => (
+                <th
+                  key={bay.id}
+                  className={[
+                    'bg-navy-dark px-4 py-4 text-center font-mono text-sm uppercase tracking-[0.28em] text-cream',
+                    i < activeBays.length - 1 ? 'border-r border-cream/10' : '',
+                  ].join(' ')}
                 >
                   {bay.name}
-                </p>
-                {isOccupied && (
-                  <div className='flex items-center gap-2'>
-                    <span className='w-2 h-2 rounded-full bg-gold animate-pulse' />
-                    <span className='font-mono text-[10px] uppercase tracking-[0.22em] text-gold/70'>
-                      Live
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {slots.map((slotTime, slotIdx) => {
+              const isHour = slotTime.getMinutes() === 0;
+              const borderTopStyle = isHour
+                ? '1px solid rgba(200,184,154,0.35)'
+                : '1px solid rgba(200,184,154,0.12)';
+
+              return (
+                <tr key={slotTime.getTime()} style={{ height: `${100 / slots.length}%` }}>
+                  {/* Time label */}
+                  <td
+                    className='px-4 align-top pt-2 border-r border-sand/20'
+                    style={{ borderTop: borderTopStyle }}
+                  >
+                    <span
+                      className={[
+                        'font-mono tracking-[0.06em]',
+                        isHour
+                          ? 'text-sm text-navy/80'
+                          : 'text-xs text-navy/50',
+                      ].join(' ')}
+                    >
+                      {formatTimeLabel(slotTime)}
                     </span>
-                  </div>
-                )}
-              </div>
+                  </td>
 
-              {/* NOW PLAYING — flex-1 so it fills top space */}
-              <div
-                className='flex-1 flex flex-col justify-end px-6 pb-7'
-                style={{ borderBottom: '1px solid rgba(255,255,255,0.09)' }}
-              >
-                <p className='font-mono text-[11px] uppercase tracking-[0.28em] text-white/40 mb-5'>
-                  Now Playing
-                </p>
-                {/* Name — always same font size so block height is consistent */}
-                <p
-                  className='font-serif font-light leading-[0.9]'
-                  style={{
-                    fontSize: 'clamp(3rem, 4.8vw, 5.5rem)',
-                    color: current ? 'white' : 'rgba(255,255,255,0.12)',
-                    fontStyle: current ? 'normal' : 'italic',
-                  }}
-                >
-                  {current ? firstName(current.members?.full_name) : '—'}
-                </p>
-                {/* Time — always rendered to keep block height consistent; invisible when empty */}
-                <p
-                  className='font-mono text-base mt-4 tracking-[0.10em]'
-                  style={{ color: current ? 'rgba(255,255,255,0.5)' : 'transparent' }}
-                >
-                  {current ? `until ${formatTime(new Date(current.end_time))}` : 'until —'}
-                </p>
-              </div>
+                  {/* Bay cells */}
+                  {activeBays.map((bay, bayIdx) => {
+                    const key = `${slotIdx}-${bayIdx}`;
 
-              {/* UP NEXT */}
-              <div className='px-6 py-6 shrink-0'>
-                <p className='font-mono text-[11px] uppercase tracking-[0.28em] text-white/40 mb-4'>
-                  Up Next
-                </p>
-                {/* Name — always same font size so block height is consistent */}
-                <p
-                  className='font-serif font-light leading-none'
-                  style={{
-                    fontSize: 'clamp(1.6rem, 2.6vw, 3rem)',
-                    color: next ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.12)',
-                    fontStyle: next ? 'normal' : 'italic',
-                  }}
-                >
-                  {next ? firstName(next.members?.full_name) : '—'}
-                </p>
-                {/* Time — always rendered to keep block height consistent; invisible when empty */}
-                <p
-                  className='font-mono text-sm mt-2 tracking-[0.10em]'
-                  style={{ color: next ? 'rgba(255,255,255,0.4)' : 'transparent' }}
-                >
-                  {next ? `at ${formatTime(new Date(next.start_time))}` : 'at —'}
-                </p>
-              </div>
-            </div>
-          )
-        })}
+                    if (continuations.has(key)) return null;
+
+                    const borderRight =
+                      bayIdx < activeBays.length - 1
+                        ? '1px solid rgba(200,184,154,0.2)'
+                        : undefined;
+
+                    const cellData = cellMap.get(key);
+
+                    if (cellData) {
+                      const { booking, span } = cellData;
+                      const memberName = (
+                        booking.members?.full_name ?? 'Member'
+                      ).split(' ')[0];
+
+                      return (
+                        <td
+                          key={bay.id}
+                          rowSpan={span}
+                          className='px-3 text-center align-middle'
+                          style={{
+                            borderTop: borderTopStyle,
+                            borderRight,
+                            background: 'rgba(92,122,82,0.18)',
+                          }}
+                        >
+                          <p className='font-serif text-3xl text-navy/80 leading-none'>
+                            {memberName}
+                          </p>
+                        </td>
+                      );
+                    }
+
+                    return (
+                      <td
+                        key={bay.id}
+                        style={{
+                          borderTop: borderTopStyle,
+                          borderRight,
+                          background: 'rgba(255,255,255,0.55)',
+                        }}
+                      />
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       {/* Footer ornament */}
-      <div className='flex items-center gap-3 mt-5'>
-        <div className='flex-1 h-px bg-white/10' />
-        <div className='w-1.5 h-1.5 bg-gold/50 rotate-45 shrink-0' />
-        <div className='flex-1 h-px bg-white/10' />
+      <div className='flex items-center gap-3 px-12 py-3.5 border-t border-sand/20'>
+        <div className='flex-1 h-px bg-sand/20' />
+        <div className='w-1.5 h-1.5 bg-gold/40 rotate-45 shrink-0' />
+        <div className='flex-1 h-px bg-sand/20' />
       </div>
     </div>
-  )
+  );
 }

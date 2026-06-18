@@ -12,6 +12,11 @@ export class DisplayErrorBoundary extends Component<
     return { hasError: true }
   }
 
+  componentDidCatch(error: Error) {
+    console.error('[DisplayErrorBoundary] render error — reloading in 5s', error)
+    setTimeout(() => window.location.reload(), 5_000)
+  }
+
   render() {
     if (this.state.hasError) {
       return (

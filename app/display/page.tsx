@@ -5,6 +5,7 @@ import {
   getDisplayBookingsForToday,
   getDisplayUpcomingEvents,
 } from '@/lib/supabase/queries/display'
+import { tokenValid } from '@/lib/utils/token'
 import { DisplayClient } from './display-client'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +22,7 @@ type Props = {
 export default async function DisplayPage({ searchParams }: Props) {
   const { token } = await searchParams
 
-  if (!process.env.DISPLAY_TOKEN || token !== process.env.DISPLAY_TOKEN) {
+  if (!tokenValid(token, process.env.DISPLAY_TOKEN)) {
     return (
       <div className='fixed inset-0 bg-navy-dark flex items-center justify-center'>
         <p className='font-mono text-xs uppercase tracking-[0.28em] text-cream/20'>403</p>
