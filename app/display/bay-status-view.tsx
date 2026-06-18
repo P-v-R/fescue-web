@@ -86,6 +86,7 @@ export function BayStatusView({ bays, bookings }: Props) {
     const grid = gridRef.current;
     const thead = theadRef.current;
     if (!grid || !thead || nowSlotIdx < 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNowLineTop(null);
       return;
     }
