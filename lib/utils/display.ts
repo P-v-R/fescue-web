@@ -1,4 +1,4 @@
-import { addMinutes, setHours, setMinutes, setSeconds, setMilliseconds } from 'date-fns'
+import { addMinutes, set } from 'date-fns'
 import { OPEN_HOUR, CLOSE_HOUR, SLOT_MINUTES } from './time-slots'
 
 export const WINDOW_HOURS = 4
@@ -9,14 +9,8 @@ export const WINDOW_HOURS = 4
  */
 export function getWindowSlots(now: Date): Date[] {
   const startHour = Math.max(now.getHours(), OPEN_HOUR)
-  const closeTime = setMilliseconds(
-    setSeconds(setMinutes(setHours(new Date(now), CLOSE_HOUR), 0), 0),
-    0,
-  )
-  const start = setMilliseconds(
-    setSeconds(setMinutes(setHours(new Date(now), startHour), 0), 0),
-    0,
-  )
+  const closeTime = set(now, { hours: CLOSE_HOUR, minutes: 0, seconds: 0, milliseconds: 0 })
+  const start = set(now, { hours: startHour, minutes: 0, seconds: 0, milliseconds: 0 })
   const windowEnd = addMinutes(start, WINDOW_HOURS * 60)
   const end = windowEnd < closeTime ? windowEnd : closeTime
 
@@ -45,8 +39,8 @@ export function formatTimeLabel(date: Date): string {
  * Interleaves two arrays element-by-element: [a0, b0, a1, b1, …].
  * If arrays have unequal lengths, excess items are appended at the end.
  */
-export function interleaveItems<A, B>(as: A[], bs: B[]): (A | B)[] {
-  const result: (A | B)[] = []
+export function interleaveItems<T>(as: T[], bs: T[]): T[] {
+  const result: T[] = []
   const maxLen = Math.max(as.length, bs.length)
   for (let i = 0; i < maxLen; i++) {
     const a = as[i]

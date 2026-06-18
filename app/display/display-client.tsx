@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { Bay, BookingWithMember, Event } from '@/lib/supabase/types'
 import type { BulletinPost } from '@/lib/sanity/types'
 import { interleaveItems } from '@/lib/utils/display'
@@ -31,29 +31,40 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   const fadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Interleave posts and events so rotation alternates: post → event → post → event …
-  const postItems = posts.map((p): DisplayContentItem => ({ kind: 'post', data: p }))
-  const eventItems = events.map((e): DisplayContentItem => ({ kind: 'event', data: e }))
-  const contentItems = interleaveItems(postItems, eventItems)
+  const contentItems = useMemo(
+    () =>
+      interleaveItems(
+        posts.map((p): DisplayContentItem => ({ kind: 'post', data: p })),
+        events.map((e): DisplayContentItem => ({ kind: 'event', data: e })),
+      ),
+    [posts, events],
+  )
 
-  // Poll the server-side API route — bypasses RLS via admin client
-  const fetchBookings = useCallback(async () => {
-    try {
-      const res = await fetch('/api/display/bookings', {
-        headers: { Authorization: token },
-      })
-      if (!res.ok) return
-      const data = await res.json()
-      setBookings(data as BookingWithMember[])
-    } catch {
-      // silently ignore — keep showing stale data
-    }
-  }, [token])
-
-  // Poll every 30 seconds
+  // Poll the server-side API route every 30 seconds — bypasses RLS via admin client
   useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch('/api/display/bookings', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        setBookings(data as BookingWithMember[])
+      } catch {
+        // silently ignore — keep showing stale data
+      }
+    }
     const interval = setInterval(fetchBookings, POLL_INTERVAL)
     return () => clearInterval(interval)
-  }, [fetchBookings])
+  }, [token])
+
+  // Reload once per day so Sanity posts and events stay fresh
+  useEffect(() => {
+    const now = new Date()
+    const msUntilReload = new Date(now).setHours(24, 5, 0, 0) - now.getTime()
+    const timer = setTimeout(() => window.location.reload(), msUntilReload)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Cycling loop
   useEffect(() => {
@@ -105,9 +116,7 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
       >
         <DisplayErrorBoundary>
           {phase === 'bays' ? (
-            <div className='h-full'>
-              <BayStatusView bays={bays} bookings={bookings} />
-            </div>
+            <BayStatusView bays={bays} bookings={bookings} />
           ) : currentItem ? (
             <ContentSlide item={currentItem} />
           ) : null}

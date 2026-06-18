@@ -10,6 +10,11 @@ const MARKETING_ROUTES = ['/', '/about', '/membership', '/contact', '/location',
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Token-gated at the page/route handler level — no Supabase session required
+  if (pathname.startsWith('/display') || pathname.startsWith('/api/display')) {
+    return NextResponse.next({ request })
+  }
+
   // Build the Supabase client — must use the request/response cookie pattern
   let supabaseResponse = NextResponse.next({ request })
 

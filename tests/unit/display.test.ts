@@ -191,8 +191,8 @@ describe('interleaveItems', () => {
 
   it('preserves the original order within each input', () => {
     const result = interleaveItems(['p1', 'p2', 'p3'], ['e1', 'e2', 'e3'])
-    const posts = result.filter((x) => (x as string).startsWith('p'))
-    const events = result.filter((x) => (x as string).startsWith('e'))
+    const posts = result.filter((x) => x.startsWith('p'))
+    const events = result.filter((x) => x.startsWith('e'))
     expect(posts).toEqual(['p1', 'p2', 'p3'])
     expect(events).toEqual(['e1', 'e2', 'e3'])
   })

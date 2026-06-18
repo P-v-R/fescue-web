@@ -1,4 +1,4 @@
-import { addMinutes, format, setHours, setMinutes, setSeconds, setMilliseconds } from 'date-fns'
+import { addMinutes, format, set } from 'date-fns'
 
 export const OPEN_HOUR = 8    // 8am
 export const CLOSE_HOUR = 22  // 10pm
@@ -7,8 +7,8 @@ export const SLOT_MINUTES = 30
 // Returns the 28 half-hour slot start times for a given date (8:00am–9:30pm)
 export function generateTimeSlots(date: Date): Date[] {
   const slots: Date[] = []
-  let current = setMilliseconds(setSeconds(setMinutes(setHours(new Date(date), OPEN_HOUR), 0), 0), 0)
-  const end = setMilliseconds(setSeconds(setMinutes(setHours(new Date(date), CLOSE_HOUR), 0), 0), 0)
+  let current = set(date, { hours: OPEN_HOUR, minutes: 0, seconds: 0, milliseconds: 0 })
+  const end = set(date, { hours: CLOSE_HOUR, minutes: 0, seconds: 0, milliseconds: 0 })
 
   while (current < end) {
     slots.push(new Date(current))
@@ -31,10 +31,7 @@ export function timeToSlotIndex(time: Date): number {
 // Whether startTime + duration fits within operating hours
 export function isWithinOperatingHours(startTime: Date, durationMinutes: number): boolean {
   const endTime = addMinutes(startTime, durationMinutes)
-  const closeTime = setMilliseconds(
-    setSeconds(setMinutes(setHours(new Date(startTime), CLOSE_HOUR), 0), 0),
-    0,
-  )
+  const closeTime = set(startTime, { hours: CLOSE_HOUR, minutes: 0, seconds: 0, milliseconds: 0 })
   return endTime <= closeTime
 }
 

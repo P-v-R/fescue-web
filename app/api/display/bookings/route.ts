@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getDisplayBookingsForToday } from '@/lib/supabase/queries/display'
+import { tokenValid } from '@/lib/utils/token'
 
 export async function GET(request: NextRequest) {
-  const token = request.headers.get('authorization')
+  const raw = request.headers.get('authorization')
+  const candidate = raw?.replace(/^Bearer /, '') ?? null
 
-  if (!process.env.DISPLAY_TOKEN || token !== process.env.DISPLAY_TOKEN) {
+  if (!tokenValid(candidate, process.env.DISPLAY_TOKEN)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const bookings = await getDisplayBookingsForToday()
-  return NextResponse.json(bookings)
+  try {
+    const bookings = await getDisplayBookingsForToday()
+    return NextResponse.json(bookings)
+  } catch {
+    return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 })
+  }
 }

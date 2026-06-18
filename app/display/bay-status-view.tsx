@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { addMinutes } from 'date-fns';
 import type { Bay, BookingWithMember } from '@/lib/supabase/types';
 import { SLOT_MINUTES } from '@/lib/utils/time-slots';
@@ -26,18 +26,17 @@ export function BayStatusView({ bays, bookings }: Props) {
   const activeBays = useMemo(() => bays.filter((b) => b.is_active), [bays]);
   const slots = useMemo(() => getWindowSlots(now), [now]);
 
-  const clockStr = now.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-  const dateStr = now.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  const clockStr = useMemo(
+    () => now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+    [now],
+  );
+  const dateStr = useMemo(
+    () => now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+    [now],
+  );
 
   const nowSlotIdx = useMemo(
-    () => slots.findIndex((s) => s <= now && now < addMinutes(s, SLOT_MINUTES)),
+    () => slots.findIndex((s) => s.getTime() <= now.getTime() && now.getTime() < addMinutes(s, SLOT_MINUTES).getTime()),
     [slots, now],
   );
 
@@ -82,11 +81,10 @@ export function BayStatusView({ bays, bookings }: Props) {
   }, [bookings, activeBays, slots]);
 
   // Recompute the floating NOW line position every time `now` ticks
-  useEffect(() => {
+  useLayoutEffect(() => {
     const grid = gridRef.current;
     const thead = theadRef.current;
     if (!grid || !thead || nowSlotIdx < 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNowLineTop(null);
       return;
     }
@@ -181,7 +179,7 @@ export function BayStatusView({ bays, bookings }: Props) {
                 : '1px solid rgba(200,184,154,0.12)';
 
               return (
-                <tr key={slotIdx} style={{ height: `${100 / slots.length}%` }}>
+                <tr key={slotTime.getTime()} style={{ height: `${100 / slots.length}%` }}>
                   {/* Time label */}
                   <td
                     className='px-4 align-top pt-2 border-r border-sand/20'
