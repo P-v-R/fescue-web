@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Member, Invite, MembershipRequest, JoinRequest, Event, EventRsvpWithMember } from '@/lib/supabase/types';
+import type { Member, Invite, MembershipRequest, JoinRequest, Event, EventRsvpWithMember, Tournament, TournamentRegistrationWithMember } from '@/lib/supabase/types';
 import type { AdminBooking, GuestLead } from '@/lib/supabase/queries/bookings';
 import type { BlackoutPeriod } from '@/lib/supabase/queries/blackout-periods';
 import type { Bay } from '@/lib/supabase/types';
@@ -11,8 +11,9 @@ import { ProspectsTab } from './tabs/prospects-tab';
 import { ReservationsTab } from './tabs/reservations-tab';
 import { BlackoutDatesTab } from './tabs/blackout-tab';
 import { EventsTab } from './tabs/events-tab';
+import { TournamentsTab } from './tabs/tournaments-tab';
 
-type Tab = 'invites' | 'join-requests' | 'prospects' | 'reservations' | 'blackout' | 'events';
+type Tab = 'invites' | 'join-requests' | 'prospects' | 'reservations' | 'blackout' | 'events' | 'tournaments';
 
 type Props = {
   members: Member[];
@@ -25,6 +26,8 @@ type Props = {
   bays: Bay[];
   events: Event[];
   eventRsvps: EventRsvpWithMember[];
+  tournaments: Tournament[];
+  tournamentRegistrations: TournamentRegistrationWithMember[];
   discordEnabled: boolean;
 };
 
@@ -39,6 +42,8 @@ export function AdminClient({
   bays,
   events,
   eventRsvps,
+  tournaments,
+  tournamentRegistrations,
   discordEnabled,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('invites');
@@ -63,6 +68,7 @@ export function AdminClient({
     { id: 'reservations', label: 'Reservations' },
     { id: 'blackout', label: 'Blackout Dates' },
     { id: 'events', label: 'Events' },
+    { id: 'tournaments', label: 'Tournaments' },
   ];
 
   return (
@@ -106,6 +112,13 @@ export function AdminClient({
       )}
       {activeTab === 'events' && (
         <EventsTab events={events} eventRsvps={eventRsvps} discordEnabled={discordEnabled} />
+      )}
+      {activeTab === 'tournaments' && (
+        <TournamentsTab
+          tournaments={tournaments}
+          registrations={tournamentRegistrations}
+          members={members}
+        />
       )}
     </div>
   );

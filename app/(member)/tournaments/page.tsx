@@ -1,9 +1,53 @@
 import Link from 'next/link'
 import { getTours } from '@/lib/sgt/queries'
 import type { SgtTour } from '@/lib/sgt/types'
+import { getTournaments } from '@/lib/supabase/queries/tournaments'
+import type { Tournament, TournamentStatus } from '@/lib/supabase/types'
 
 export const metadata = {
   title: 'Tournaments — Fescue',
+}
+
+const MP_STATUS_LABELS: Record<TournamentStatus, string> = {
+  draft: 'Draft',
+  registration: 'Registration Open',
+  seeding: 'Seeding',
+  in_progress: 'In Progress',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+}
+
+function MatchPlayCard({ tournament }: { tournament: Tournament }) {
+  const isLive = tournament.status === 'registration' || tournament.status === 'in_progress'
+  const formatLabel = tournament.format === 'single_elim' ? 'Single elimination' : 'Double elimination'
+
+  return (
+    <Link
+      href={`/tournaments/match-play/${tournament.id}`}
+      className="block group bg-white border border-cream-mid hover:border-navy/30 transition-colors"
+    >
+      <div className="px-6 py-5 flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h2 className="font-serif text-lg font-light text-navy group-hover:text-navy-dark leading-snug">
+            {tournament.name}
+          </h2>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-navy/40">
+            {formatLabel}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span
+            className={`font-mono text-[9px] uppercase tracking-[0.15em] px-3 py-1 ${
+              isLive ? 'text-navy bg-sage/15' : 'text-navy/40 bg-cream'
+            }`}
+          >
+            {MP_STATUS_LABELS[tournament.status]}
+          </span>
+          <span className="font-mono text-[10px] text-navy/25 group-hover:text-gold transition-colors">→</span>
+        </div>
+      </div>
+    </Link>
+  )
 }
 
 function TourCard({ tour }: { tour: SgtTour }) {
@@ -54,12 +98,27 @@ export default async function TournamentsPage() {
   let tours: SgtTour[] = []
   let error: string | null = null
 
-  try {
-    tours = await getTours()
-  } catch (e) {
-    console.error('[tournaments] failed to load tours:', e)
+  const [toursResult, matchPlay] = await Promise.all([
+    getTours().then(
+      (t) => ({ ok: true as const, data: t }),
+      (e) => ({ ok: false as const, error: e }),
+    ),
+    getTournaments().catch((e) => {
+      console.error('[tournaments] failed to load match play tournaments:', e)
+      return [] as Tournament[]
+    }),
+  ])
+
+  if (toursResult.ok) {
+    tours = toursResult.data
+  } else {
+    console.error('[tournaments] failed to load tours:', toursResult.error)
     error = 'Tournament data is temporarily unavailable. Please try again shortly.'
   }
+
+  // Members only see tournaments that have progressed past draft (enforced in the query),
+  // and we hide cancelled ones from the headline list.
+  const visibleMatchPlay = matchPlay.filter((t) => t.status !== 'cancelled')
 
   const active = tours.filter((t) => t.active === 1)
   const past = tours.filter((t) => t.active !== 1)
@@ -106,6 +165,23 @@ export default async function TournamentsPage() {
         </div>
       )}
 
+      {visibleMatchPlay.length > 0 && (
+        <section className="space-y-2">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/40 mb-3">
+            Match Play
+          </p>
+          {visibleMatchPlay.map((t) => (
+            <MatchPlayCard key={t.id} tournament={t} />
+          ))}
+        </section>
+      )}
+
+      {(active.length > 0 || past.length > 0) && (
+        <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-gold pt-2">
+          Simulator Golf Tour
+        </p>
+      )}
+
       {active.length > 0 && (
         <section className="space-y-2">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/40 mb-3">
@@ -128,8 +204,8 @@ export default async function TournamentsPage() {
         </section>
       )}
 
-      {!error && tours.length === 0 && (
-        <p className="font-serif italic text-sm text-navy/35">No tours found.</p>
+      {!error && tours.length === 0 && visibleMatchPlay.length === 0 && (
+        <p className="font-serif italic text-sm text-navy/35">No tournaments yet.</p>
       )}
     </div>
   )

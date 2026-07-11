@@ -10,6 +10,8 @@ import { getActiveBays } from '@/lib/supabase/queries/bays'
 import { getAdminEvents } from '@/lib/supabase/queries/events'
 import { getAdminRsvpsForEvents } from '@/lib/supabase/queries/event-rsvps'
 import { getJoinRequests } from '@/lib/supabase/queries/join-requests'
+import { getAllTournaments } from '@/lib/supabase/queries/tournaments'
+import { getRegistrationsForTournaments } from '@/lib/supabase/queries/tournament-registrations'
 import { AdminClient } from './admin-client'
 import { DashboardStats } from './dashboard-stats'
 
@@ -37,7 +39,7 @@ export default async function AdminPage() {
   if (!member?.is_admin) redirect('/dashboard')
 
   // Parallel data fetch
-  const [members, pendingInvites, requests, joinRequests, todaysBookings, guestLeads, blackoutPeriods, bays, bookingsThisWeek, events] = await Promise.all([
+  const [members, pendingInvites, requests, joinRequests, todaysBookings, guestLeads, blackoutPeriods, bays, bookingsThisWeek, events, tournaments] = await Promise.all([
     getAllMembers(),
     getPendingInvites(),
     getMembershipRequests(),
@@ -48,9 +50,13 @@ export default async function AdminPage() {
     getActiveBays(),
     getBookingsThisWeek(),
     getAdminEvents(),
+    getAllTournaments(),
   ])
 
-  const eventRsvps = await getAdminRsvpsForEvents(events.map((e) => e.id))
+  const [eventRsvps, tournamentRegistrations] = await Promise.all([
+    getAdminRsvpsForEvents(events.map((e) => e.id)),
+    getRegistrationsForTournaments(tournaments.map((t) => t.id)),
+  ])
 
   const activeMembers = members.filter((m) => m.is_active && !m.is_admin).length
   const pendingRequests = requests.filter((r) => r.status === 'pending').length
@@ -93,6 +99,8 @@ export default async function AdminPage() {
         bays={bays}
         events={events}
         eventRsvps={eventRsvps}
+        tournaments={tournaments}
+        tournamentRegistrations={tournamentRegistrations}
         discordEnabled={!!process.env.DISCORD_WEBHOOK_URL}
       />
     </div>
