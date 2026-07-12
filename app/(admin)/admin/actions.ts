@@ -13,6 +13,29 @@ import { createEvent, updateEvent, deleteEvent, getEventById } from '@/lib/supab
 import { deleteRsvpAdmin } from '@/lib/supabase/queries/event-rsvps'
 import { getJoinRequestForApproval, markJoinRequestApproved, markJoinRequestDeclined } from '@/lib/supabase/queries/join-requests'
 import { createEventSchema } from '@/lib/validations/event'
+import { createTournamentSchema } from '@/lib/validations/tournament'
+import {
+  createTournament,
+  updateTournament,
+  updateTournamentStatus,
+  deleteTournament,
+  getTournamentById,
+} from '@/lib/supabase/queries/tournaments'
+import {
+  insertRegistrationAdmin,
+  deleteRegistrationAdmin,
+  getMemberRegistration,
+  getRegistrationCount,
+  getRegistrationsForTournament,
+} from '@/lib/supabase/queries/tournament-registrations'
+import {
+  insertBracket,
+  deleteMatchesForTournament,
+  setMatchPlayer,
+  setRegistrationSeeds,
+} from '@/lib/supabase/queries/tournament-matches'
+import { buildBracketRows } from '@/lib/tournament/build-rows'
+import type { TournamentRegistrationWithMember } from '@/lib/supabase/types'
 import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/resend/client'
 import { inviteEmailHtml, inviteEmailText } from '@/lib/resend/templates/invite'
 import { introEmailHtml, introEmailText } from '@/lib/resend/templates/intro'
@@ -697,6 +720,304 @@ export async function removeRsvpAction(
     return { success: 'RSVP removed.' }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to remove RSVP.' }
+  }
+}
+
+// ─── Tournament actions ─────────────────────────────────────────────────────────
+
+// Combines a datetime-local string (YYYY-MM-DDTHH:MM) into an ISO timestamp, or
+// null when the field is blank.
+function optionalDatetimeToIso(value: string | undefined): string | null {
+  if (!value) return null
+  const d = new Date(value)
+  return isNaN(d.getTime()) ? null : d.toISOString()
+}
+
+function parseTournamentForm(formData: FormData) {
+  const capacityRaw = (formData.get('capacity') as string | null)?.trim()
+  const raw = {
+    name: (formData.get('name') as string | null)?.trim() ?? '',
+    description: (formData.get('description') as string | null)?.trim() || undefined,
+    format: (formData.get('format') as string | null) ?? '',
+    capacity: capacityRaw ? Number(capacityRaw) : null,
+    registration_closes_at: (formData.get('registration_closes_at') as string | null)?.trim() || undefined,
+    starts_at: (formData.get('starts_at') as string | null)?.trim() || undefined,
+  }
+  return createTournamentSchema.safeParse(raw)
+}
+
+export async function createTournamentAction(
+  formData: FormData,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    const adminId = await requireAdmin()
+    const parsed = parseTournamentForm(formData)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
+
+    await createTournament({
+      name: parsed.data.name,
+      description: parsed.data.description,
+      format: parsed.data.format,
+      capacity: parsed.data.capacity ?? null,
+      registration_closes_at: optionalDatetimeToIso(parsed.data.registration_closes_at),
+      starts_at: optionalDatetimeToIso(parsed.data.starts_at),
+      created_by: adminId,
+    })
+
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    return { success: 'Tournament created as a draft.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to create tournament.' }
+  }
+}
+
+export async function updateTournamentAction(
+  id: string,
+  formData: FormData,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const parsed = parseTournamentForm(formData)
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
+
+    await updateTournament(id, {
+      name: parsed.data.name,
+      description: parsed.data.description ?? null,
+      format: parsed.data.format,
+      capacity: parsed.data.capacity ?? null,
+      registration_closes_at: optionalDatetimeToIso(parsed.data.registration_closes_at),
+      starts_at: optionalDatetimeToIso(parsed.data.starts_at),
+    })
+
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    revalidatePath(`/tournaments/match-play/${id}`)
+    return { success: 'Tournament updated.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to update tournament.' }
+  }
+}
+
+export async function deleteTournamentAction(
+  id: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await deleteTournament(id)
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    return { success: 'Tournament deleted.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to delete tournament.' }
+  }
+}
+
+// Draft → registration: opens the tournament for member sign-ups.
+export async function openRegistrationAction(
+  id: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const tournament = await getTournamentById(id)
+    if (!tournament) return { error: 'Tournament not found.' }
+    if (tournament.status !== 'draft' && tournament.status !== 'seeding') {
+      return { error: 'Registration can only be opened from draft or seeding.' }
+    }
+    await updateTournamentStatus(id, 'registration')
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    revalidatePath(`/tournaments/match-play/${id}`)
+    return { success: 'Registration is open.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to open registration.' }
+  }
+}
+
+// Admin — add any member to a tournament's field.
+export async function addParticipantAction(
+  tournamentId: string,
+  memberId: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const tournament = await getTournamentById(tournamentId)
+    if (!tournament) return { error: 'Tournament not found.' }
+
+    const existing = await getMemberRegistration(tournamentId, memberId)
+    if (existing) return { error: 'That member is already registered.' }
+
+    if (tournament.capacity != null) {
+      const count = await getRegistrationCount(tournamentId)
+      if (count >= tournament.capacity) return { error: 'This tournament is full.' }
+    }
+
+    await insertRegistrationAdmin(tournamentId, memberId)
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    revalidatePath(`/tournaments/match-play/${tournamentId}`)
+    return { success: 'Participant added.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to add participant.' }
+  }
+}
+
+// Admin — remove a registration by its id.
+export async function removeParticipantAction(
+  registrationId: string,
+  tournamentId: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await deleteRegistrationAdmin(registrationId)
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    revalidatePath(`/tournaments/match-play/${tournamentId}`)
+    return { success: 'Participant removed.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to remove participant.' }
+  }
+}
+
+// ─── Bracket / seeding actions ──────────────────────────────────────────────
+
+// Orders registrations by assigned seed (nulls last, then by sign-up order).
+function bySeed(a: TournamentRegistrationWithMember, b: TournamentRegistrationWithMember): number {
+  if (a.seed != null && b.seed != null) return a.seed - b.seed
+  if (a.seed != null) return -1
+  if (b.seed != null) return 1
+  return a.created_at.localeCompare(b.created_at)
+}
+
+// Admin — persist a seed order (called from the seeding UI before generation).
+export async function setSeedsAction(
+  tournamentId: string,
+  orderedRegistrationIds: string[],
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const tournament = await getTournamentById(tournamentId)
+    if (!tournament) return { error: 'Tournament not found.' }
+    if (tournament.status !== 'seeding') {
+      return { error: 'Seeds can only be changed while seeding.' }
+    }
+    await setRegistrationSeeds(orderedRegistrationIds.map((id, i) => ({ id, seed: i + 1 })))
+    revalidatePath('/admin')
+    revalidatePath(`/tournaments/match-play/${tournamentId}`)
+    return { success: 'Seeding saved.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to save seeding.' }
+  }
+}
+
+// Admin — draw the bracket from the current field and start play.
+export async function generateBracketAction(
+  tournamentId: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const tournament = await getTournamentById(tournamentId)
+    if (!tournament) return { error: 'Tournament not found.' }
+    if (tournament.status !== 'seeding') {
+      return { error: 'Close registration before drawing the bracket.' }
+    }
+
+    const registrations = await getRegistrationsForTournament(tournamentId)
+    if (registrations.length < 2) return { error: 'Need at least 2 registered players.' }
+
+    // Persist the seed order (current order becomes seeds 1..N), then build.
+    const ordered = [...registrations].sort(bySeed)
+    await setRegistrationSeeds(ordered.map((r, i) => ({ id: r.id, seed: i + 1 })))
+
+    const idByLocal = new Map<number, string>()
+    const newId = (localId: number): string => {
+      let id = idByLocal.get(localId)
+      if (!id) {
+        id = crypto.randomUUID()
+        idByLocal.set(localId, id)
+      }
+      return id
+    }
+
+    const rows = buildBracketRows({
+      tournamentId,
+      format: tournament.format,
+      orderedRegistrationIds: ordered.map((r) => r.id),
+      newId,
+    })
+
+    // Regenerating is safe — clear any prior draw first.
+    await deleteMatchesForTournament(tournamentId)
+    await insertBracket(rows)
+    await updateTournamentStatus(tournamentId, 'in_progress')
+
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    revalidatePath(`/tournaments/match-play/${tournamentId}`)
+    return { success: 'Bracket drawn. The tournament is underway.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to draw bracket.' }
+  }
+}
+
+// Admin — tear down the bracket and return to seeding.
+export async function resetBracketAction(
+  tournamentId: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const tournament = await getTournamentById(tournamentId)
+    if (!tournament) return { error: 'Tournament not found.' }
+    if (tournament.status === 'completed') {
+      return { error: 'Reopen the tournament before resetting the bracket.' }
+    }
+    await deleteMatchesForTournament(tournamentId)
+    await updateTournamentStatus(tournamentId, 'seeding')
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    revalidatePath(`/tournaments/match-play/${tournamentId}`)
+    return { success: 'Bracket cleared. Back to seeding.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to reset bracket.' }
+  }
+}
+
+// Admin — move a player into a specific match slot (manual correction).
+export async function moveMatchPlayerAction(
+  matchId: string,
+  tournamentId: string,
+  slot: 1 | 2,
+  registrationId: string | null,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    await setMatchPlayer(matchId, slot, registrationId)
+    revalidatePath('/admin')
+    revalidatePath(`/tournaments/match-play/${tournamentId}`)
+    return { success: 'Player moved.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to move player.' }
+  }
+}
+
+// Registration → seeding: closes sign-ups ahead of bracket generation.
+export async function closeRegistrationAction(
+  id: string,
+): Promise<{ error?: string; success?: string }> {
+  try {
+    await requireAdmin()
+    const tournament = await getTournamentById(id)
+    if (!tournament) return { error: 'Tournament not found.' }
+    if (tournament.status !== 'registration') {
+      return { error: 'Only an open tournament can be closed.' }
+    }
+    await updateTournamentStatus(id, 'seeding')
+    revalidatePath('/admin')
+    revalidatePath('/tournaments')
+    revalidatePath(`/tournaments/match-play/${id}`)
+    return { success: 'Registration closed.' }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to close registration.' }
   }
 }
 

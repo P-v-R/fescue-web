@@ -108,6 +108,77 @@ export type EventRsvpWithMember = EventRsvp & {
   members: { full_name: string; email: string } | null
 }
 
+export type TournamentFormat = 'single_elim' | 'double_elim'
+export type TournamentStatus =
+  | 'draft'
+  | 'registration'
+  | 'seeding'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled'
+
+export type Tournament = {
+  id: string
+  name: string
+  description: string | null
+  format: TournamentFormat
+  status: TournamentStatus
+  capacity: number | null
+  registration_closes_at: string | null
+  starts_at: string | null
+  champion_registration_id: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export type NewTournament = {
+  name: string
+  description?: string
+  format: TournamentFormat
+  capacity?: number | null
+  registration_closes_at?: string | null
+  starts_at?: string | null
+  created_by?: string
+}
+
+export type TournamentRegistration = {
+  id: string
+  tournament_id: string
+  member_id: string
+  seed: number | null
+  created_at: string
+}
+
+// Registration joined with the member's display fields (for rosters + seeding).
+export type TournamentRegistrationWithMember = TournamentRegistration & {
+  members: { full_name: string; sgt_username: string | null } | null
+}
+
+export type MatchBracketName = 'winners' | 'losers' | 'grand_final'
+export type MatchStatus = 'pending' | 'scheduled' | 'completed'
+export type MatchResultType = 'play' | 'forfeit' | 'bye' | 'admin'
+
+export type TournamentMatch = {
+  id: string
+  tournament_id: string
+  bracket: MatchBracketName
+  round: number
+  position: number
+  player1_registration_id: string | null
+  player2_registration_id: string | null
+  winner_registration_id: string | null
+  is_bye: boolean
+  result_type: MatchResultType | null
+  result_summary: string | null
+  sgt_tournament_id: number | null
+  status: MatchStatus
+  next_match_id: string | null
+  next_match_slot: 1 | 2 | null
+  loser_match_id: string | null
+  loser_match_slot: 1 | 2 | null
+  created_at: string
+}
+
 export type JoinRequest = {
   id: string
   full_name: string
