@@ -110,10 +110,17 @@ function SeedingPanel({
         </button>
         <ConfirmButton
           disabled={isPending || order.length < 2}
-          onConfirm={() => run(() => generateBracketAction(tournamentId))}
+          onConfirm={() =>
+            run(async () => {
+              // Persist the on-screen order first so the draw uses exactly what's shown.
+              const seedResult = await setSeedsAction(tournamentId, order.map((r) => r.id));
+              if (seedResult.error) return seedResult;
+              return generateBracketAction(tournamentId);
+            })
+          }
           label='Draw Bracket →'
           confirmLabel='Yes, Draw'
-          confirmMessage='Draw the bracket and start play? This saves the current order.'
+          confirmMessage='Save this order and draw the bracket to start play?'
           variant='primary'
         />
       </div>

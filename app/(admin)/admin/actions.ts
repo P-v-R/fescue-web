@@ -783,7 +783,7 @@ export async function updateTournamentAction(
 
     await updateTournament(id, {
       name: parsed.data.name,
-      description: parsed.data.description ?? '',
+      description: parsed.data.description ?? null,
       format: parsed.data.format,
       capacity: parsed.data.capacity ?? null,
       registration_closes_at: optionalDatetimeToIso(parsed.data.registration_closes_at),
@@ -822,7 +822,7 @@ export async function openRegistrationAction(
     const tournament = await getTournamentById(id)
     if (!tournament) return { error: 'Tournament not found.' }
     if (tournament.status !== 'draft' && tournament.status !== 'seeding') {
-      return { error: 'Registration can only be opened from draft.' }
+      return { error: 'Registration can only be opened from draft or seeding.' }
     }
     await updateTournamentStatus(id, 'registration')
     revalidatePath('/admin')

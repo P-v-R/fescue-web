@@ -17,6 +17,17 @@ function isUniqueViolation(err: unknown): boolean {
   return typeof err === 'object' && err !== null && 'code' in err && (err as { code?: string }).code === '23505'
 }
 
+// The enforce_tournament_capacity trigger raises "Tournament is full" (check_violation).
+function isTournamentFull(err: unknown): boolean {
+  return (
+    typeof err === 'object' &&
+    err !== null &&
+    'message' in err &&
+    typeof (err as { message?: unknown }).message === 'string' &&
+    (err as { message: string }).message.includes('Tournament is full')
+  )
+}
+
 export async function registerForTournamentAction(tournamentId: string): Promise<Result> {
   try {
     const supabase = await createClient()
@@ -48,6 +59,8 @@ export async function registerForTournamentAction(tournamentId: string): Promise
     } catch (err) {
       // Concurrent double-submit — the row already exists, which is fine.
       if (isUniqueViolation(err)) return { success: "You're registered." }
+      // Lost a capacity race — the DB trigger rejected the insert.
+      if (isTournamentFull(err)) return { error: 'This tournament is full.' }
       throw err
     }
 

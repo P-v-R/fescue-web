@@ -41,42 +41,15 @@ export async function deleteMatchesForTournament(tournamentId: string): Promise<
   if (error) throw new Error(`deleteMatchesForTournament: ${error.message}`)
 }
 
-// Insert the full bracket. FKs are self-referential, so insert without the
-// pointer columns first, then patch them in — avoids ordering constraints.
+// Insert the full bracket in a single statement. The advancement pointers are
+// self-referential FKs, but Postgres checks referential integrity at the end of
+// the statement, so a multi-row insert that references its own rows resolves
+// fine — no second pass needed.
 export async function insertBracket(rows: NewMatchRow[]): Promise<void> {
+  if (rows.length === 0) return
   const supabase = createAdminClient()
-
-  const base = rows.map((r) => ({
-    id: r.id,
-    tournament_id: r.tournament_id,
-    bracket: r.bracket,
-    round: r.round,
-    position: r.position,
-    player1_registration_id: r.player1_registration_id,
-    player2_registration_id: r.player2_registration_id,
-    winner_registration_id: r.winner_registration_id,
-    is_bye: r.is_bye,
-    result_type: r.result_type,
-    status: r.status,
-  }))
-
-  const { error: insertError } = await supabase.from('tournament_matches').insert(base)
-  if (insertError) throw new Error(`insertBracket insert: ${insertError.message}`)
-
-  // Second pass: wire advancement pointers now that every row exists.
-  for (const r of rows) {
-    if (r.next_match_id == null && r.loser_match_id == null) continue
-    const { error } = await supabase
-      .from('tournament_matches')
-      .update({
-        next_match_id: r.next_match_id,
-        next_match_slot: r.next_match_slot,
-        loser_match_id: r.loser_match_id,
-        loser_match_slot: r.loser_match_slot,
-      })
-      .eq('id', r.id)
-    if (error) throw new Error(`insertBracket wire: ${error.message}`)
-  }
+  const { error } = await supabase.from('tournament_matches').insert(rows)
+  if (error) throw new Error(`insertBracket: ${error.message}`)
 }
 
 // Admin — set a registration into a match slot (manual move / correction).
@@ -91,11 +64,11 @@ export async function setMatchPlayer(
   if (error) throw new Error(`setMatchPlayer: ${error.message}`)
 }
 
-// Admin — persist seed numbers on the registrations (batched).
+// Admin — persist seed numbers on the registrations in a single statement via
+// the set_registration_seeds RPC.
 export async function setRegistrationSeeds(seeds: { id: string; seed: number }[]): Promise<void> {
+  if (seeds.length === 0) return
   const supabase = createAdminClient()
-  for (const { id, seed } of seeds) {
-    const { error } = await supabase.from('tournament_registrations').update({ seed }).eq('id', id)
-    if (error) throw new Error(`setRegistrationSeeds: ${error.message}`)
-  }
+  const { error } = await supabase.rpc('set_registration_seeds', { seed_pairs: seeds })
+  if (error) throw new Error(`setRegistrationSeeds: ${error.message}`)
 }
