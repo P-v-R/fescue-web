@@ -52,6 +52,25 @@ export type SgtScorecard = {
   country_code: string
 }
 
+// Club member as returned by /members/list — maps our sgt_username to a numeric id.
+export type SgtClubMember = {
+  user_name: string
+  user_id: number
+}
+
+// Raw per-player scorecard from /tournaments/scorecards. Includes per-hole
+// fields hole{N}_gross / hole{N}_net and course fields h{N}_index / h{N}_Par.
+export type SgtRawScorecard = {
+  playerId: number
+  player_name: string
+  hcp_index: number
+  round: number
+  total_gross: number
+  total_net: number
+  // Per-hole and course fields are accessed dynamically (hole1_gross, h1_index, …).
+  [key: string]: unknown
+}
+
 // Aggregated leaderboard row (all rounds for one player)
 export type SgtLeaderboardRow = {
   position: number

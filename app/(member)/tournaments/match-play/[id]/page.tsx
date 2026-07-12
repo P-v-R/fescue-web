@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getTournamentById } from '@/lib/supabase/queries/tournaments'
 import { getRegistrationsForTournament } from '@/lib/supabase/queries/tournament-registrations'
+import { getMatchesForTournament } from '@/lib/supabase/queries/tournament-matches'
 import { RegistrationButton } from '@/components/tournaments/registration-button'
+import { BracketBoard, type PlayerInfo } from '@/components/tournaments/bracket-board'
 import type { TournamentStatus } from '@/lib/supabase/types'
 
 type Props = {
@@ -47,16 +49,27 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const [registrations, memberRow] = await Promise.all([
+  const [registrations, matches, memberRow] = await Promise.all([
     getRegistrationsForTournament(id),
+    getMatchesForTournament(id),
     user
-      ? supabase.from('members').select('sgt_username').eq('id', user.id).single()
+      ? supabase.from('members').select('sgt_username, is_admin').eq('id', user.id).single()
       : Promise.resolve({ data: null }),
   ])
 
+  const member = memberRow.data as { sgt_username: string | null; is_admin: boolean } | null
   const isRegistered = !!user && registrations.some((r) => r.member_id === user.id)
   const isFull = tournament.capacity != null && registrations.length >= tournament.capacity
-  const hasSgtUsername = !!(memberRow.data as { sgt_username: string | null } | null)?.sgt_username
+  const hasSgtUsername = !!member?.sgt_username
+  const isAdmin = !!member?.is_admin
+
+  const players: Record<string, PlayerInfo> = {}
+  for (const r of registrations) {
+    players[r.id] = { name: r.members?.full_name ?? 'Unknown', seed: r.seed }
+  }
+  const champion = tournament.champion_registration_id
+    ? players[tournament.champion_registration_id]?.name
+    : null
   const closesAt = tournament.registration_closes_at
     ? new Date(tournament.registration_closes_at)
     : null
@@ -162,10 +175,24 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
         )}
       </section>
 
-      {(tournament.status === 'seeding' || tournament.status === 'in_progress' || tournament.status === 'completed') && (
-        <p className="font-serif italic text-sm text-navy/35">
-          The bracket will appear here once it&apos;s drawn.
-        </p>
+      {champion && (
+        <div className="border border-gold/40 bg-gold/5 px-6 py-5 text-center">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-gold mb-1">Champion</p>
+          <p className="font-serif text-2xl font-light text-navy">{champion}</p>
+        </div>
+      )}
+
+      {matches.length > 0 ? (
+        <section className="space-y-3">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/40">Bracket</p>
+          <BracketBoard tournamentId={tournament.id} matches={matches} players={players} isAdmin={isAdmin} />
+        </section>
+      ) : (
+        tournament.status === 'seeding' && (
+          <p className="font-serif italic text-sm text-navy/35">
+            The bracket will appear here once it&apos;s drawn.
+          </p>
+        )
       )}
     </div>
   )

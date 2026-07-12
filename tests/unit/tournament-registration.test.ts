@@ -57,6 +57,7 @@ function tournament(overrides: Partial<Tournament> = {}): Tournament {
     registration_closes_at: null,
     starts_at: null,
     champion_registration_id: null,
+    sgt_tour_id: null,
     created_by: null,
     created_at: '2026-07-01T00:00:00Z',
     ...overrides,

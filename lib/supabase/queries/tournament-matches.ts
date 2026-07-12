@@ -52,6 +52,76 @@ export async function insertBracket(rows: NewMatchRow[]): Promise<void> {
   if (error) throw new Error(`insertBracket: ${error.message}`)
 }
 
+export async function getMatchById(id: string): Promise<TournamentMatch | null> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('tournament_matches').select('*').eq('id', id).single()
+  if (error) return null
+  return data as TournamentMatch
+}
+
+// All matches in one bracket round (a "round" = one SGT event).
+export async function getRoundMatches(
+  tournamentId: string,
+  bracket: TournamentMatch['bracket'],
+  round: number,
+): Promise<TournamentMatch[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('tournament_matches')
+    .select('*')
+    .eq('tournament_id', tournamentId)
+    .eq('bracket', bracket)
+    .eq('round', round)
+    .order('position', { ascending: true })
+  if (error) throw new Error(`getRoundMatches: ${error.message}`)
+  return (data ?? []) as TournamentMatch[]
+}
+
+// Attach a created SGT event + its settings to every match in a round, marking them scheduled.
+export async function setRoundSgtEvent(
+  matchIds: string[],
+  sgtTournamentId: number,
+  settings: TournamentMatch['sgt_settings'],
+): Promise<void> {
+  if (matchIds.length === 0) return
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('tournament_matches')
+    .update({ sgt_tournament_id: sgtTournamentId, sgt_settings: settings, status: 'scheduled' })
+    .in('id', matchIds)
+  if (error) throw new Error(`setRoundSgtEvent: ${error.message}`)
+}
+
+// Record a match result (winner + summary) and mark it completed.
+export async function completeMatch(
+  matchId: string,
+  winnerRegistrationId: string,
+  resultType: NonNullable<TournamentMatch['result_type']>,
+  resultSummary: string,
+): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('tournament_matches')
+    .update({
+      winner_registration_id: winnerRegistrationId,
+      result_type: resultType,
+      result_summary: resultSummary,
+      status: 'completed',
+    })
+    .eq('id', matchId)
+  if (error) throw new Error(`completeMatch: ${error.message}`)
+}
+
+// Record an all-square result that the admin still needs to decide (no winner set).
+export async function setMatchNeedsDecision(matchId: string, summary: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('tournament_matches')
+    .update({ result_summary: summary, result_type: 'play' })
+    .eq('id', matchId)
+  if (error) throw new Error(`setMatchNeedsDecision: ${error.message}`)
+}
+
 // Admin — set a registration into a match slot (manual move / correction).
 export async function setMatchPlayer(
   matchId: string,

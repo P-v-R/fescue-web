@@ -99,3 +99,38 @@ export async function sgtFetch(
   }
   throw lastError
 }
+
+// SGT write endpoints follow a { success, feedback, ... } shape and take
+// form-encoded bodies with the api-key as a field. Values are flattened to
+// strings; nested arrays/objects are JSON-encoded (register-members expects
+// registrationList as JSON). Throws when success is false.
+export async function sgtPost(
+  path: string,
+  body: Record<string, string | number | boolean | unknown[]>,
+): Promise<Record<string, unknown>> {
+  const key = await getSgtApiKey()
+  const form = new URLSearchParams()
+  form.set('api-key', key)
+  for (const [k, v] of Object.entries(body)) {
+    form.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v))
+  }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), SGT_TIMEOUT_MS)
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form,
+      signal: controller.signal,
+    })
+    if (!res.ok) throw new Error(`SGT API error ${res.status} on ${path}`)
+    const json = (await res.json()) as Record<string, unknown>
+    if (json.success === false || json.success === 0) {
+      throw new Error(`SGT ${path} failed: ${json.feedback ?? 'unknown error'}`)
+    }
+    return json
+  } finally {
+    clearTimeout(timer)
+  }
+}

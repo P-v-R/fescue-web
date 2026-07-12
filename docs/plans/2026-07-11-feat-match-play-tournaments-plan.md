@@ -80,12 +80,12 @@ Docs: https://simulator-golf-tour.gitbook.io/sgt-club-admin-api · OpenAPI: http
 ### Phase 3 — Bracket generation, seeding, admin manipulation ✅
 `tournament_matches` table + pure `bracket.ts` engine (single + double elim, standard seeding, byes, self-referential wiring) + `build-rows.ts` + seed/generate/reset/move actions + a seeding panel in the admin tab (reorder, draw bracket).
 
-### Phase 4 — Match-play scoring engine + SGT round linkage (pending)
+### Phase 4 — Match-play scoring engine + SGT round linkage ✅
 - `lib/tournament/matchplay.ts` (pure): `resolveMatch(p1, p2)` computing hole-by-hole net from `hole*_gross` + `h*_index` (100% allowance; strokes to holes where `strokeIndex ≤ strokesGiven`, second pass beyond 18; gross 0 = unplayed).
 - `lib/sgt/` groundwork: `SgtHoleScorecard` / `SgtClubMember` types, `getClubMembers()`, `resolvePlayerId(sgtUsername)`, `getMatchScorecards(tournamentId)`, a `sgtPost()` helper, `createSgtTournament()`, `addRegistration()`.
 - `startRoundAction` creates the SGT event + registers both players; `resolveMatchAction` computes the result, sets the winner, and advances (winner → `next_match`, loser → `loser_match` for double elim). Admin `forfeitMatchAction` / `setMatchWinnerAction` overrides.
 
-### Phase 5 — Bracket display + completion (pending)
+### Phase 5 — Bracket display + completion ✅
 - `components/tournaments/bracket.tsx` — member bracket view; completed matches link to their SGT leaderboard and show the result (e.g. "3 & 2").
 - On the final match resolving, set `status = 'completed'` + `champion_registration_id` and render a champion banner. Optional matchup notifications.
 
@@ -97,8 +97,8 @@ Docs: https://simulator-golf-tour.gitbook.io/sgt-club-admin-api · OpenAPI: http
 - [x] Admin can add/remove any member and close registration.
 - [x] Admin can reorder seeds and draw the bracket; byes auto-resolve for non-power-of-two fields.
 - [x] Bracket engine produces correct match counts, bye placement, and advancement wiring for single and double elimination (unit-tested).
-- [ ] A bracket round can be played through SGT and resolved to a hole-by-hole net match result, advancing the winner. *(Phase 4)*
-- [ ] Members see a visual bracket; the final resolves to a single champion and the tournament completes. *(Phase 5)*
+- [x] A bracket round can be played through SGT and resolved to a hole-by-hole net match result, advancing the winner. Ties break on count-back, then admin decision. *(Phase 4)*
+- [x] Members see a visual bracket; the final resolves to a single champion and the tournament completes. *(Phase 5)*
 
 ## Dependencies & Risks
 
