@@ -99,12 +99,12 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   const currentItem = contentItems[contentIdx] ?? null
 
   return (
-    <div className='fixed inset-0 bg-cream overflow-hidden'>
+    <div className='fixed inset-0 bg-navy-dark overflow-hidden'>
       {/* Subtle corner decorations */}
-      <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-navy/15' />
-      <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-navy/15' />
-      <span className='absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-navy/15' />
-      <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-navy/15' />
+      <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cream/15' />
+      <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cream/15' />
+      <span className='absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cream/15' />
+      <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cream/15' />
 
       {/* Main content with fade transition */}
       <div

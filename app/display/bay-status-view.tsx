@@ -27,16 +27,27 @@ export function BayStatusView({ bays, bookings }: Props) {
   const slots = useMemo(() => getWindowSlots(now), [now]);
 
   const clockStr = useMemo(
-    () => now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+    () =>
+      now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
     [now],
   );
   const dateStr = useMemo(
-    () => now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }),
+    () =>
+      now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      }),
     [now],
   );
 
   const nowSlotIdx = useMemo(
-    () => slots.findIndex((s) => s.getTime() <= now.getTime() && now.getTime() < addMinutes(s, SLOT_MINUTES).getTime()),
+    () =>
+      slots.findIndex(
+        (s) =>
+          s.getTime() <= now.getTime() &&
+          now.getTime() < addMinutes(s, SLOT_MINUTES).getTime(),
+      ),
     [slots, now],
   );
 
@@ -99,7 +110,7 @@ export function BayStatusView({ bays, bookings }: Props) {
   return (
     <div className='flex flex-col h-full'>
       {/* Page header */}
-      <div className='flex items-center justify-between px-12 py-5 border-b border-sand/30'>
+      <div className='flex items-center justify-between px-12 py-5 border-b border-cream/10'>
         <div className='flex items-center gap-4'>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -110,7 +121,7 @@ export function BayStatusView({ bays, bookings }: Props) {
             style={{ objectFit: 'contain' }}
           />
           <div>
-            <p className='font-serif text-navy text-3xl leading-none tracking-wide'>
+            <p className='font-serif text-cream text-3xl leading-none tracking-wide'>
               Fescue Golf Club
             </p>
             <p className='font-mono text-[11px] uppercase tracking-[0.28em] text-sand mt-1.5'>
@@ -119,7 +130,7 @@ export function BayStatusView({ bays, bookings }: Props) {
           </div>
         </div>
         <div className='text-right'>
-          <p className='font-mono text-4xl font-medium tracking-[0.04em] text-navy tabular-nums'>
+          <p className='font-mono text-4xl font-medium tracking-[0.04em] text-cream tabular-nums'>
             {clockStr}
           </p>
           <p className='font-mono text-[11px] uppercase tracking-[0.22em] text-sand mt-1'>
@@ -137,7 +148,7 @@ export function BayStatusView({ bays, bookings }: Props) {
             style={{
               top: nowLineTop,
               background: 'var(--color-gold)',
-              opacity: 0.3,
+              opacity: 0.65,
             }}
           />
         )}
@@ -155,7 +166,7 @@ export function BayStatusView({ bays, bookings }: Props) {
           {/* Column headers */}
           <thead ref={theadRef}>
             <tr>
-              <th className='bg-navy-dark px-4 py-4 text-left font-mono text-sm uppercase tracking-[0.28em] text-cream/40 border-r border-cream/10'>
+              <th className='bg-navy-dark px-4 py-4 text-left font-mono text-sm uppercase tracking-[0.28em] text-cream/40 border-r border-cream/30'>
                 Time
               </th>
               {activeBays.map((bay, i) => (
@@ -163,7 +174,7 @@ export function BayStatusView({ bays, bookings }: Props) {
                   key={bay.id}
                   className={[
                     'bg-navy-dark px-4 py-4 text-center font-mono text-sm uppercase tracking-[0.28em] text-cream',
-                    i < activeBays.length - 1 ? 'border-r border-cream/10' : '',
+                    i < activeBays.length - 1 ? 'border-r border-cream/30' : '',
                   ].join(' ')}
                 >
                   {bay.name}
@@ -180,18 +191,21 @@ export function BayStatusView({ bays, bookings }: Props) {
                 : '1px solid rgba(200,184,154,0.12)';
 
               return (
-                <tr key={slotTime.getTime()} style={{ height: `${100 / slots.length}%` }}>
+                <tr
+                  key={slotTime.getTime()}
+                  style={{ height: `${100 / slots.length}%` }}
+                >
                   {/* Time label */}
                   <td
-                    className='px-4 align-top pt-2 border-r border-sand/20'
+                    className='px-4 align-top pt-2 border-r border-cream/30'
                     style={{ borderTop: borderTopStyle }}
                   >
                     <span
                       className={[
                         'font-mono tracking-[0.06em]',
                         isHour
-                          ? 'text-sm text-navy/80'
-                          : 'text-xs text-navy/50',
+                          ? 'text-sm text-cream/70'
+                          : 'text-xs text-cream/35',
                       ].join(' ')}
                     >
                       {formatTimeLabel(slotTime)}
@@ -206,7 +220,7 @@ export function BayStatusView({ bays, bookings }: Props) {
 
                     const borderRight =
                       bayIdx < activeBays.length - 1
-                        ? '1px solid rgba(200,184,154,0.2)'
+                        ? '1px solid rgba(200,184,154,0.45)'
                         : undefined;
 
                     const cellData = cellMap.get(key);
@@ -225,10 +239,10 @@ export function BayStatusView({ bays, bookings }: Props) {
                           style={{
                             borderTop: borderTopStyle,
                             borderRight,
-                            background: 'rgba(92,122,82,0.18)',
+                            background: 'rgba(92,122,82,0.35)',
                           }}
                         >
-                          <p className='font-serif text-3xl text-navy/80 leading-none'>
+                          <p className='font-serif text-3xl text-cream/85 leading-none'>
                             {memberName}
                           </p>
                         </td>
@@ -241,7 +255,7 @@ export function BayStatusView({ bays, bookings }: Props) {
                         style={{
                           borderTop: borderTopStyle,
                           borderRight,
-                          background: 'rgba(255,255,255,0.55)',
+                          background: 'rgba(255,255,255,0.04)',
                         }}
                       />
                     );
@@ -254,10 +268,10 @@ export function BayStatusView({ bays, bookings }: Props) {
       </div>
 
       {/* Footer ornament */}
-      <div className='flex items-center gap-3 px-12 py-3.5 border-t border-sand/20'>
-        <div className='flex-1 h-px bg-sand/20' />
+      <div className='flex items-center gap-3 px-12 py-3.5 border-t border-cream/10'>
+        <div className='flex-1 h-px bg-cream/15' />
         <div className='w-1.5 h-1.5 bg-gold/40 rotate-45 shrink-0' />
-        <div className='flex-1 h-px bg-sand/20' />
+        <div className='flex-1 h-px bg-cream/15' />
       </div>
     </div>
   );
