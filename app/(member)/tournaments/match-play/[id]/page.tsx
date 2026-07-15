@@ -79,7 +79,9 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
   const formatLabel = tournament.format === 'single_elim' ? 'Single elimination' : 'Double elimination'
 
   return (
-    <div className="max-w-3xl space-y-8">
+    <div className="max-w-6xl space-y-8">
+      {/* Header + registration stay narrow for readability; the bracket goes wide. */}
+      <div className="max-w-3xl space-y-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-navy/35">
         <Link href="/tournaments" className="hover:text-navy transition-colors">
@@ -143,6 +145,7 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
           <p className="font-serif italic text-sm text-navy/50">Registration has closed.</p>
         </div>
       )}
+      </div>
 
       {champion && (
         <div className="border border-gold/40 bg-gold/5 px-6 py-5 text-center">
