@@ -5,6 +5,7 @@ import { getRegistrationsForTournament } from '@/lib/supabase/queries/tournament
 import { getMatchesForTournament } from '@/lib/supabase/queries/tournament-matches'
 import { RegistrationButton } from '@/components/tournaments/registration-button'
 import { BracketBoard, type PlayerInfo } from '@/components/tournaments/bracket-board'
+import { TournamentTabs } from '@/components/tournaments/tournament-tabs'
 import type { TournamentStatus } from '@/lib/supabase/types'
 
 type Props = {
@@ -143,38 +144,6 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
         </div>
       )}
 
-      {/* Field / roster */}
-      <section className="bg-white border border-cream-mid">
-        <div className="flex items-center gap-2 px-6 py-4 border-b border-cream-mid">
-          <span className="text-gold/70 text-sm leading-none">◈</span>
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/60">Field</p>
-          <span className="ml-auto font-mono text-[10px] bg-gold/15 text-gold px-2 py-0.5 tracking-[0.1em]">
-            {registrations.length}
-          </span>
-        </div>
-        {registrations.length === 0 ? (
-          <div className="px-6 py-5">
-            <p className="font-serif italic text-sm text-navy/35">No players registered yet.</p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-cream-mid">
-            {registrations.map((r, i) => (
-              <li key={r.id} className="flex items-center gap-4 px-6 py-3">
-                <span className="font-mono text-[10px] text-navy/30 w-6">{String(i + 1).padStart(2, '0')}</span>
-                <span className="font-serif text-sm font-light text-navy">
-                  {r.members?.full_name ?? 'Unknown'}
-                </span>
-                {user && r.member_id === user.id && (
-                  <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-sage bg-sage/10 px-2 py-0.5">
-                    You
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
       {champion && (
         <div className="border border-gold/40 bg-gold/5 px-6 py-5 text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-gold mb-1">Champion</p>
@@ -182,18 +151,50 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
         </div>
       )}
 
-      {matches.length > 0 ? (
-        <section className="space-y-3">
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/40">Bracket</p>
-          <BracketBoard tournamentId={tournament.id} matches={matches} players={players} isAdmin={isAdmin} />
-        </section>
-      ) : (
-        tournament.status === 'seeding' && (
-          <p className="font-serif italic text-sm text-navy/35">
-            The bracket will appear here once it&apos;s drawn.
-          </p>
-        )
-      )}
+      <TournamentTabs
+        hasBracket={matches.length > 0}
+        bracket={
+          matches.length > 0 ? (
+            <BracketBoard tournamentId={tournament.id} matches={matches} players={players} isAdmin={isAdmin} />
+          ) : (
+            <p className="font-serif italic text-sm text-navy/35">
+              The bracket will appear here once it&apos;s drawn.
+            </p>
+          )
+        }
+        field={
+          <section className="bg-white border border-cream-mid">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-cream-mid">
+              <span className="text-gold/70 text-sm leading-none">◈</span>
+              <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/60">Field</p>
+              <span className="ml-auto font-mono text-[10px] bg-gold/15 text-gold px-2 py-0.5 tracking-[0.1em]">
+                {registrations.length}
+              </span>
+            </div>
+            {registrations.length === 0 ? (
+              <div className="px-6 py-5">
+                <p className="font-serif italic text-sm text-navy/35">No players registered yet.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-cream-mid">
+                {registrations.map((r, i) => (
+                  <li key={r.id} className="flex items-center gap-4 px-6 py-3">
+                    <span className="font-mono text-[10px] text-navy/30 w-6">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="font-serif text-sm font-light text-navy">
+                      {r.members?.full_name ?? 'Unknown'}
+                    </span>
+                    {user && r.member_id === user.id && (
+                      <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-sage bg-sage/10 px-2 py-0.5">
+                        You
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        }
+      />
     </div>
   )
 }
