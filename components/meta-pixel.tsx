@@ -1,9 +1,29 @@
+'use client'
+
 import Script from 'next/script'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
 
 // Meta pixel IDs are always numeric strings (15-16 digits)
 const PIXEL_ID_RE = /^\d{15,16}$/
 
+declare global {
+  interface Window {
+    fbq?: (...args: unknown[]) => void
+  }
+}
+
 export function MetaPixel({ pixelId }: { pixelId: string }) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Fire PageView on every client-side navigation
+    if (window.fbq) {
+      window.fbq('track', 'PageView')
+    }
+  }, [pathname, searchParams])
+
   if (!PIXEL_ID_RE.test(pixelId)) return null
 
   return (
