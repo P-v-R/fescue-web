@@ -1,11 +1,7 @@
-import { Suspense } from 'react';
 import Image from 'next/image';
 import { CartProvider } from '@/components/shop/cart-provider';
 import { CartDrawer } from '@/components/shop/cart-drawer';
 import { PublicNav } from '@/components/ui/public-nav';
-import { MetaPixel } from '@/components/meta-pixel';
-
-const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID
 
 export default function PublicLayout({
   children,
@@ -14,11 +10,6 @@ export default function PublicLayout({
 }) {
   return (
     <CartProvider>
-      {META_PIXEL_ID && (
-        <Suspense fallback={null}>
-          <MetaPixel pixelId={META_PIXEL_ID} />
-        </Suspense>
-      )}
       <div className='relative min-h-screen bg-cream flex flex-col'>
         <div className='fixed inset-0 bg-[url(/soft-wallpaper.png)] bg-repeat opacity-[0.54] pointer-events-none z-0' />
         <div className='relative z-10 flex flex-col min-h-screen'>
