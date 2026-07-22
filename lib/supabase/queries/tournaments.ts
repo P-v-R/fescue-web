@@ -95,3 +95,19 @@ export async function deleteTournament(id: string): Promise<void> {
   const { error } = await supabase.from('tournaments').delete().eq('id', id)
   if (error) throw new Error(`deleteTournament: ${error.message}`)
 }
+
+export async function setTournamentSgtTour(id: string, sgtTourId: number): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('tournaments').update({ sgt_tour_id: sgtTourId }).eq('id', id)
+  if (error) throw new Error(`setTournamentSgtTour: ${error.message}`)
+}
+
+// Crown the champion and close out the tournament.
+export async function setTournamentChampion(id: string, registrationId: string): Promise<void> {
+  const supabase = createAdminClient()
+  const { error } = await supabase
+    .from('tournaments')
+    .update({ champion_registration_id: registrationId, status: 'completed' })
+    .eq('id', id)
+  if (error) throw new Error(`setTournamentChampion: ${error.message}`)
+}

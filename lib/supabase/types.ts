@@ -127,6 +127,7 @@ export type Tournament = {
   registration_closes_at: string | null
   starts_at: string | null
   champion_registration_id: string | null
+  sgt_tour_id: number | null
   created_by: string | null
   created_at: string
 }
@@ -154,6 +155,19 @@ export type TournamentRegistrationWithMember = TournamentRegistration & {
   members: { full_name: string; sgt_username: string | null } | null
 }
 
+// Settings used to create a round's SGT head-to-head event. Persisted on the
+// round's matches so the event can be renamed/regenerated (SGT's edit endpoint
+// resends the full field set).
+export type SgtRoundSettings = {
+  tourneyname: string
+  courseId: number
+  numberholes: string // '18' | 'Front9' | 'Back9' | '1'..'17'
+  greenspeed: number // 8..13
+  gimmes: string // '0','2','4','5','6','8','10','99'
+  puttingmode: string // 'Optimistic' | 'Casual' | 'Hard'
+  tees: string
+}
+
 export type MatchBracketName = 'winners' | 'losers' | 'grand_final'
 export type MatchStatus = 'pending' | 'scheduled' | 'completed'
 export type MatchResultType = 'play' | 'forfeit' | 'bye' | 'admin'
@@ -164,6 +178,7 @@ export type TournamentMatch = {
   bracket: MatchBracketName
   round: number
   position: number
+  phase: number
   player1_registration_id: string | null
   player2_registration_id: string | null
   winner_registration_id: string | null
@@ -171,6 +186,7 @@ export type TournamentMatch = {
   result_type: MatchResultType | null
   result_summary: string | null
   sgt_tournament_id: number | null
+  sgt_settings: SgtRoundSettings | null
   status: MatchStatus
   next_match_id: string | null
   next_match_slot: 1 | 2 | null

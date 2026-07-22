@@ -88,6 +88,10 @@ describe('generateSingleElimination', () => {
       it('never wires a loser drop (single elimination)', () => {
         expect(matches.every((m) => m.loserTo === null)).toBe(true)
       })
+
+      it('sets each match phase equal to its round', () => {
+        expect(matches.every((m) => m.phase === m.round)).toBe(true)
+      })
     })
   }
 
@@ -157,6 +161,28 @@ describe('generateDoubleElimination', () => {
       })
 
       it('has valid wiring', () => assertWiringIntegrity(matches))
+
+      it('phases align winners round r with losers round r-1', () => {
+        const k = Math.log2(size)
+        // Winners phase = round.
+        for (const m of matches.filter((m) => m.bracket === 'winners')) {
+          expect(m.phase).toBe(m.round)
+        }
+        // Losers phase = round + 1, so losers round r plays alongside winners round r+1.
+        for (const m of matches.filter((m) => m.bracket === 'losers')) {
+          expect(m.phase).toBe(m.round + 1)
+        }
+        // Grand final is the last phase, 2k.
+        const gf = matches.find((m) => m.bracket === 'grand_final')!
+        expect(gf.phase).toBe(2 * k)
+      })
+
+      it('every phase but the last winners/first losers overlaps two brackets', () => {
+        // Phase 1 is winners-only; phase 2 pairs winners R2 with losers R1, etc.
+        const phase2 = matches.filter((m) => m.phase === 2)
+        expect(phase2.some((m) => m.bracket === 'winners')).toBe(true)
+        expect(phase2.some((m) => m.bracket === 'losers')).toBe(true)
+      })
     })
   }
 
@@ -165,5 +191,8 @@ describe('generateDoubleElimination', () => {
     expect(matches.filter((m) => m.bracket === 'grand_final').length).toBe(1)
     const wbFinal = matches.find((m) => m.bracket === 'winners')!
     expect(wbFinal.loserTo).not.toBeNull()
+    // Only one winners round (k=1) → grand final is phase 2.
+    const gf = matches.find((m) => m.bracket === 'grand_final')!
+    expect(gf.phase).toBe(2)
   })
 })

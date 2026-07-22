@@ -18,6 +18,12 @@ export type GeneratedMatch = {
   bracket: BracketName
   round: number
   position: number
+  // Global "phase": the concurrent play slot this match belongs to across both
+  // brackets, so a whole phase can be scheduled as one round. Winners round r is
+  // phase r; losers round r is phase r+1 (it follows the winners round that feeds
+  // it); the grand final is phase 2k. Everything sharing a phase can be played at
+  // the same time once the previous phase completes.
+  phase: number
   // Known seeds for this match. null = to-be-determined (filled by advancement) or a phantom bye.
   player1Seed: number | null
   player2Seed: number | null
@@ -64,6 +70,9 @@ class MatchBuilder {
       bracket,
       round,
       position,
+      // Losers rounds trail their feeding winners round by one phase. The grand
+      // final is re-stamped by the caller once the winners depth k is known.
+      phase: bracket === 'losers' ? round + 1 : round,
       player1Seed: null,
       player2Seed: null,
       isBye: false,
@@ -149,8 +158,10 @@ export function generateDoubleElimination(playerCount: number): GeneratedMatch[]
   const b = new MatchBuilder()
   const { size, rounds: k } = buildWinners(b, playerCount)
 
-  // Grand final (no bracket reset): WB champion vs LB champion.
+  // Grand final (no bracket reset): WB champion vs LB champion. It runs one phase
+  // after the losers final, which sits at phase 2(k-1)+1 = 2k-1, so phase 2k.
   const grandFinal = b.create('grand_final', 1, 0)
+  grandFinal.phase = 2 * k
   b.get('winners', k, 0).winnerTo = { localId: grandFinal.localId, slot: 1 }
 
   if (k === 1) {

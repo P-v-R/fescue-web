@@ -28,6 +28,7 @@ export function buildBracketRows({
     bracket: m.bracket,
     round: m.round,
     position: m.position,
+    phase: m.phase,
     player1_registration_id: seedToReg(m.player1Seed),
     player2_registration_id: seedToReg(m.player2Seed),
     winner_registration_id: m.isBye ? seedToReg(m.winnerSeed) : null,

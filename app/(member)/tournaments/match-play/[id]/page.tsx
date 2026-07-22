@@ -2,7 +2,10 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getTournamentById } from '@/lib/supabase/queries/tournaments'
 import { getRegistrationsForTournament } from '@/lib/supabase/queries/tournament-registrations'
+import { getMatchesForTournament } from '@/lib/supabase/queries/tournament-matches'
 import { RegistrationButton } from '@/components/tournaments/registration-button'
+import { BracketBoard, type PlayerInfo } from '@/components/tournaments/bracket-board'
+import { TournamentTabs } from '@/components/tournaments/tournament-tabs'
 import type { TournamentStatus } from '@/lib/supabase/types'
 
 type Props = {
@@ -47,16 +50,27 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const [registrations, memberRow] = await Promise.all([
+  const [registrations, matches, memberRow] = await Promise.all([
     getRegistrationsForTournament(id),
+    getMatchesForTournament(id),
     user
-      ? supabase.from('members').select('sgt_username').eq('id', user.id).single()
+      ? supabase.from('members').select('sgt_username, is_admin').eq('id', user.id).single()
       : Promise.resolve({ data: null }),
   ])
 
+  const member = memberRow.data as { sgt_username: string | null; is_admin: boolean } | null
   const isRegistered = !!user && registrations.some((r) => r.member_id === user.id)
   const isFull = tournament.capacity != null && registrations.length >= tournament.capacity
-  const hasSgtUsername = !!(memberRow.data as { sgt_username: string | null } | null)?.sgt_username
+  const hasSgtUsername = !!member?.sgt_username
+  const isAdmin = !!member?.is_admin
+
+  const players: Record<string, PlayerInfo> = {}
+  for (const r of registrations) {
+    players[r.id] = { name: r.members?.full_name ?? 'Unknown', seed: r.seed }
+  }
+  const champion = tournament.champion_registration_id
+    ? players[tournament.champion_registration_id]?.name
+    : null
   const closesAt = tournament.registration_closes_at
     ? new Date(tournament.registration_closes_at)
     : null
@@ -65,7 +79,9 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
   const formatLabel = tournament.format === 'single_elim' ? 'Single elimination' : 'Double elimination'
 
   return (
-    <div className="max-w-3xl space-y-8">
+    <div className="max-w-6xl space-y-8">
+      {/* Header + registration stay narrow for readability; the bracket goes wide. */}
+      <div className="max-w-3xl space-y-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-navy/35">
         <Link href="/tournaments" className="hover:text-navy transition-colors">
@@ -129,44 +145,59 @@ export default async function MatchPlayTournamentPage({ params }: Props) {
           <p className="font-serif italic text-sm text-navy/50">Registration has closed.</p>
         </div>
       )}
+      </div>
 
-      {/* Field / roster */}
-      <section className="bg-white border border-cream-mid">
-        <div className="flex items-center gap-2 px-6 py-4 border-b border-cream-mid">
-          <span className="text-gold/70 text-sm leading-none">◈</span>
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/60">Field</p>
-          <span className="ml-auto font-mono text-[10px] bg-gold/15 text-gold px-2 py-0.5 tracking-[0.1em]">
-            {registrations.length}
-          </span>
+      {champion && (
+        <div className="border border-gold/40 bg-gold/5 px-6 py-5 text-center">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-gold mb-1">Champion</p>
+          <p className="font-serif text-2xl font-light text-navy">{champion}</p>
         </div>
-        {registrations.length === 0 ? (
-          <div className="px-6 py-5">
-            <p className="font-serif italic text-sm text-navy/35">No players registered yet.</p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-cream-mid">
-            {registrations.map((r, i) => (
-              <li key={r.id} className="flex items-center gap-4 px-6 py-3">
-                <span className="font-mono text-[10px] text-navy/30 w-6">{String(i + 1).padStart(2, '0')}</span>
-                <span className="font-serif text-sm font-light text-navy">
-                  {r.members?.full_name ?? 'Unknown'}
-                </span>
-                {user && r.member_id === user.id && (
-                  <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-sage bg-sage/10 px-2 py-0.5">
-                    You
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {(tournament.status === 'seeding' || tournament.status === 'in_progress' || tournament.status === 'completed') && (
-        <p className="font-serif italic text-sm text-navy/35">
-          The bracket will appear here once it&apos;s drawn.
-        </p>
       )}
+
+      <TournamentTabs
+        hasBracket={matches.length > 0}
+        bracket={
+          matches.length > 0 ? (
+            <BracketBoard tournamentId={tournament.id} matches={matches} players={players} isAdmin={isAdmin} />
+          ) : (
+            <p className="font-serif italic text-sm text-navy/35">
+              The bracket will appear here once it&apos;s drawn.
+            </p>
+          )
+        }
+        field={
+          <section className="bg-white border border-cream-mid">
+            <div className="flex items-center gap-2 px-6 py-4 border-b border-cream-mid">
+              <span className="text-gold/70 text-sm leading-none">◈</span>
+              <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-navy/60">Field</p>
+              <span className="ml-auto font-mono text-[10px] bg-gold/15 text-gold px-2 py-0.5 tracking-[0.1em]">
+                {registrations.length}
+              </span>
+            </div>
+            {registrations.length === 0 ? (
+              <div className="px-6 py-5">
+                <p className="font-serif italic text-sm text-navy/35">No players registered yet.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-cream-mid">
+                {registrations.map((r, i) => (
+                  <li key={r.id} className="flex items-center gap-4 px-6 py-3">
+                    <span className="font-mono text-[10px] text-navy/30 w-6">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="font-serif text-sm font-light text-navy">
+                      {r.members?.full_name ?? 'Unknown'}
+                    </span>
+                    {user && r.member_id === user.id && (
+                      <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-sage bg-sage/10 px-2 py-0.5">
+                        You
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        }
+      />
     </div>
   )
 }

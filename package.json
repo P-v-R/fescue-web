@@ -35,7 +35,12 @@
     "zod": "^4.3.6"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@sentry/cli", "esbuild", "sharp", "unrs-resolver"]
+    "onlyBuiltDependencies": [
+      "@sentry/cli",
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -51,6 +56,7 @@
     "husky": "^9.1.7",
     "jsdom": "^25.0.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.1",
     "typescript": "^5",
     "vite": "5",
     "vitest": "^2.1.9"
