@@ -9,6 +9,7 @@ export type NewMatchRow = {
   bracket: TournamentMatch['bracket']
   round: number
   position: number
+  phase: number
   player1_registration_id: string | null
   player2_registration_id: string | null
   winner_registration_id: string | null
@@ -59,21 +60,22 @@ export async function getMatchById(id: string): Promise<TournamentMatch | null> 
   return data as TournamentMatch
 }
 
-// All matches in one bracket round (a "round" = one SGT event).
-export async function getRoundMatches(
+// All matches in one phase — the concurrent play slot spanning both brackets.
+// A phase is the unit of scheduling: one phase = one SGT event.
+export async function getPhaseMatches(
   tournamentId: string,
-  bracket: TournamentMatch['bracket'],
-  round: number,
+  phase: number,
 ): Promise<TournamentMatch[]> {
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('tournament_matches')
     .select('*')
     .eq('tournament_id', tournamentId)
-    .eq('bracket', bracket)
-    .eq('round', round)
+    .eq('phase', phase)
+    .order('bracket', { ascending: true })
+    .order('round', { ascending: true })
     .order('position', { ascending: true })
-  if (error) throw new Error(`getRoundMatches: ${error.message}`)
+  if (error) throw new Error(`getPhaseMatches: ${error.message}`)
   return (data ?? []) as TournamentMatch[]
 }
 

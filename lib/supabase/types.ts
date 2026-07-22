@@ -178,6 +178,7 @@ export type TournamentMatch = {
   bracket: MatchBracketName
   round: number
   position: number
+  phase: number
   player1_registration_id: string | null
   player2_registration_id: string | null
   winner_registration_id: string | null

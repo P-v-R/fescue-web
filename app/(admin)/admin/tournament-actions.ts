@@ -6,7 +6,7 @@ import { getTournamentById, setTournamentSgtTour, setTournamentChampion } from '
 import { getRegistrationsForTournament } from '@/lib/supabase/queries/tournament-registrations'
 import {
   getMatchById,
-  getRoundMatches,
+  getPhaseMatches,
   setRoundSgtEvent,
   completeMatch,
   setMatchNeedsDecision,
@@ -82,10 +82,9 @@ function buildSettings(name: string, roundLabel: string, input: RoundSettingsInp
   }
 }
 
-function roundLabelOf(match: TournamentMatch): string {
-  const bracket =
-    match.bracket === 'winners' ? 'Winners' : match.bracket === 'losers' ? 'Losers' : 'Grand Final'
-  return match.bracket === 'grand_final' ? bracket : `${bracket} R${match.round}`
+// A phase groups concurrent matches from both brackets into one schedulable round.
+function phaseLabelOf(match: TournamentMatch): string {
+  return match.bracket === 'grand_final' ? 'Grand Final' : `Round ${match.phase}`
 }
 
 // Resolves each playable match's two players to SGT user ids + head-to-head pairs.
@@ -118,12 +117,12 @@ async function resolvePairs(
   return { pairs }
 }
 
-// Starts a bracket round: lazily creates the tournament's SGT tour, creates a
-// head-to-head event for the round, registers all pairings, and links the matches.
+// Starts a phase: lazily creates the tournament's SGT tour, creates a single
+// head-to-head event covering every playable match in the phase (across both
+// brackets), registers all pairings, and links the matches.
 export async function startRoundAction(
   tournamentId: string,
-  bracket: TournamentMatch['bracket'],
-  round: number,
+  phase: number,
   input: RoundSettingsInput,
 ): Promise<Result> {
   try {
@@ -133,13 +132,21 @@ export async function startRoundAction(
     const tournament = await getTournamentById(tournamentId)
     if (!tournament) return { error: 'Tournament not found.' }
 
-    const allMatches = await getRoundMatches(tournamentId, bracket, round)
+    const allMatches = await getPhaseMatches(tournamentId, phase)
     const playable = allMatches.filter(
       (m) => !m.is_bye && m.status !== 'completed' && m.player1_registration_id && m.player2_registration_id,
     )
     if (playable.length === 0) return { error: 'No matches in this round are ready to start.' }
     if (playable.some((m) => m.sgt_tournament_id)) {
       return { error: 'This round already has an SGT event. Regenerate it instead.' }
+    }
+    // Don't start until every match in the phase is decided, so the whole round
+    // plays in one event and nobody is left out.
+    const waiting = allMatches.filter(
+      (m) => !m.is_bye && m.status !== 'completed' && (!m.player1_registration_id || !m.player2_registration_id),
+    )
+    if (waiting.length > 0) {
+      return { error: `${waiting.length} match(es) in this round are still waiting on players.` }
     }
 
     const regList = await getRegistrationsForTournament(tournamentId)
@@ -155,7 +162,7 @@ export async function startRoundAction(
       await setTournamentSgtTour(tournamentId, sgtTourId)
     }
 
-    const settings = buildSettings(tournament.name, roundLabelOf(playable[0]), input)
+    const settings = buildSettings(tournament.name, phaseLabelOf(playable[0]), input)
     const sgtTournamentId = await createSgtRoundEvent(sgtTourId, settings)
     await registerRoundPlayers(sgtTournamentId, sgtTourId, pairs)
     await setRoundSgtEvent(playable.map((m) => m.id), sgtTournamentId, settings)
@@ -263,7 +270,7 @@ export async function renameRoundEventAction(matchId: string, newName: string): 
     const settings: SgtRoundSettings = { ...match.sgt_settings, tourneyname: newName.slice(0, 50) }
     await editSgtRoundEvent(match.sgt_tournament_id, tournament.sgt_tour_id, settings)
     await setRoundSgtEvent(
-      (await getRoundMatches(match.tournament_id, match.bracket, match.round)).map((m) => m.id),
+      (await getPhaseMatches(match.tournament_id, match.phase)).map((m) => m.id),
       match.sgt_tournament_id,
       settings,
     )
@@ -286,7 +293,7 @@ export async function regenerateRoundEventAction(
     const tournament = await getTournamentById(match.tournament_id)
     if (!tournament?.sgt_tour_id) return { error: 'Tournament has no SGT tour yet — start the round instead.' }
 
-    const roundMatches = await getRoundMatches(match.tournament_id, match.bracket, match.round)
+    const roundMatches = await getPhaseMatches(match.tournament_id, match.phase)
     const playable = roundMatches.filter(
       (m) => !m.is_bye && m.player1_registration_id && m.player2_registration_id,
     )
@@ -298,7 +305,7 @@ export async function regenerateRoundEventAction(
     if (match.sgt_tournament_id) {
       await deleteSgtRoundEvent(match.sgt_tournament_id, tournament.sgt_tour_id)
     }
-    const settings = buildSettings(tournament.name, roundLabelOf(match), input)
+    const settings = buildSettings(tournament.name, phaseLabelOf(match), input)
     const newId = await createSgtRoundEvent(tournament.sgt_tour_id, settings)
     await registerRoundPlayers(newId, tournament.sgt_tour_id, pairs)
     await setRoundSgtEvent(playable.map((m) => m.id), newId, settings)
