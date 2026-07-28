@@ -50,6 +50,7 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
         } else if (result.success) {
           setSuccessMessage(result.success)
           setSubmitted(true)
+          ;(window as typeof window & { fbq?: (...args: unknown[]) => void }).fbq?.('track', 'Lead')
           onSubmitted?.()
         } else {
           setServerError('Unexpected response. Please try again.')
