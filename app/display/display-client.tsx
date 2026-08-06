@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import type { Bay, BookingWithMember, Event } from '@/lib/supabase/types'
 import type { BulletinPost } from '@/lib/sanity/types'
 import { interleaveItems } from '@/lib/utils/display'
@@ -21,9 +21,45 @@ const CONTENT_DURATION = 15_000 // 15 seconds
 const FADE_DURATION = 700       // ms for opacity transition
 const POLL_INTERVAL = 30_000    // 30 seconds
 
+// The whole kiosk is laid out on a fixed design canvas and then scaled with CSS
+// `zoom` to fill the physical screen. This keeps text a constant proportion of
+// the display regardless of resolution — a 4K TV gets zoom ~2 (crisp, since
+// `zoom` re-rasterizes text) while a 1080p monitor gets zoom 1 (unchanged).
+const CANVAS_WIDTH = 1920
+const CANVAS_HEIGHT = 1080
+
 type Phase = 'bays' | 'content'
 
+/**
+ * Returns the `zoom` factor that fits the CANVAS_WIDTH × CANVAS_HEIGHT design
+ * canvas onto the current viewport. An optional `?zoom=` URL multiplier lets the
+ * owner enlarge text beyond the fit (e.g. `&zoom=1.15`) for a bigger, more
+ * legible-from-a-distance kiosk without a code change.
+ */
+function useFitZoom(): number {
+  const [zoom, setZoom] = useState(1)
+
+  useLayoutEffect(() => {
+    const compute = () => {
+      const params = new URLSearchParams(window.location.search)
+      const multiplier = parseFloat(params.get('zoom') ?? '')
+      const safeMultiplier = Number.isFinite(multiplier) && multiplier > 0 ? multiplier : 1
+      const fit = Math.min(
+        window.innerWidth / CANVAS_WIDTH,
+        window.innerHeight / CANVAS_HEIGHT,
+      )
+      setZoom(fit * safeMultiplier)
+    }
+    compute()
+    window.addEventListener('resize', compute)
+    return () => window.removeEventListener('resize', compute)
+  }, [])
+
+  return zoom
+}
+
 export function DisplayClient({ bays, initialBookings, posts, events, token }: Props) {
+  const zoom = useFitZoom()
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
   const [phase, setPhase] = useState<Phase>('bays')
   const [contentIdx, setContentIdx] = useState(0)
@@ -99,28 +135,34 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   const currentItem = contentItems[contentIdx] ?? null
 
   return (
-    <div className='fixed inset-0 bg-navy-dark overflow-hidden'>
-      {/* Subtle corner decorations */}
-      <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cream/15' />
-      <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cream/15' />
-      <span className='absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cream/15' />
-      <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cream/15' />
-
-      {/* Main content with fade transition */}
+    <div className='fixed inset-0 bg-navy-dark overflow-hidden flex items-center justify-center'>
+      {/* Fixed design canvas scaled to fill the screen via CSS zoom */}
       <div
-        className='h-full transition-opacity'
-        style={{
-          opacity: visible ? 1 : 0,
-          transitionDuration: `${FADE_DURATION}ms`,
-        }}
+        className='relative'
+        style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT, zoom }}
       >
-        <DisplayErrorBoundary>
-          {phase === 'bays' ? (
-            <BayStatusView bays={bays} bookings={bookings} />
-          ) : currentItem ? (
-            <ContentSlide item={currentItem} />
-          ) : null}
-        </DisplayErrorBoundary>
+        {/* Subtle corner decorations */}
+        <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cream/15' />
+        <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cream/15' />
+        <span className='absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-cream/15' />
+        <span className='absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cream/15' />
+
+        {/* Main content with fade transition */}
+        <div
+          className='h-full transition-opacity'
+          style={{
+            opacity: visible ? 1 : 0,
+            transitionDuration: `${FADE_DURATION}ms`,
+          }}
+        >
+          <DisplayErrorBoundary>
+            {phase === 'bays' ? (
+              <BayStatusView bays={bays} bookings={bookings} />
+            ) : currentItem ? (
+              <ContentSlide item={currentItem} />
+            ) : null}
+          </DisplayErrorBoundary>
+        </div>
       </div>
     </div>
   )

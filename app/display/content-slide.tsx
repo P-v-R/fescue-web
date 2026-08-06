@@ -61,14 +61,14 @@ export function ContentSlide({ item }: Props) {
       <SlideShell label='Bulletin Board'>
         <h2
           className='font-serif font-light text-cream leading-tight max-w-3xl mb-10'
-          style={{ fontSize: 'clamp(2.5rem, 4.5vw, 5rem)' }}
+          style={{ fontSize: '5rem' }}
         >
           {post.title}
         </h2>
         {excerpt && (
           <p
             className='font-sans font-light text-cream/60 leading-relaxed max-w-2xl'
-            style={{ fontSize: 'clamp(1.1rem, 1.6vw, 1.5rem)' }}
+            style={{ fontSize: '1.5rem' }}
           >
             {excerpt}
             {excerpt.length >= 240 ? '…' : ''}
@@ -101,7 +101,7 @@ export function ContentSlide({ item }: Props) {
       </h2>
       <p
         className='font-mono uppercase tracking-[0.22em] text-gold'
-        style={{ fontSize: 'clamp(1rem, 1.4vw, 1.25rem)' }}
+        style={{ fontSize: '1.25rem' }}
       >
         {startsAt.toLocaleDateString('en-US', {
           weekday: 'long',
