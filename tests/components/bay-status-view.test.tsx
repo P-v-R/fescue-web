@@ -66,9 +66,11 @@ describe('BayStatusView', () => {
 
     it('renders all active bay names as column headers', () => {
       render(<BayStatusView bays={[bay1, bay2, bigBay]} bookings={[]} />)
-      expect(screen.getByRole('columnheader', { name: 'Bay 1' })).toBeInTheDocument()
-      expect(screen.getByRole('columnheader', { name: 'Bay 2' })).toBeInTheDocument()
-      expect(screen.getByRole('columnheader', { name: 'Big Bay' })).toBeInTheDocument()
+      // Headers now also carry a live "Open now / In use" status line, so the
+      // accessible name includes it — match the bay name within the header.
+      expect(screen.getByRole('columnheader', { name: /Bay 1/ })).toBeInTheDocument()
+      expect(screen.getByRole('columnheader', { name: /Bay 2/ })).toBeInTheDocument()
+      expect(screen.getByRole('columnheader', { name: /Big Bay/ })).toBeInTheDocument()
     })
 
     it('does not render inactive bay names', () => {
@@ -153,6 +155,36 @@ describe('BayStatusView', () => {
       render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
       const cells = screen.getAllByText('Jerry')
       expect(cells).toHaveLength(1)
+    })
+  })
+
+  describe('live bay status', () => {
+    it('shows "Open now" for a bay with no current booking', () => {
+      render(<BayStatusView bays={[bay1]} bookings={[]} />)
+      expect(screen.getByText('Open now')).toBeInTheDocument()
+    })
+
+    it('shows "In use" with the end time for a bay occupied right now', () => {
+      // 10:00–11:00 covers the mocked now (10:15 AM)
+      const booking = makeBooking('bay-1', 10, 0, 60)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      expect(screen.getByText(/In use .* til 11:00/)).toBeInTheDocument()
+      expect(screen.queryByText('Open now')).not.toBeInTheDocument()
+    })
+
+    it('stays "Open now" when the bay is only booked later today', () => {
+      // 12:00–1:00 PM — after the mocked now, so the bay is currently free
+      const booking = makeBooking('bay-1', 12, 0, 60)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      expect(screen.getByText('Open now')).toBeInTheDocument()
+    })
+  })
+
+  describe('booking time range', () => {
+    it('shows the booking time range under the member name', () => {
+      const booking = makeBooking('bay-1', 10, 0, 60, 'George Pemberton')
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      expect(screen.getByText('10:00 – 11:00')).toBeInTheDocument()
     })
   })
 
