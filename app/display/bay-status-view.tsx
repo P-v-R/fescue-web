@@ -157,7 +157,7 @@ export function BayStatusView({ bays, bookings }: Props) {
           style={{ height: '100%', tableLayout: 'fixed' }}
         >
           <colgroup>
-            <col style={{ width: '108px' }} />
+            <col style={{ width: '150px' }} />
             {activeBays.map((bay) => (
               <col key={bay.id} />
             ))}
@@ -166,14 +166,14 @@ export function BayStatusView({ bays, bookings }: Props) {
           {/* Column headers */}
           <thead ref={theadRef}>
             <tr>
-              <th className='bg-navy-dark px-4 py-4 text-left font-mono text-sm uppercase tracking-[0.28em] text-cream/40 border-r border-cream/30'>
+              <th className='bg-navy-dark px-4 py-5 text-left font-mono text-2xl uppercase tracking-[0.22em] text-cream/40 border-r border-cream/30'>
                 Time
               </th>
               {activeBays.map((bay, i) => (
                 <th
                   key={bay.id}
                   className={[
-                    'bg-navy-dark px-4 py-4 text-center font-mono text-sm uppercase tracking-[0.28em] text-cream',
+                    'bg-navy-dark px-4 py-5 text-center font-mono text-2xl uppercase tracking-[0.22em] text-cream',
                     i < activeBays.length - 1 ? 'border-r border-cream/30' : '',
                   ].join(' ')}
                 >
@@ -204,8 +204,8 @@ export function BayStatusView({ bays, bookings }: Props) {
                       className={[
                         'font-mono tracking-[0.06em]',
                         isHour
-                          ? 'text-sm text-cream/70'
-                          : 'text-xs text-cream/35',
+                          ? 'text-lg text-cream/70'
+                          : 'text-base text-cream/35',
                       ].join(' ')}
                     >
                       {formatTimeLabel(slotTime)}
@@ -242,7 +242,7 @@ export function BayStatusView({ bays, bookings }: Props) {
                             background: 'rgba(92,122,82,0.35)',
                           }}
                         >
-                          <p className='font-serif text-3xl text-cream/85 leading-none'>
+                          <p className='font-serif text-4xl text-cream/85 leading-none'>
                             {memberName}
                           </p>
                         </td>
