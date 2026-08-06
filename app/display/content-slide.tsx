@@ -1,6 +1,12 @@
-import type React from 'react'
+'use client'
+
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { BulletinPost } from '@/lib/sanity/types'
 import type { Event } from '@/lib/supabase/types'
+
+// Breathing room (canvas px) reserved above and below the slide content so it
+// never touches the frame edges when scaled to fit.
+const SLIDE_PADDING_Y = 72
 
 export type DisplayContentItem =
   | { kind: 'post'; data: BulletinPost }
@@ -39,36 +45,60 @@ function clampText(str: string, limit: number): { text: string; truncated: boole
   return { text, truncated: true }
 }
 
-function SlideShell({ label, children }: { label: string; children: React.ReactNode }) {
+function SlideShell({ label, children }: { label: string; children: ReactNode }) {
+  const contentRef = useRef<HTMLDivElement>(null)
+  // Scale the content down only when a particular post is taller than the frame,
+  // so short posts render full-size and long ones shrink just enough to fit.
+  const [scale, setScale] = useState(1)
+
+  useLayoutEffect(() => {
+    const fit = () => {
+      const el = contentRef.current
+      const container = el?.parentElement
+      if (!el || !container) return
+      const available = container.clientHeight - SLIDE_PADDING_Y * 2
+      const natural = el.scrollHeight // layout height, unaffected by the transform
+      const next = natural > available && natural > 0 ? available / natural : 1
+      setScale((prev) => (Math.abs(prev - next) > 0.005 ? next : prev))
+    }
+    fit()
+  })
+
   return (
-    <div className='flex flex-col items-center justify-center h-full px-24 text-center'>
-      {/* Club mark */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src='/quail-alt.png'
-        alt='Fescue Golf Club'
-        width={104}
-        height={104}
-        className='mb-9'
-        style={{ objectFit: 'contain' }}
-      />
-
-      {/* Category label */}
-      <p
-        className='font-mono uppercase tracking-[0.42em] text-gold mb-8'
-        style={{ fontSize: '1.25rem' }}
+    <div className='flex items-center justify-center h-full px-24'>
+      <div
+        ref={contentRef}
+        className='flex flex-col items-center text-center w-full'
+        style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}
       >
-        {label}
-      </p>
+        {/* Club mark */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src='/quail-alt.png'
+          alt='Fescue Golf Club'
+          width={104}
+          height={104}
+          className='mb-9'
+          style={{ objectFit: 'contain' }}
+        />
 
-      {/* Divider */}
-      <div className='flex items-center gap-4 mb-12 w-full max-w-4xl'>
-        <div className='flex-1 h-px bg-cream/15' />
-        <div className='w-2 h-2 bg-gold/55 rotate-45 shrink-0' />
-        <div className='flex-1 h-px bg-cream/15' />
+        {/* Category label */}
+        <p
+          className='font-mono uppercase tracking-[0.42em] text-gold mb-8'
+          style={{ fontSize: '1.25rem' }}
+        >
+          {label}
+        </p>
+
+        {/* Divider */}
+        <div className='flex items-center gap-4 mb-12 w-full max-w-4xl'>
+          <div className='flex-1 h-px bg-cream/15' />
+          <div className='w-2 h-2 bg-gold/55 rotate-45 shrink-0' />
+          <div className='flex-1 h-px bg-cream/15' />
+        </div>
+
+        {children}
       </div>
-
-      {children}
     </div>
   )
 }
