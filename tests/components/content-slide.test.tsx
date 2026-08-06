@@ -88,8 +88,8 @@ describe('ContentSlide — bulletin post', () => {
     expect(screen.getByText('Summer Tournament Registration Open')).toBeInTheDocument()
   })
 
-  it('truncates body excerpts longer than 240 characters and appends ellipsis', () => {
-    const longText = 'A'.repeat(250)
+  it('truncates body excerpts longer than the excerpt limit and appends ellipsis', () => {
+    const longText = 'A'.repeat(300)
     const post = makePost({
       body: [
         {
@@ -105,8 +105,33 @@ describe('ContentSlide — bulletin post', () => {
     expect(screen.getByText(/…$/)).toBeInTheDocument()
   })
 
-  it('does not append ellipsis when excerpt is under 240 characters', () => {
-    const shortText = 'B'.repeat(239)
+  it('trims long excerpts on a word boundary (no mid-word cut)', () => {
+    const words =
+      'alpha bravo charlie delta echo foxtrot golf hotel india juliet '.repeat(6)
+    const post = makePost({
+      body: [
+        {
+          _type: 'block',
+          _key: 'b1',
+          children: [{ _type: 'span', _key: 's1', marks: [], text: words }],
+          markDefs: [],
+          style: 'normal',
+        },
+      ] as BulletinPost['body'],
+    })
+    render(<ContentSlide item={{ kind: 'post', data: post }} />)
+    const shown = screen
+      .getByText(/…$/)
+      .textContent!.replace(/…$/, '')
+      .trim()
+    const sourceWords = words.trim().split(/\s+/)
+    const lastShownWord = shown.split(/\s+/).pop()!
+    // The last visible word must be a complete word from the source, not a fragment.
+    expect(sourceWords).toContain(lastShownWord)
+  })
+
+  it('does not append ellipsis when excerpt is within the limit', () => {
+    const shortText = 'B'.repeat(200)
     const post = makePost({
       body: [
         {
@@ -220,13 +245,13 @@ describe('ContentSlide — event', () => {
     expect(screen.queryByText(/annual member-guest event/i)).not.toBeInTheDocument()
   })
 
-  it('truncates descriptions longer than 200 characters with ellipsis', () => {
-    const event = makeEvent({ description: 'C'.repeat(210) })
+  it('truncates descriptions longer than the description limit with ellipsis', () => {
+    const event = makeEvent({ description: 'C'.repeat(260) })
     render(<ContentSlide item={{ kind: 'event', data: event }} />)
     expect(screen.getByText(/…$/)).toBeInTheDocument()
   })
 
-  it('does not truncate descriptions of 200 characters or fewer', () => {
+  it('does not truncate descriptions within the limit', () => {
     const event = makeEvent({ description: 'C'.repeat(200) })
     render(<ContentSlide item={{ kind: 'event', data: event }} />)
     expect(screen.queryByText(/…/)).not.toBeInTheDocument()

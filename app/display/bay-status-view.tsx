@@ -11,6 +11,13 @@ type Props = {
   bookings: BookingWithMember[];
 };
 
+/** "6:00 PM" → "6:00" — drops the AM/PM for compact in-grid time ranges. */
+function shortTime(date: Date): string {
+  return date
+    .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    .replace(/\s?[AP]M$/i, '');
+}
+
 export function BayStatusView({ bays, bookings }: Props) {
   const [now, setNow] = useState(() => new Date());
 
@@ -50,6 +57,24 @@ export function BayStatusView({ bays, bookings }: Props) {
       ),
     [slots, now],
   );
+
+  // Live "is this bay free right now?" status shown under each column header.
+  const bayStatus = useMemo(() => {
+    const map = new Map<string, { inUse: boolean; until: Date | null }>();
+    for (const bay of activeBays) {
+      const current = bookings.find(
+        (b) =>
+          b.bay_id === bay.id &&
+          new Date(b.start_time).getTime() <= now.getTime() &&
+          now.getTime() < new Date(b.end_time).getTime(),
+      );
+      map.set(bay.id, {
+        inUse: Boolean(current),
+        until: current ? new Date(current.end_time) : null,
+      });
+    }
+    return map;
+  }, [activeBays, bookings, now]);
 
   const { cellMap, continuations } = useMemo(() => {
     const cellMap = new Map<
@@ -143,21 +168,32 @@ export function BayStatusView({ bays, bookings }: Props) {
       <div className='flex-1 overflow-hidden relative' ref={gridRef}>
         {/* Floating NOW line — absolutely positioned at exact current time */}
         {nowLineTop !== null && (
-          <div
-            className='absolute left-0 right-0 pointer-events-none z-10 h-[2px]'
-            style={{
-              top: nowLineTop,
-              background: 'var(--color-gold)',
-              opacity: 0.65,
-            }}
-          />
+          <>
+            <div
+              className='absolute left-0 right-0 pointer-events-none z-10'
+              style={{ top: nowLineTop, height: 3, background: 'var(--gold)' }}
+            />
+            <div
+              className='absolute z-20 pointer-events-none font-mono text-sm font-medium uppercase tracking-[0.16em] whitespace-nowrap'
+              style={{
+                top: nowLineTop,
+                left: 0,
+                transform: 'translateY(-50%)',
+                background: 'var(--gold)',
+                color: 'var(--navy-dark)',
+                padding: '3px 12px',
+              }}
+            >
+              Now · {clockStr}
+            </div>
+          </>
         )}
         <table
           className='w-full border-collapse'
           style={{ height: '100%', tableLayout: 'fixed' }}
         >
           <colgroup>
-            <col style={{ width: '108px' }} />
+            <col style={{ width: '150px' }} />
             {activeBays.map((bay) => (
               <col key={bay.id} />
             ))}
@@ -166,20 +202,47 @@ export function BayStatusView({ bays, bookings }: Props) {
           {/* Column headers */}
           <thead ref={theadRef}>
             <tr>
-              <th className='bg-navy-dark px-4 py-4 text-left font-mono text-sm uppercase tracking-[0.28em] text-cream/40 border-r border-cream/30'>
+              <th className='bg-navy-dark px-4 py-5 text-left font-mono text-2xl uppercase tracking-[0.22em] text-cream/40 border-r border-cream/30'>
                 Time
               </th>
-              {activeBays.map((bay, i) => (
-                <th
-                  key={bay.id}
-                  className={[
-                    'bg-navy-dark px-4 py-4 text-center font-mono text-sm uppercase tracking-[0.28em] text-cream',
-                    i < activeBays.length - 1 ? 'border-r border-cream/30' : '',
-                  ].join(' ')}
-                >
-                  {bay.name}
-                </th>
-              ))}
+              {activeBays.map((bay, i) => {
+                const status = bayStatus.get(bay.id);
+                const inUse = status?.inUse ?? false;
+                return (
+                  <th
+                    key={bay.id}
+                    className={[
+                      'bg-navy-dark px-4 py-5 text-center align-top',
+                      i < activeBays.length - 1 ? 'border-r border-cream/30' : '',
+                    ].join(' ')}
+                  >
+                    <p className='font-mono text-2xl uppercase tracking-[0.22em] text-cream'>
+                      {bay.name}
+                    </p>
+                    <span className='mt-2.5 inline-flex items-center gap-2 font-mono text-sm uppercase tracking-[0.18em]'>
+                      <span
+                        className='inline-block h-2 w-2 rounded-full'
+                        style={{
+                          background: inUse
+                            ? 'rgba(245,240,232,0.35)'
+                            : 'var(--gold-light)',
+                        }}
+                      />
+                      <span
+                        style={{
+                          color: inUse
+                            ? 'rgba(245,240,232,0.45)'
+                            : 'var(--gold-light)',
+                        }}
+                      >
+                        {inUse && status?.until
+                          ? `In use · til ${shortTime(status.until)}`
+                          : 'Open now'}
+                      </span>
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
 
@@ -204,8 +267,8 @@ export function BayStatusView({ bays, bookings }: Props) {
                       className={[
                         'font-mono tracking-[0.06em]',
                         isHour
-                          ? 'text-sm text-cream/70'
-                          : 'text-xs text-cream/35',
+                          ? 'text-lg text-cream/70'
+                          : 'text-base text-cream/35',
                       ].join(' ')}
                     >
                       {formatTimeLabel(slotTime)}
@@ -230,6 +293,7 @@ export function BayStatusView({ bays, bookings }: Props) {
                       const memberName = (
                         booking.members?.full_name ?? 'Member'
                       ).split(' ')[0];
+                      const timeRange = `${shortTime(new Date(booking.start_time))} – ${shortTime(new Date(booking.end_time))}`;
 
                       return (
                         <td
@@ -239,11 +303,15 @@ export function BayStatusView({ bays, bookings }: Props) {
                           style={{
                             borderTop: borderTopStyle,
                             borderRight,
-                            background: 'rgba(92,122,82,0.35)',
+                            background: 'rgba(107,135,95,0.55)',
+                            boxShadow: 'inset 4px 0 0 var(--gold)',
                           }}
                         >
-                          <p className='font-serif text-3xl text-cream/85 leading-none'>
+                          <p className='font-serif text-4xl text-cream leading-none'>
                             {memberName}
+                          </p>
+                          <p className='mt-2.5 font-mono text-base tracking-[0.12em] text-cream/60'>
+                            {timeRange}
                           </p>
                         </td>
                       );
@@ -255,7 +323,7 @@ export function BayStatusView({ bays, bookings }: Props) {
                         style={{
                           borderTop: borderTopStyle,
                           borderRight,
-                          background: 'rgba(255,255,255,0.04)',
+                          background: 'rgba(255,255,255,0.02)',
                         }}
                       />
                     );
