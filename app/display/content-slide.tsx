@@ -65,10 +65,19 @@ function SlideShell({ label, children }: { label: string; children: ReactNode })
   })
 
   return (
-    <div className='flex items-center justify-center h-full px-24'>
+    <div className='relative flex items-center justify-center h-full px-24 overflow-hidden'>
+      {/* Oversized offset quail watermark — matches the homepage "Our Story" flourish */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src='/logo-quail.png'
+        alt=''
+        aria-hidden={true}
+        className='absolute -bottom-24 -right-16 brightness-0 invert opacity-[0.05] pointer-events-none select-none'
+        style={{ width: 820 }}
+      />
       <div
         ref={contentRef}
-        className='flex flex-col items-center text-center w-full'
+        className='relative z-10 flex flex-col items-center text-center w-full'
         style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}
       >
         {/* Club mark */}
