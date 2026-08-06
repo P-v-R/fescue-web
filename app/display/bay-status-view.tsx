@@ -170,8 +170,8 @@ export function BayStatusView({ bays, bookings }: Props) {
         {nowLineTop !== null && (
           <>
             <div
-              className='absolute left-0 right-0 pointer-events-none z-10 h-0.75'
-              style={{ top: nowLineTop, background: 'var(--gold)' }}
+              className='absolute left-0 right-0 pointer-events-none z-10'
+              style={{ top: nowLineTop, height: 3, background: 'var(--gold)' }}
             />
             <div
               className='absolute z-20 pointer-events-none font-mono text-sm font-medium uppercase tracking-[0.16em] whitespace-nowrap'

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import type { CSSProperties } from 'react'
 import type { Bay, BookingWithMember, Event } from '@/lib/supabase/types'
 import type { BulletinPost } from '@/lib/sanity/types'
 import { interleaveItems } from '@/lib/utils/display'
@@ -27,39 +28,58 @@ const POLL_INTERVAL = 30_000    // 30 seconds
 // `zoom` re-rasterizes text) while a 1080p monitor gets zoom 1 (unchanged).
 const CANVAS_WIDTH = 1920
 const CANVAS_HEIGHT = 1080
+// Clamp the optional `?zoom=` multiplier so a stray large value can't make the
+// browser allocate an enormous surface and hang the kiosk.
+const MAX_ZOOM_MULTIPLIER = 3
 
 type Phase = 'bays' | 'content'
 
 /**
- * Returns the `zoom` factor that fits the CANVAS_WIDTH × CANVAS_HEIGHT design
- * canvas onto the current viewport. An optional `?zoom=` URL multiplier lets the
- * owner enlarge text beyond the fit (e.g. `&zoom=1.15`) for a bigger, more
- * legible-from-a-distance kiosk without a code change.
+ * Fits the CANVAS_WIDTH × CANVAS_HEIGHT design canvas onto the current viewport.
+ * Returns the scale factor plus whether CSS `zoom` is supported — `zoom` keeps
+ * text crisp (it re-rasterizes), and callers fall back to `transform: scale()`
+ * on browsers without it. An optional `?zoom=` URL multiplier (clamped) lets the
+ * owner enlarge text beyond the fit (e.g. `&zoom=1.15`) without a code change.
  */
-function useFitZoom(): number {
-  const [zoom, setZoom] = useState(1)
+function useFitScale(): { scale: number; supportsZoom: boolean } {
+  // Default to `zoom` (the target is a Chromium kiosk); the effect corrects to
+  // the transform fallback after mount on the rare browser without zoom support.
+  const [state, setState] = useState({ scale: 1, supportsZoom: true })
 
   useLayoutEffect(() => {
+    const supportsZoom =
+      typeof CSS !== 'undefined' &&
+      typeof CSS.supports === 'function' &&
+      CSS.supports('zoom', '1')
     const compute = () => {
       const params = new URLSearchParams(window.location.search)
-      const multiplier = parseFloat(params.get('zoom') ?? '')
-      const safeMultiplier = Number.isFinite(multiplier) && multiplier > 0 ? multiplier : 1
+      const raw = parseFloat(params.get('zoom') ?? '')
+      const multiplier =
+        Number.isFinite(raw) && raw > 0 ? Math.min(raw, MAX_ZOOM_MULTIPLIER) : 1
       const fit = Math.min(
         window.innerWidth / CANVAS_WIDTH,
         window.innerHeight / CANVAS_HEIGHT,
       )
-      setZoom(fit * safeMultiplier)
+      setState({ scale: fit * multiplier, supportsZoom })
     }
     compute()
     window.addEventListener('resize', compute)
     return () => window.removeEventListener('resize', compute)
   }, [])
 
-  return zoom
+  return state
 }
 
 export function DisplayClient({ bays, initialBookings, posts, events, token }: Props) {
-  const zoom = useFitZoom()
+  const { scale, supportsZoom } = useFitScale()
+  const canvasStyle: CSSProperties = supportsZoom
+    ? { width: CANVAS_WIDTH, height: CANVAS_HEIGHT, zoom: scale }
+    : {
+        width: CANVAS_WIDTH,
+        height: CANVAS_HEIGHT,
+        transform: `scale(${scale})`,
+        transformOrigin: 'center center',
+      }
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
   const [phase, setPhase] = useState<Phase>('bays')
   const [contentIdx, setContentIdx] = useState(0)
@@ -137,10 +157,7 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
   return (
     <div className='fixed inset-0 bg-navy-dark overflow-hidden flex items-center justify-center'>
       {/* Fixed design canvas scaled to fill the screen via CSS zoom */}
-      <div
-        className='relative'
-        style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT, zoom }}
-      >
+      <div className='relative' style={canvasStyle}>
         {/* Subtle corner decorations */}
         <span className='absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cream/15' />
         <span className='absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-cream/15' />
