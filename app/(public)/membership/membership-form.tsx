@@ -8,11 +8,11 @@ import { submitMembershipRequestAction } from './actions'
 import { formatPhone } from '@/lib/utils/phone'
 
 const inputClass =
-  'w-full bg-white border border-cream-mid px-3 py-2.5 font-sans text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:border-navy transition-colors'
+  'field-dark w-full bg-navy/45 border border-cream/15 px-3 py-2.5 font-sans text-sm text-cream caret-gold placeholder:text-cream/35 focus:outline-none focus:border-gold transition-colors'
 
-const labelClass = 'block font-mono text-label uppercase tracking-[0.2em] text-navy/70 mb-2'
+const labelClass = 'block font-mono text-label uppercase tracking-[0.2em] text-sand mb-2'
 
-const errorClass = 'font-mono text-label text-red-500 mt-1'
+const errorClass = 'font-mono text-label text-[#f0a493] mt-1'
 
 export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
   const [submitted, setSubmitted] = useState(false)
@@ -65,8 +65,8 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
     return (
       <div className="py-10">
         <div className="w-8 h-px bg-gold mb-6" />
-        <p className="font-serif text-2xl font-light text-navy mb-2">{successMessage}</p>
-        <p className="font-sans text-sm text-navy/45 font-light">
+        <p className="font-serif text-2xl font-light text-cream mb-2">{successMessage}</p>
+        <p className="font-sans text-sm text-cream/60 font-light">
           A member of our team will be in touch shortly.
         </p>
       </div>
@@ -129,7 +129,7 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
       {/* Zip */}
       <div>
         <label className={labelClass}>
-          Home Zip Code <span className="normal-case text-navy/30">(optional)</span>
+          Home Zip Code <span className="normal-case text-cream/40">(optional)</span>
         </label>
         <input
           {...register('zip_code')}
@@ -166,9 +166,9 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
       {/* Membership Orgs */}
       <div>
         <label className={labelClass}>
-          Membership Orgs <span className="normal-case text-navy/30">(optional)</span>
+          Membership Orgs <span className="normal-case text-cream/40">(optional)</span>
         </label>
-        <p className="font-sans text-xs text-navy/40 mb-3">
+        <p className="font-sans text-xs text-cream/55 mb-3">
           Have you belonged to a membership organization (i.e. social/country club)?
         </p>
         <div className="flex gap-6">
@@ -179,9 +179,9 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
                 name="has_membership_org"
                 value={opt}
                 onChange={() => setValue('has_membership_org', opt === 'Yes', { shouldValidate: true })}
-                className="accent-navy w-4 h-4"
+                className="accent-gold w-4 h-4"
               />
-              <span className="font-mono text-label uppercase tracking-[0.15em] text-navy/70">{opt}</span>
+              <span className="font-mono text-label uppercase tracking-[0.15em] text-sand">{opt}</span>
             </label>
           ))}
         </div>
@@ -190,7 +190,7 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
       {/* Membership Orgs follow-up */}
       <div>
         <label className={labelClass}>
-          Membership Orgs follow up <span className="normal-case text-navy/30">(optional)</span>
+          Membership Orgs follow up <span className="normal-case text-cream/40">(optional)</span>
         </label>
         <input
           {...register('membership_org_names')}
@@ -203,7 +203,7 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
       {/* Golf History */}
       <div>
         <label className={labelClass}>
-          Golf History <span className="normal-case text-navy/30">(optional)</span>
+          Golf History <span className="normal-case text-cream/40">(optional)</span>
         </label>
         <textarea
           {...register('message')}
@@ -219,7 +219,7 @@ export function MembershipForm({ onSubmitted }: { onSubmitted?: () => void }) {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full sm:w-auto bg-navy text-cream font-mono text-label uppercase tracking-[0.25em] px-10 py-3 shadow-[inset_0_-2px_0_0_rgba(184,150,60,0.4)] hover:opacity-90 transition-opacity disabled:opacity-50"
+          className="w-full sm:w-auto bg-gold text-navy-dark font-mono text-label uppercase tracking-[0.25em] px-10 py-3 shadow-[inset_0_-2px_0_0_rgba(122,99,40,0.6)] hover:bg-cream focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cream transition-colors disabled:opacity-50"
         >
           {isPending ? 'Sending…' : 'Apply'}
         </button>
