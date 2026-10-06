@@ -348,3 +348,19 @@ html.high-contrast .border-cream-mid\/60 {
 
 html.high-contrast .hover\:border-navy\/30:hover              { border-color: rgba(0, 66, 37, 0.55); }
 html.high-contrast .group:hover .group-hover\:border-navy\/30 { border-color: rgba(0, 66, 37, 0.55); }
+
+/*
+ * Dark-toned public pages (opt in via data-tone="dark", e.g. /contact).
+ * Match the overscroll/rubber-band area to the page, and keep browser
+ * autofill from painting pale yellow/blue boxes on the dark form fields.
+ */
+body:has([data-tone='dark']) {
+  background-color: var(--navy-dark);
+}
+.field-dark:-webkit-autofill,
+.field-dark:-webkit-autofill:hover,
+.field-dark:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--cream);
+  -webkit-box-shadow: 0 0 0 1000px color-mix(in srgb, var(--navy) 45%, var(--navy-dark)) inset;
+  caret-color: var(--gold);
+}
