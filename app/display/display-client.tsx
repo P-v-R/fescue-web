@@ -4,6 +4,7 @@ import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import type { Bay, BookingWithMember, Event } from '@/lib/supabase/types'
 import type { BulletinPost } from '@/lib/sanity/types'
+import type { BlackoutPeriod } from '@/lib/utils/blackout'
 import { interleaveItems } from '@/lib/utils/display'
 import { BayStatusView } from './bay-status-view'
 import { ContentSlide, type DisplayContentItem } from './content-slide'
@@ -12,6 +13,7 @@ import { DisplayErrorBoundary } from './display-error-boundary'
 type Props = {
   bays: Bay[]
   initialBookings: BookingWithMember[]
+  initialBlackouts: BlackoutPeriod[]
   posts: BulletinPost[]
   events: Event[]
   token: string
@@ -70,7 +72,7 @@ function useFitScale(): { scale: number; supportsZoom: boolean } {
   return state
 }
 
-export function DisplayClient({ bays, initialBookings, posts, events, token }: Props) {
+export function DisplayClient({ bays, initialBookings, initialBlackouts, posts, events, token }: Props) {
   const { scale, supportsZoom } = useFitScale()
   const canvasStyle: CSSProperties = supportsZoom
     ? { width: CANVAS_WIDTH, height: CANVAS_HEIGHT, zoom: scale }
@@ -81,6 +83,7 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
         transformOrigin: 'center center',
       }
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
+  const [blackouts, setBlackouts] = useState<BlackoutPeriod[]>(initialBlackouts)
   const [phase, setPhase] = useState<Phase>('bays')
   const [contentIdx, setContentIdx] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -96,21 +99,23 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
     [posts, events],
   )
 
-  // Poll the server-side API route every 30 seconds — bypasses RLS via admin client
+  // Poll the server-side API routes every 30 seconds — bypasses RLS via admin client
   useEffect(() => {
-    const fetchBookings = async () => {
+    const poll = async <T,>(url: string, apply: (data: T) => void) => {
       try {
-        const res = await fetch('/api/display/bookings', {
+        const res = await fetch(url, {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (!res.ok) return
-        const data = await res.json()
-        setBookings(data as BookingWithMember[])
+        apply((await res.json()) as T)
       } catch {
         // silently ignore — keep showing stale data
       }
     }
-    const interval = setInterval(fetchBookings, POLL_INTERVAL)
+    const interval = setInterval(() => {
+      void poll<BookingWithMember[]>('/api/display/bookings', setBookings)
+      void poll<BlackoutPeriod[]>('/api/display/blackouts', setBlackouts)
+    }, POLL_INTERVAL)
     return () => clearInterval(interval)
   }, [token])
 
@@ -174,7 +179,7 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
         >
           <DisplayErrorBoundary>
             {phase === 'bays' ? (
-              <BayStatusView bays={bays} bookings={bookings} />
+              <BayStatusView bays={bays} bookings={bookings} blackouts={blackouts} />
             ) : currentItem ? (
               <ContentSlide item={currentItem} />
             ) : null}

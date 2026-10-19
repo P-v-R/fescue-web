@@ -1,6 +1,9 @@
 // Shared type + helper — safe to import in both server and client modules.
 // Server-only queries (createClient, etc.) live in lib/supabase/queries/blackout-periods.ts
 
+import { clubDateKey, clubTimeKey } from './club-time'
+import { SLOT_MINUTES } from './time-slots'
+
 export type BlackoutPeriod = {
   id: string
   date: string           // 'YYYY-MM-DD'
@@ -13,18 +16,15 @@ export type BlackoutPeriod = {
 }
 
 // Returns the matching period if this bay+time is blacked out, otherwise null.
+// Periods are stored as club-local (Pacific) date + wall-clock times, so the
+// slot is converted to club time explicitly — this runs on UTC servers too.
 export function findBlackout(
   slotTime: Date,
   bayId: string,
   periods: BlackoutPeriod[],
 ): BlackoutPeriod | null {
-  const slotHHMM = `${String(slotTime.getHours()).padStart(2, '0')}:${String(slotTime.getMinutes()).padStart(2, '0')}`
-
-  const slotDate = [
-    slotTime.getFullYear(),
-    String(slotTime.getMonth() + 1).padStart(2, '0'),
-    String(slotTime.getDate()).padStart(2, '0'),
-  ].join('-')
+  const slotDate = clubDateKey(slotTime)
+  const slotHHMM = clubTimeKey(slotTime)
 
   return (
     periods.find((p) => {
@@ -37,4 +37,20 @@ export function findBlackout(
       return slotHHMM >= start && slotHHMM < end
     }) ?? null
   )
+}
+
+// Returns the first blackout that any 30-minute slot of the booking falls
+// into — so a 4pm two-hour booking can't run into a 5pm blackout.
+export function findBlackoutInRange(
+  startTime: Date,
+  durationMinutes: number,
+  bayId: string,
+  periods: BlackoutPeriod[],
+): BlackoutPeriod | null {
+  for (let offset = 0; offset < durationMinutes; offset += SLOT_MINUTES) {
+    const slot = new Date(startTime.getTime() + offset * 60_000)
+    const blackout = findBlackout(slot, bayId, periods)
+    if (blackout) return blackout
+  }
+  return null
 }
