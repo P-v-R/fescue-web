@@ -8,7 +8,7 @@ import { interleaveItems } from '@/lib/utils/display'
 import { BayStatusView } from './bay-status-view'
 import { ContentSlide, type DisplayContentItem } from './content-slide'
 import { DisplayErrorBoundary } from './display-error-boundary'
-import { createSingleFlight } from '@/lib/utils/single-flight'
+import { startPoller } from '@/lib/utils/poller'
 
 type Props = {
   bays: Bay[]
@@ -21,8 +21,9 @@ type Props = {
 const BAYS_DURATION = 60_000   // 1 minute
 const CONTENT_DURATION = 15_000 // 15 seconds
 const FADE_DURATION = 700       // ms for opacity transition
-const POLL_INTERVAL = 30_000    // 30 seconds
-const POLL_TIMEOUT = 20_000     // abandon a poll that hasn't answered in 20s
+const POLL_INTERVAL = 30_000    // 30 seconds while healthy
+const POLL_TIMEOUT = 15_000     // server route gives up at 10s; this is a backstop
+const POLL_MAX_BACKOFF = 300_000 // after repeated failures, poll at most every 5 min
 
 // The whole kiosk is laid out on a fixed design canvas and then scaled with CSS
 // `zoom` to fill the physical screen. This keeps text a constant proportion of
@@ -98,21 +99,23 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
     [posts, events],
   )
 
-  // Poll the server-side API route every 30 seconds — bypasses RLS via admin client.
-  // Single-flight + timeout: when the DB is slow, skip polls instead of stacking
-  // requests on top of ones that are still hanging. Errors keep the stale data.
+  // Poll the server-side API route (bypasses RLS via admin client). Polls never
+  // overlap and back off on failure so a struggling database gets fewer
+  // requests; on failure the kiosk keeps showing its last good data.
   useEffect(() => {
-    const fetchBookings = createSingleFlight(async (signal) => {
-      const res = await fetch('/api/display/bookings', {
-        headers: { Authorization: `Bearer ${token}` },
-        signal,
-      })
-      if (!res.ok) return
-      const data = await res.json()
-      setBookings(data as BookingWithMember[])
-    }, POLL_TIMEOUT)
-    const interval = setInterval(fetchBookings, POLL_INTERVAL)
-    return () => clearInterval(interval)
+    return startPoller(
+      async (signal) => {
+        const res = await fetch('/api/display/bookings', {
+          headers: { Authorization: `Bearer ${token}` },
+          signal,
+        })
+        if (!res.ok) throw new Error(`bookings poll failed: ${res.status}`)
+        const data: unknown = await res.json()
+        if (!Array.isArray(data)) throw new Error('bookings poll returned a non-array body')
+        setBookings(data as BookingWithMember[])
+      },
+      { intervalMs: POLL_INTERVAL, timeoutMs: POLL_TIMEOUT, maxBackoffMs: POLL_MAX_BACKOFF },
+    )
   }, [token])
 
   // Reload once per day so Sanity posts and events stay fresh

@@ -20,8 +20,8 @@
 | 10–11am | 48 of 210 Supabase API requests fail (5xx) |
 | 11am–noon | 122 of 122 requests fail |
 | noon–1pm | 133 of 147 requests fail; trivial system queries (`pg_settings`) take 15–18s; new DB connections time out |
-| ~1pm | Owner reports login timing out; project restarted from dashboard |
-| +8 min | Project still in `RESTARTING`; DB not accepting connections (restart slowed by throttled disk) |
+| ~12:12pm | Owner reports login timing out (last Sentry FESCUE-WEB-F event) |
+| ~12:20pm | Project restarted from dashboard; stays in `RESTARTING` for several minutes (restart slowed by throttled disk) |
 | ~12:30pm | Org upgraded Free → Pro ($25/mo). Note: plan upgrade does **not** change compute size |
 | 12:34pm | Postgres back up (`ACTIVE_HEALTHY`); queries instant, members signing in successfully |
 
@@ -62,15 +62,19 @@ Legend: ✅ confirmed problem · 🔍 to verify · 💡 hardening
 
 ### App — kiosk
 
-- [x] ✅ **Kiosk polls pile up when the DB is slow** *(fix/login-and-kiosk-resilience)* — `display-client.tsx` fires 2 requests every 30s regardless of whether the previous ones finished. With 60s+ queries, requests stack up and add load exactly when the DB is struggling. Skip a poll while one is in flight; back off on errors
+- [x] ✅ **Kiosk polls pile up when the DB is slow** *(fix/login-and-kiosk-resilience)* — `display-client.tsx` fired a bookings request every 30s regardless of whether the previous one finished, and the route/query had no deadline, so with 60s+ queries requests overlapped on the server. Fixed: self-scheduling poller (never overlaps) with exponential backoff + jitter on failure (cap 5 min); the route aborts its query on client disconnect or after 10s and returns 503. PR #110's blackouts poll should use the same poller
 - [ ] 💡 Consider a longer kiosk poll interval (60s) or Supabase Realtime instead of polling
 
 ### App — login & error handling
 
 - [x] ✅ **Login form gives no feedback on failure** *(fix/login-and-kiosk-resilience)* — `login-form.tsx` `onSubmit` has no try/catch, so a network failure becomes an unhandled rejection and the user sees nothing (Sentry FESCUE-WEB-F, 19 events / 4 users since May). Catch errors, show "Sign-in is taking longer than usual — try again", add a client-side timeout (~15s)
-- [ ] 💡 Middleware (`proxy.ts`) calls Supabase on every request — confirm it fails fast rather than hanging page loads when Supabase is degraded
+- [x] ✅ **Middleware (`proxy.ts`) could hang logged-in members' page loads** during an Auth outage (logged-out visitors unaffected — `getUser()` makes no network call without a session; `/login` middleware took 4ms during the outage). Fixed: 10s fetch timeout on the proxy and server Supabase clients *(fix/login-and-kiosk-resilience)*
+- [x] ✅ **Login had no server-side deadline** — the 15s client timeout didn't stop the server action, and Next runs server actions serially, so a retry queued behind the hung request. Fixed: server Supabase calls time out at 10s → "temporarily unavailable"; client 15s timeout is a backstop *(fix/login-and-kiosk-resilience)*
 
 - [x] ✅ **Outages showed as "Invalid email or password"** — the login action mapped every Supabase error (including 504s) to the wrong-password message, sending members to reset working passwords. Now: 5xx/timeouts → "temporarily unavailable", 429 → "too many attempts" *(fix/login-and-kiosk-resilience)*
+
+- [ ] 🔍 **Shared Auth rate-limit bucket** — sign-in runs server-side, so Supabase sees every member as Railway's IP; 9 × 429 on `/auth/v1/token` in 14 days. See todos/047
+- [ ] 🔍 **No `statement_timeout` for service_role** — admin queries can hold connections indefinitely. See todos/048
 
 ### Monitoring
 
