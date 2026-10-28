@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { loginSchema } from '@/lib/validations/auth'
 import type { LoginInput } from '@/lib/validations/auth'
+import { loginErrorMessage } from '@/lib/utils/auth-errors'
 
 export async function loginAction(
   input: LoginInput,
@@ -20,8 +21,7 @@ export async function loginAction(
   })
 
   if (error) {
-    // Don't leak whether the email exists
-    return { error: 'Invalid email or password. Please try again.' }
+    return { error: loginErrorMessage(error) }
   }
 
   redirect('/dashboard')
