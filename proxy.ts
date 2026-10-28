@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { fetchWithTimeout } from '@/lib/supabase/fetch-with-timeout'
 
 const MEMBER_ROUTES = ['/dashboard', '/calendar', '/reservations', '/account', '/tournaments', '/workbench', '/bay-setup', '/events', '/members']
 const ADMIN_ROUTES = ['/admin', '/studio']
@@ -22,6 +23,9 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // Fail fast during a Supabase outage — getUser() then reports no user
+      // and member routes redirect to /login instead of hanging.
+      global: { fetch: fetchWithTimeout() },
       cookies: {
         getAll() {
           return request.cookies.getAll()

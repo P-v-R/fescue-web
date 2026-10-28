@@ -17,18 +17,20 @@ export async function getDisplayActiveBays(): Promise<Bay[]> {
   return (data ?? []) as Bay[]
 }
 
-export async function getDisplayBookingsForToday(): Promise<BookingWithMember[]> {
+export async function getDisplayBookingsForToday(signal?: AbortSignal): Promise<BookingWithMember[]> {
   const supabase = createAdminClient()
   const now = new Date()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('bookings')
     .select('id, bay_id, start_time, end_time, members(full_name)')
     .gte('start_time', startOfDay(now).toISOString())
     .lte('start_time', endOfDay(now).toISOString())
     .is('cancelled_at', null)
     .order('start_time', { ascending: true })
+  if (signal) query = query.abortSignal(signal)
 
+  const { data, error } = await query
   if (error) throw new Error(`getDisplayBookingsForToday: ${error.message}`)
   return (data ?? []) as unknown as BookingWithMember[]
 }

@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { fetchWithTimeout } from './fetch-with-timeout'
 
 // Use in Server Components, Server Actions, and Route Handlers.
 // Reads and writes session cookies — call once per request, don't reuse across requests.
@@ -10,6 +11,7 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: { fetch: fetchWithTimeout() },
       cookies: {
         getAll() {
           return cookieStore.getAll()
