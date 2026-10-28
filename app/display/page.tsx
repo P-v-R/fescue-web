@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getBulletinPosts } from '@/lib/sanity/queries'
 import {
   getDisplayActiveBays,
+  getDisplayBlackoutsForToday,
   getDisplayBookingsForToday,
   getDisplayUpcomingEvents,
 } from '@/lib/supabase/queries/display'
@@ -30,9 +31,10 @@ export default async function DisplayPage({ searchParams }: Props) {
     )
   }
 
-  const [bays, bookings, posts, events] = await Promise.all([
+  const [bays, bookings, blackouts, posts, events] = await Promise.all([
     getDisplayActiveBays(),
     getDisplayBookingsForToday(),
+    getDisplayBlackoutsForToday(),
     getBulletinPosts(),
     getDisplayUpcomingEvents(),
   ])
@@ -41,6 +43,7 @@ export default async function DisplayPage({ searchParams }: Props) {
     <DisplayClient
       bays={bays}
       initialBookings={bookings}
+      initialBlackouts={blackouts}
       posts={posts}
       events={events}
       token={token!}

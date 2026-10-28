@@ -10,6 +10,7 @@ import { BookingDetailModal } from '@/components/reservations/booking-detail-mod
 import { UpcomingReservationsDesktop, UpcomingReservationsMobile } from '@/components/reservations/upcoming-reservations-panel'
 import type { Bay, Booking, BookingWithMember, BookingWithBay } from '@/lib/supabase/types'
 import type { BlackoutPeriod } from '@/lib/utils/blackout'
+import { clubDateKey } from '@/lib/utils/club-time'
 
 type SelectedSlot = {
   bayId: string
@@ -46,7 +47,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
 
   const fetchBlackoutPeriods = useCallback(async () => {
     const supabase = supabaseRef.current
-    const today = new Date().toISOString().split('T')[0]
+    const today = clubDateKey(new Date())
     const { data } = await supabase
       .from('blackout_periods')
       .select('*')

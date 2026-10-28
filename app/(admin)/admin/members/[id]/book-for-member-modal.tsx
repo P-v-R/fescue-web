@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect, useRef } from 'react'
 import type { Bay } from '@/lib/supabase/types'
 import { createBookingForMemberAction } from '@/app/(admin)/admin/actions'
+import { clubDateKey } from '@/lib/utils/club-time'
 
 const TIME_OPTIONS = Array.from({ length: 29 }, (_, i) => {
   const totalMins = 8 * 60 + i * 30
@@ -27,13 +28,13 @@ const DURATIONS = [
 type DurationValue = typeof DURATIONS[number]['value']
 
 function todayStr() {
-  return new Date().toISOString().split('T')[0]
+  return clubDateKey(new Date())
 }
 
 function maxDateStr() {
   const d = new Date()
   d.setDate(d.getDate() + 30)
-  return d.toISOString().split('T')[0]
+  return clubDateKey(d)
 }
 
 type Props = {

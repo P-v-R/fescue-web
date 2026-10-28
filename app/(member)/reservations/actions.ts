@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createBooking, cancelBooking } from '@/lib/supabase/queries/bookings'
-import { getUpcomingBlackoutPeriods, findBlackout } from '@/lib/supabase/queries/blackout-periods'
+import { getUpcomingBlackoutPeriods, findBlackoutInRange } from '@/lib/supabase/queries/blackout-periods'
 import { newBookingSchema } from '@/lib/validations/booking'
 import { isWithinOperatingHours } from '@/lib/utils/time-slots'
 import { createResendClient, isResendConfigured, FROM_ADDRESSES } from '@/lib/resend/client'
@@ -61,9 +61,10 @@ export async function createBookingAction(input: NewBookingInput): Promise<Creat
     }
   }
 
-  // Blackout period check — server-side enforcement
+  // Blackout period check — server-side enforcement over the whole booking,
+  // not just its start slot
   const blackouts = await getUpcomingBlackoutPeriods()
-  const blackout = findBlackout(startTime, bay_id, blackouts)
+  const blackout = findBlackoutInRange(startTime, duration_minutes, bay_id, blackouts)
   if (blackout) {
     return { error: `This time is unavailable: ${blackout.reason ?? 'Bay Unavailable'}.` }
   }

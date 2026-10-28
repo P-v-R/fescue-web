@@ -4,11 +4,13 @@ import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { addMinutes } from 'date-fns';
 import type { Bay, BookingWithMember } from '@/lib/supabase/types';
 import { SLOT_MINUTES } from '@/lib/utils/time-slots';
-import { getWindowSlots, formatTimeLabel } from '@/lib/utils/display';
+import { getWindowSlots, formatTimeLabel, getBlackoutRuns } from '@/lib/utils/display';
+import { findBlackout, type BlackoutPeriod } from '@/lib/utils/blackout';
 
 type Props = {
   bays: Bay[];
   bookings: BookingWithMember[];
+  blackouts: BlackoutPeriod[];
 };
 
 /** "6:00 PM" → "6:00" — drops the AM/PM for compact in-grid time ranges. */
@@ -18,7 +20,16 @@ function shortTime(date: Date): string {
     .replace(/\s?[AP]M$/i, '');
 }
 
-export function BayStatusView({ bays, bookings }: Props) {
+/** Blackout wall-clock '22:00:00' → "10:00", matching shortTime(). */
+function shortWallClock(hhmmss: string): string {
+  const [h, m] = hhmmss.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')}`;
+}
+
+const BLACKOUT_BACKGROUND =
+  'repeating-linear-gradient(135deg, rgba(184,150,60,0.22) 0 14px, rgba(184,150,60,0.1) 14px 28px)';
+
+export function BayStatusView({ bays, bookings, blackouts }: Props) {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -60,7 +71,10 @@ export function BayStatusView({ bays, bookings }: Props) {
 
   // Live "is this bay free right now?" status shown under each column header.
   const bayStatus = useMemo(() => {
-    const map = new Map<string, { inUse: boolean; until: Date | null }>();
+    const map = new Map<
+      string,
+      { inUse: boolean; until: Date | null; blackout: BlackoutPeriod | null }
+    >();
     for (const bay of activeBays) {
       const current = bookings.find(
         (b) =>
@@ -71,10 +85,11 @@ export function BayStatusView({ bays, bookings }: Props) {
       map.set(bay.id, {
         inUse: Boolean(current),
         until: current ? new Date(current.end_time) : null,
+        blackout: current ? null : findBlackout(now, bay.id, blackouts),
       });
     }
     return map;
-  }, [activeBays, bookings, now]);
+  }, [activeBays, bookings, blackouts, now]);
 
   const { cellMap, continuations } = useMemo(() => {
     const cellMap = new Map<
@@ -115,6 +130,18 @@ export function BayStatusView({ bays, bookings }: Props) {
 
     return { cellMap, continuations };
   }, [bookings, activeBays, slots]);
+
+  // Blacked-out slots not already showing a booking, merged into runs per bay
+  const { runs: blackoutRuns, continuations: blackoutContinuations } = useMemo(
+    () =>
+      getBlackoutRuns(
+        slots,
+        activeBays.map((b) => b.id),
+        blackouts,
+        new Set([...cellMap.keys(), ...continuations]),
+      ),
+    [slots, activeBays, blackouts, cellMap, continuations],
+  );
 
   // Recompute the floating NOW line position every time `now` ticks
   useLayoutEffect(() => {
@@ -208,6 +235,20 @@ export function BayStatusView({ bays, bookings }: Props) {
               {activeBays.map((bay, i) => {
                 const status = bayStatus.get(bay.id);
                 const inUse = status?.inUse ?? false;
+                const blackout = status?.blackout ?? null;
+                const statusColor = inUse
+                  ? 'rgba(245,240,232,0.45)'
+                  : blackout
+                    ? 'var(--sand)'
+                    : 'var(--gold-light)';
+                const statusLabel =
+                  inUse && status?.until
+                    ? `In use · til ${shortTime(status.until)}`
+                    : blackout
+                      ? blackout.end_time
+                        ? `Unavailable · til ${shortWallClock(blackout.end_time)}`
+                        : 'Unavailable today'
+                      : 'Open now';
                 return (
                   <th
                     key={bay.id}
@@ -225,20 +266,10 @@ export function BayStatusView({ bays, bookings }: Props) {
                         style={{
                           background: inUse
                             ? 'rgba(245,240,232,0.35)'
-                            : 'var(--gold-light)',
+                            : statusColor,
                         }}
                       />
-                      <span
-                        style={{
-                          color: inUse
-                            ? 'rgba(245,240,232,0.45)'
-                            : 'var(--gold-light)',
-                        }}
-                      >
-                        {inUse && status?.until
-                          ? `In use · til ${shortTime(status.until)}`
-                          : 'Open now'}
-                      </span>
+                      <span style={{ color: statusColor }}>{statusLabel}</span>
                     </span>
                   </th>
                 );
@@ -279,7 +310,8 @@ export function BayStatusView({ bays, bookings }: Props) {
                   {activeBays.map((bay, bayIdx) => {
                     const key = `${slotIdx}-${bayIdx}`;
 
-                    if (continuations.has(key)) return null;
+                    if (continuations.has(key) || blackoutContinuations.has(key))
+                      return null;
 
                     const borderRight =
                       bayIdx < activeBays.length - 1
@@ -313,6 +345,34 @@ export function BayStatusView({ bays, bookings }: Props) {
                           <p className='mt-2.5 font-mono text-base tracking-[0.12em] text-cream/60'>
                             {timeRange}
                           </p>
+                        </td>
+                      );
+                    }
+
+                    const blackoutRun = blackoutRuns.get(key);
+
+                    if (blackoutRun) {
+                      const { period, span } = blackoutRun;
+                      return (
+                        <td
+                          key={bay.id}
+                          rowSpan={span}
+                          className='px-3 text-center align-middle'
+                          style={{
+                            borderTop: borderTopStyle,
+                            borderRight,
+                            background: BLACKOUT_BACKGROUND,
+                          }}
+                        >
+                          <p className='font-serif text-3xl text-gold-light leading-tight'>
+                            {period.reason ?? 'Unavailable'}
+                          </p>
+                          {period.start_time && period.end_time && span > 1 && (
+                            <p className='mt-2 font-mono text-base tracking-[0.12em] text-cream/55'>
+                              {shortWallClock(period.start_time)} –{' '}
+                              {shortWallClock(period.end_time)}
+                            </p>
+                          )}
                         </td>
                       );
                     }

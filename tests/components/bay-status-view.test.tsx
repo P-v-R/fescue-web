@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { BayStatusView } from '@/app/display/bay-status-view'
 import type { Bay, BookingWithMember } from '@/lib/supabase/types'
+import type { BlackoutPeriod } from '@/lib/utils/blackout'
+import { clubDateKey, clubTimeKey } from '@/lib/utils/club-time'
 
 // Fixed test time: Thursday June 18 2026, 10:15 AM
 // Visible window: 10:00 AM – 2:00 PM (8 slots)
@@ -39,6 +41,28 @@ function makeBooking(
   }
 }
 
+// Blackout expressed in club time for the given local test times, so these
+// tests hold whatever timezone the test process runs in.
+function makeBlackout(
+  startHour: number,
+  endHour: number,
+  overrides: Partial<BlackoutPeriod> = {},
+): BlackoutPeriod {
+  const start = new Date(2026, 5, 18, startHour, 0)
+  const end = new Date(2026, 5, 18, endHour, 0)
+  return {
+    id: `blackout-${startHour}-${endHour}`,
+    date: clubDateKey(start),
+    start_time: `${clubTimeKey(start)}:00`,
+    end_time: `${clubTimeKey(end)}:00`,
+    all_bays: true,
+    bay_ids: [],
+    reason: 'Private Event',
+    created_at: start.toISOString(),
+    ...overrides,
+  }
+}
+
 // ─── Setup ───────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
@@ -55,17 +79,17 @@ afterEach(() => {
 describe('BayStatusView', () => {
   describe('header', () => {
     it('renders the club name', () => {
-      render(<BayStatusView bays={[bay1]} bookings={[]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[]} />)
       expect(screen.getByText('Fescue Golf Club')).toBeInTheDocument()
     })
 
     it('renders the Bay Schedule label', () => {
-      render(<BayStatusView bays={[bay1]} bookings={[]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[]} />)
       expect(screen.getByText(/Bay Schedule/i)).toBeInTheDocument()
     })
 
     it('renders all active bay names as column headers', () => {
-      render(<BayStatusView bays={[bay1, bay2, bigBay]} bookings={[]} />)
+      render(<BayStatusView bays={[bay1, bay2, bigBay]} bookings={[]} blackouts={[]} />)
       // Headers now also carry a live "Open now / In use" status line, so the
       // accessible name includes it — match the bay name within the header.
       expect(screen.getByRole('columnheader', { name: /Bay 1/ })).toBeInTheDocument()
@@ -74,27 +98,27 @@ describe('BayStatusView', () => {
     })
 
     it('does not render inactive bay names', () => {
-      render(<BayStatusView bays={[bay1, inactiveBay]} bookings={[]} />)
+      render(<BayStatusView bays={[bay1, inactiveBay]} bookings={[]} blackouts={[]} />)
       expect(screen.queryByRole('columnheader', { name: 'Storage' })).not.toBeInTheDocument()
     })
   })
 
   describe('time labels', () => {
     it('renders hour marks with AM/PM', () => {
-      render(<BayStatusView bays={[bay1]} bookings={[]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[]} />)
       expect(screen.getByText('10:00 AM')).toBeInTheDocument()
       expect(screen.getByText('11:00 AM')).toBeInTheDocument()
       expect(screen.getByText('12:00 PM')).toBeInTheDocument()
     })
 
     it('renders half-hour marks without AM/PM', () => {
-      render(<BayStatusView bays={[bay1]} bookings={[]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[]} />)
       expect(screen.getByText('10:30')).toBeInTheDocument()
       expect(screen.getByText('11:30')).toBeInTheDocument()
     })
 
     it('does not show times outside the 4-hour window', () => {
-      render(<BayStatusView bays={[bay1]} bookings={[]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[]} />)
       // Window is 10 AM – 2 PM, so 9:00 AM should not appear
       expect(screen.queryByText('9:00 AM')).not.toBeInTheDocument()
       // 3:00 PM is past the window
@@ -105,13 +129,13 @@ describe('BayStatusView', () => {
   describe('booking display', () => {
     it('shows the member first name in their booked slot', () => {
       const booking = makeBooking('bay-1', 10, 0, 60, 'George Pemberton')
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.getByText('George')).toBeInTheDocument()
     })
 
     it('shows only first name — not the full name', () => {
       const booking = makeBooking('bay-1', 10, 0, 60, 'George Pemberton')
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.queryByText('George Pemberton')).not.toBeInTheDocument()
       expect(screen.getByText('George')).toBeInTheDocument()
     })
@@ -119,7 +143,7 @@ describe('BayStatusView', () => {
     it('shows members in separate bays independently', () => {
       const b1 = makeBooking('bay-1', 10, 0, 60, 'George Pemberton')
       const b2 = makeBooking('bay-2', 10, 0, 60, 'Dorothy Winslow')
-      render(<BayStatusView bays={[bay1, bay2]} bookings={[b1, b2]} />)
+      render(<BayStatusView bays={[bay1, bay2]} bookings={[b1, b2]} blackouts={[]} />)
       expect(screen.getByText('George')).toBeInTheDocument()
       expect(screen.getByText('Dorothy')).toBeInTheDocument()
     })
@@ -127,32 +151,32 @@ describe('BayStatusView', () => {
     it('shows a booking that started before the visible window (clipped span)', () => {
       // 9:00 AM – 11:00 AM; window starts at 10:00 AM — still visible
       const booking = makeBooking('bay-1', 9, 0, 120, 'Perry Von Rosenvinge')
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.getByText('Perry')).toBeInTheDocument()
     })
 
     it('does not show a booking that ended before the window starts', () => {
       // 8:00 AM – 9:00 AM; window starts at 10:00 AM — fully past
       const booking = makeBooking('bay-1', 8, 0, 60, 'Jerry Garcia')
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.queryByText('Jerry')).not.toBeInTheDocument()
     })
 
     it('does not show a booking from an inactive bay', () => {
       const booking = makeBooking('inactive', 10, 0, 60, 'Hidden Member')
-      render(<BayStatusView bays={[bay1, inactiveBay]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1, inactiveBay]} bookings={[booking]} blackouts={[]} />)
       expect(screen.queryByText('Hidden')).not.toBeInTheDocument()
     })
 
     it('shows a single-slot (30-min) booking', () => {
       const booking = makeBooking('bay-1', 10, 30, 30, 'Alice Cooper')
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.getByText('Alice')).toBeInTheDocument()
     })
 
     it('shows a multi-slot booking only once (rowSpan, not repeated)', () => {
       const booking = makeBooking('bay-1', 10, 0, 120, 'Jerry Garcia') // 4 slots
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       const cells = screen.getAllByText('Jerry')
       expect(cells).toHaveLength(1)
     })
@@ -160,14 +184,14 @@ describe('BayStatusView', () => {
 
   describe('live bay status', () => {
     it('shows "Open now" for a bay with no current booking', () => {
-      render(<BayStatusView bays={[bay1]} bookings={[]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[]} />)
       expect(screen.getByText('Open now')).toBeInTheDocument()
     })
 
     it('shows "In use" with the end time for a bay occupied right now', () => {
       // 10:00–11:00 covers the mocked now (10:15 AM)
       const booking = makeBooking('bay-1', 10, 0, 60)
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.getByText(/In use .* til 11:00/)).toBeInTheDocument()
       expect(screen.queryByText('Open now')).not.toBeInTheDocument()
     })
@@ -175,7 +199,7 @@ describe('BayStatusView', () => {
     it('stays "Open now" when the bay is only booked later today', () => {
       // 12:00–1:00 PM — after the mocked now, so the bay is currently free
       const booking = makeBooking('bay-1', 12, 0, 60)
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.getByText('Open now')).toBeInTheDocument()
     })
   })
@@ -183,7 +207,7 @@ describe('BayStatusView', () => {
   describe('booking time range', () => {
     it('shows the booking time range under the member name', () => {
       const booking = makeBooking('bay-1', 10, 0, 60, 'George Pemberton')
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.getByText('10:00 – 11:00')).toBeInTheDocument()
     })
   })
@@ -191,33 +215,85 @@ describe('BayStatusView', () => {
   describe('edge cases', () => {
     it('renders without crashing with an empty bookings list', () => {
       expect(() =>
-        render(<BayStatusView bays={[bay1, bay2]} bookings={[]} />),
+        render(<BayStatusView bays={[bay1, bay2]} bookings={[]} blackouts={[]} />),
       ).not.toThrow()
     })
 
     it('renders without crashing with an empty bays list', () => {
       expect(() =>
-        render(<BayStatusView bays={[]} bookings={[]} />),
+        render(<BayStatusView bays={[]} bookings={[]} blackouts={[]} />),
       ).not.toThrow()
     })
 
     it('renders without crashing when all bays are inactive', () => {
       expect(() =>
-        render(<BayStatusView bays={[inactiveBay]} bookings={[]} />),
+        render(<BayStatusView bays={[inactiveBay]} bookings={[]} blackouts={[]} />),
       ).not.toThrow()
     })
 
     it('handles a member with only a single name token gracefully', () => {
       const booking = makeBooking('bay-1', 10, 0, 60, 'Cher')
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.getByText('Cher')).toBeInTheDocument()
     })
 
     it('handles a booking with null members field', () => {
       const booking = makeBooking('bay-1', 10, 0, 60)
       booking.members = null
-      render(<BayStatusView bays={[bay1]} bookings={[booking]} />)
+      render(<BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[]} />)
       expect(screen.getByText('Member')).toBeInTheDocument()
+    })
+  })
+
+  describe('blackouts', () => {
+    it('shows a blackout in the grid with its reason', () => {
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[makeBlackout(11, 13)]} />)
+      expect(screen.getByText('Private Event')).toBeInTheDocument()
+    })
+
+    it('merges a blackout into one cell spanning its slots', () => {
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[makeBlackout(11, 13)]} />)
+      const cell = screen.getByText('Private Event').closest('td')
+      expect(cell).toHaveAttribute('rowspan', '4')
+    })
+
+    it('falls back to "Unavailable" when the blackout has no reason', () => {
+      render(
+        <BayStatusView
+          bays={[bay1]}
+          bookings={[]}
+          blackouts={[makeBlackout(11, 13, { reason: null })]}
+        />,
+      )
+      expect(screen.getByText('Unavailable')).toBeInTheDocument()
+    })
+
+    it('only blocks the bays a bay-specific blackout applies to', () => {
+      render(
+        <BayStatusView
+          bays={[bay1, bay2]}
+          bookings={[]}
+          blackouts={[makeBlackout(11, 13, { all_bays: false, bay_ids: ['bay-2'] })]}
+        />,
+      )
+      expect(screen.getAllByText('Private Event')).toHaveLength(1)
+    })
+
+    it('marks a bay "Unavailable" in the header while a blackout is in effect', () => {
+      // TEST_NOW is 10:15 — blackout 10:00–12:00 is active
+      render(<BayStatusView bays={[bay1]} bookings={[]} blackouts={[makeBlackout(10, 12)]} />)
+      expect(
+        screen.getByRole('columnheader', { name: /Unavailable · til/ }),
+      ).toBeInTheDocument()
+    })
+
+    it('still shows a booking that overlaps a blackout instead of hiding it', () => {
+      const booking = makeBooking('bay-1', 11, 0, 60, 'Brinn Walker')
+      render(
+        <BayStatusView bays={[bay1]} bookings={[booking]} blackouts={[makeBlackout(11, 13)]} />,
+      )
+      expect(screen.getByText('Brinn')).toBeInTheDocument()
+      expect(screen.getByText('Private Event')).toBeInTheDocument()
     })
   })
 })

@@ -3,8 +3,10 @@ import {
   getWindowSlots,
   formatTimeLabel,
   interleaveItems,
+  getBlackoutRuns,
   WINDOW_HOURS,
 } from '@/lib/utils/display'
+import type { BlackoutPeriod } from '@/lib/utils/blackout'
 import { OPEN_HOUR, CLOSE_HOUR, SLOT_MINUTES } from '@/lib/utils/time-slots'
 
 // ─── getWindowSlots ──────────────────────────────────────────────────────────
@@ -195,5 +197,55 @@ describe('interleaveItems', () => {
     const events = result.filter((x) => x.startsWith('e'))
     expect(posts).toEqual(['p1', 'p2', 'p3'])
     expect(events).toEqual(['e1', 'e2', 'e3'])
+  })
+})
+
+// ─── getBlackoutRuns ─────────────────────────────────────────────────────────
+
+describe('getBlackoutRuns', () => {
+  // 4:00pm–7:00pm Pacific on 2026-10-17, as the kiosk would see it
+  const slots = Array.from(
+    { length: 6 },
+    (_, i) => new Date(new Date('2026-10-17T16:00:00-07:00').getTime() + i * 30 * 60_000),
+  )
+  const blackout: BlackoutPeriod = {
+    id: 'evening',
+    date: '2026-10-17',
+    start_time: '17:00:00',
+    end_time: '22:00:00',
+    all_bays: true,
+    bay_ids: [],
+    reason: 'Private event',
+    created_at: '2026-10-10T00:00:00Z',
+  }
+
+  it('merges consecutive blacked-out slots into one run per bay', () => {
+    const { runs, continuations } = getBlackoutRuns(slots, ['a', 'b'], [blackout], new Set())
+    // 5:00pm is slot index 2; 5:00–7:00 = 4 slots
+    expect(runs.get('2-0')).toEqual({ period: blackout, span: 4 })
+    expect(runs.get('2-1')).toEqual({ period: blackout, span: 4 })
+    expect(runs.has('0-0')).toBe(false)
+    expect([...continuations].sort()).toEqual(['3-0', '3-1', '4-0', '4-1', '5-0', '5-1'])
+  })
+
+  it('only covers the bays a bay-specific blackout applies to', () => {
+    const bayB = { ...blackout, all_bays: false, bay_ids: ['b'] }
+    const { runs } = getBlackoutRuns(slots, ['a', 'b'], [bayB], new Set())
+    expect(runs.has('2-0')).toBe(false)
+    expect(runs.get('2-1')?.span).toBe(4)
+  })
+
+  it('splits a run around a slot already showing a booking', () => {
+    // A booking that slipped in at 6:00pm (slot 4) on bay a
+    const { runs } = getBlackoutRuns(slots, ['a'], [blackout], new Set(['4-0']))
+    expect(runs.get('2-0')?.span).toBe(2)
+    expect(runs.has('4-0')).toBe(false)
+    expect(runs.get('5-0')?.span).toBe(1)
+  })
+
+  it('returns nothing when there are no blackouts', () => {
+    const { runs, continuations } = getBlackoutRuns(slots, ['a'], [], new Set())
+    expect(runs.size).toBe(0)
+    expect(continuations.size).toBe(0)
   })
 })

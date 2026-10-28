@@ -4,6 +4,7 @@ import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import type { CSSProperties } from 'react'
 import type { Bay, BookingWithMember, Event } from '@/lib/supabase/types'
 import type { BulletinPost } from '@/lib/sanity/types'
+import type { BlackoutPeriod } from '@/lib/utils/blackout'
 import { interleaveItems } from '@/lib/utils/display'
 import { BayStatusView } from './bay-status-view'
 import { ContentSlide, type DisplayContentItem } from './content-slide'
@@ -13,6 +14,7 @@ import { startPoller } from '@/lib/utils/poller'
 type Props = {
   bays: Bay[]
   initialBookings: BookingWithMember[]
+  initialBlackouts: BlackoutPeriod[]
   posts: BulletinPost[]
   events: Event[]
   token: string
@@ -73,7 +75,7 @@ function useFitScale(): { scale: number; supportsZoom: boolean } {
   return state
 }
 
-export function DisplayClient({ bays, initialBookings, posts, events, token }: Props) {
+export function DisplayClient({ bays, initialBookings, initialBlackouts, posts, events, token }: Props) {
   const { scale, supportsZoom } = useFitScale()
   const canvasStyle: CSSProperties = supportsZoom
     ? { width: CANVAS_WIDTH, height: CANVAS_HEIGHT, zoom: scale }
@@ -84,6 +86,7 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
         transformOrigin: 'center center',
       }
   const [bookings, setBookings] = useState<BookingWithMember[]>(initialBookings)
+  const [blackouts, setBlackouts] = useState<BlackoutPeriod[]>(initialBlackouts)
   const [phase, setPhase] = useState<Phase>('bays')
   const [contentIdx, setContentIdx] = useState(0)
   const [visible, setVisible] = useState(true)
@@ -99,23 +102,30 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
     [posts, events],
   )
 
-  // Poll the server-side API route (bypasses RLS via admin client). Polls never
-  // overlap and back off on failure so a struggling database gets fewer
-  // requests; on failure the kiosk keeps showing its last good data.
+  // Poll the server-side API routes (bypass RLS via admin client). Each poll
+  // never overlaps itself and backs off on failure, so a struggling database
+  // gets fewer requests; on failure the kiosk keeps showing its last good data.
   useEffect(() => {
-    return startPoller(
-      async (signal) => {
-        const res = await fetch('/api/display/bookings', {
-          headers: { Authorization: `Bearer ${token}` },
-          signal,
-        })
-        if (!res.ok) throw new Error(`bookings poll failed: ${res.status}`)
-        const data: unknown = await res.json()
-        if (!Array.isArray(data)) throw new Error('bookings poll returned a non-array body')
-        setBookings(data as BookingWithMember[])
-      },
-      { intervalMs: POLL_INTERVAL, timeoutMs: POLL_TIMEOUT, maxBackoffMs: POLL_MAX_BACKOFF },
-    )
+    const pollArray = <T,>(url: string, apply: (data: T[]) => void) =>
+      startPoller(
+        async (signal) => {
+          const res = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` },
+            signal,
+          })
+          if (!res.ok) throw new Error(`${url} poll failed: ${res.status}`)
+          const data: unknown = await res.json()
+          if (!Array.isArray(data)) throw new Error(`${url} returned a non-array body`)
+          apply(data as T[])
+        },
+        { intervalMs: POLL_INTERVAL, timeoutMs: POLL_TIMEOUT, maxBackoffMs: POLL_MAX_BACKOFF },
+      )
+    const stopBookings = pollArray<BookingWithMember>('/api/display/bookings', setBookings)
+    const stopBlackouts = pollArray<BlackoutPeriod>('/api/display/blackouts', setBlackouts)
+    return () => {
+      stopBookings()
+      stopBlackouts()
+    }
   }, [token])
 
   // Reload once per day so Sanity posts and events stay fresh
@@ -178,7 +188,7 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
         >
           <DisplayErrorBoundary>
             {phase === 'bays' ? (
-              <BayStatusView bays={bays} bookings={bookings} />
+              <BayStatusView bays={bays} bookings={bookings} blackouts={blackouts} />
             ) : currentItem ? (
               <ContentSlide item={currentItem} />
             ) : null}

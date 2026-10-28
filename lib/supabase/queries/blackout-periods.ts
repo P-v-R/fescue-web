@@ -1,8 +1,9 @@
 import { createClient } from '../server'
 import { createAdminClient } from '../admin'
 export type { BlackoutPeriod } from '@/lib/utils/blackout'
-export { findBlackout } from '@/lib/utils/blackout'
+export { findBlackout, findBlackoutInRange } from '@/lib/utils/blackout'
 import type { BlackoutPeriod } from '@/lib/utils/blackout'
+import { clubDateKey } from '@/lib/utils/club-time'
 
 // Admin — all periods, ordered by date then start_time
 export async function getBlackoutPeriods(): Promise<BlackoutPeriod[]> {
@@ -17,10 +18,12 @@ export async function getBlackoutPeriods(): Promise<BlackoutPeriod[]> {
   return (data ?? []) as BlackoutPeriod[]
 }
 
-// Member-facing — upcoming periods from today forward
+// Member-facing — upcoming periods from today (club time) forward.
+// Not toISOString(): that's the UTC date, which flips to tomorrow at 5pm
+// Pacific and silently dropped tonight's blackouts.
 export async function getUpcomingBlackoutPeriods(): Promise<BlackoutPeriod[]> {
   const supabase = await createClient()
-  const today = new Date().toISOString().split('T')[0]
+  const today = clubDateKey(new Date())
 
   const { data, error } = await supabase
     .from('blackout_periods')

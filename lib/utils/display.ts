@@ -1,5 +1,6 @@
 import { addMinutes, set } from 'date-fns'
 import { OPEN_HOUR, CLOSE_HOUR, SLOT_MINUTES } from './time-slots'
+import { findBlackout, type BlackoutPeriod } from './blackout'
 
 export const WINDOW_HOURS = 4
 
@@ -49,4 +50,55 @@ export function interleaveItems<T>(as: T[], bs: T[]): T[] {
     if (b !== undefined) result.push(b)
   }
   return result
+}
+
+export type BlackoutRun = {
+  period: BlackoutPeriod
+  /** Number of consecutive visible slots this blackout covers */
+  span: number
+}
+
+/**
+ * Groups consecutive blacked-out slots for each bay into runs so the kiosk can
+ * render one merged cell per blackout. Keys are `${slotIdx}-${bayIdx}` (the
+ * run's first slot), matching the kiosk's booking cell keys. Slots in
+ * `occupied` (already showing a booking) break a run and are never covered.
+ */
+export function getBlackoutRuns(
+  slots: Date[],
+  bayIds: string[],
+  periods: BlackoutPeriod[],
+  occupied: Set<string>,
+): { runs: Map<string, BlackoutRun>; continuations: Set<string> } {
+  const runs = new Map<string, BlackoutRun>()
+  const continuations = new Set<string>()
+  if (periods.length === 0) return { runs, continuations }
+
+  bayIds.forEach((bayId, bayIdx) => {
+    let runStartKey: string | null = null
+    let runPeriodId: string | null = null
+
+    slots.forEach((slot, slotIdx) => {
+      const key = `${slotIdx}-${bayIdx}`
+      const period = occupied.has(key) ? null : findBlackout(slot, bayId, periods)
+
+      if (!period) {
+        runStartKey = null
+        runPeriodId = null
+        return
+      }
+
+      const run = runStartKey ? runs.get(runStartKey) : undefined
+      if (run && runPeriodId === period.id) {
+        run.span++
+        continuations.add(key)
+      } else {
+        runs.set(key, { period, span: 1 })
+        runStartKey = key
+        runPeriodId = period.id
+      }
+    })
+  })
+
+  return { runs, continuations }
 }

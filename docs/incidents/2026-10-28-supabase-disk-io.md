@@ -62,7 +62,7 @@ Legend: ✅ confirmed problem · 🔍 to verify · 💡 hardening
 
 ### App — kiosk
 
-- [x] ✅ **Kiosk polls pile up when the DB is slow** *(fix/login-and-kiosk-resilience)* — `display-client.tsx` fired a bookings request every 30s regardless of whether the previous one finished, and the route/query had no deadline, so with 60s+ queries requests overlapped on the server. Fixed: self-scheduling poller (never overlaps) with exponential backoff + jitter on failure (cap 5 min); the route aborts its query on client disconnect or after 10s and returns 503. PR #110's blackouts poll should use the same poller
+- [x] ✅ **Kiosk polls pile up when the DB is slow** *(fix/login-and-kiosk-resilience)* — `display-client.tsx` fired a bookings request every 30s regardless of whether the previous one finished, and the route/query had no deadline, so with 60s+ queries requests overlapped on the server. Fixed: self-scheduling poller (never overlaps) with exponential backoff + jitter on failure (cap 5 min); the route aborts its query on client disconnect or after 10s and returns 503. The blackouts poll (PR #110) uses the same poller and route deadline
 - [ ] 💡 Consider a longer kiosk poll interval (60s) or Supabase Realtime instead of polling
 
 ### App — login & error handling

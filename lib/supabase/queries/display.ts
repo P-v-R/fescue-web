@@ -1,6 +1,8 @@
 import { startOfDay, endOfDay } from 'date-fns'
 import { createAdminClient } from '../admin'
 import type { Bay, BookingWithMember, Event } from '../types'
+import type { BlackoutPeriod } from '@/lib/utils/blackout'
+import { clubDateKey } from '@/lib/utils/club-time'
 
 // Display page — uses admin client, no auth required.
 
@@ -33,6 +35,22 @@ export async function getDisplayBookingsForToday(signal?: AbortSignal): Promise<
   const { data, error } = await query
   if (error) throw new Error(`getDisplayBookingsForToday: ${error.message}`)
   return (data ?? []) as unknown as BookingWithMember[]
+}
+
+// Today's blackout periods (club-local date) so the kiosk can show blocked bays.
+export async function getDisplayBlackoutsForToday(signal?: AbortSignal): Promise<BlackoutPeriod[]> {
+  const supabase = createAdminClient()
+
+  let query = supabase
+    .from('blackout_periods')
+    .select('*')
+    .eq('date', clubDateKey(new Date()))
+    .order('start_time', { ascending: true, nullsFirst: true })
+  if (signal) query = query.abortSignal(signal)
+
+  const { data, error } = await query
+  if (error) throw new Error(`getDisplayBlackoutsForToday: ${error.message}`)
+  return (data ?? []) as BlackoutPeriod[]
 }
 
 export async function getDisplayUpcomingEvents(): Promise<Event[]> {
