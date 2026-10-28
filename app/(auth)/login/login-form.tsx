@@ -9,6 +9,7 @@ import { loginAction } from './actions'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
+import { submitLogin } from '@/lib/utils/submit-login'
 
 export function LoginForm() {
   const [serverError, setServerError] = useState<string | null>(null)
@@ -35,10 +36,8 @@ export function LoginForm() {
 
   async function onSubmit(data: LoginInput) {
     setServerError(null)
-    const result = await loginAction(data)
-    if (result?.error) {
-      setServerError(result.error)
-    }
+    const message = await submitLogin(() => loginAction(data))
+    if (message) setServerError(message)
   }
 
   return (

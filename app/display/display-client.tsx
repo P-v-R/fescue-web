@@ -8,6 +8,7 @@ import { interleaveItems } from '@/lib/utils/display'
 import { BayStatusView } from './bay-status-view'
 import { ContentSlide, type DisplayContentItem } from './content-slide'
 import { DisplayErrorBoundary } from './display-error-boundary'
+import { createSingleFlight } from '@/lib/utils/single-flight'
 
 type Props = {
   bays: Bay[]
@@ -21,6 +22,7 @@ const BAYS_DURATION = 60_000   // 1 minute
 const CONTENT_DURATION = 15_000 // 15 seconds
 const FADE_DURATION = 700       // ms for opacity transition
 const POLL_INTERVAL = 30_000    // 30 seconds
+const POLL_TIMEOUT = 20_000     // abandon a poll that hasn't answered in 20s
 
 // The whole kiosk is laid out on a fixed design canvas and then scaled with CSS
 // `zoom` to fill the physical screen. This keeps text a constant proportion of
@@ -96,20 +98,19 @@ export function DisplayClient({ bays, initialBookings, posts, events, token }: P
     [posts, events],
   )
 
-  // Poll the server-side API route every 30 seconds — bypasses RLS via admin client
+  // Poll the server-side API route every 30 seconds — bypasses RLS via admin client.
+  // Single-flight + timeout: when the DB is slow, skip polls instead of stacking
+  // requests on top of ones that are still hanging. Errors keep the stale data.
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const res = await fetch('/api/display/bookings', {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) return
-        const data = await res.json()
-        setBookings(data as BookingWithMember[])
-      } catch {
-        // silently ignore — keep showing stale data
-      }
-    }
+    const fetchBookings = createSingleFlight(async (signal) => {
+      const res = await fetch('/api/display/bookings', {
+        headers: { Authorization: `Bearer ${token}` },
+        signal,
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      setBookings(data as BookingWithMember[])
+    }, POLL_TIMEOUT)
     const interval = setInterval(fetchBookings, POLL_INTERVAL)
     return () => clearInterval(interval)
   }, [token])
