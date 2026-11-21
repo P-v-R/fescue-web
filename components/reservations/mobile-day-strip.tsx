@@ -50,12 +50,14 @@ export function MobileDayStrip({ date, setDate, bookedDates }: Props) {
           )
         })}
 
-        <div className='relative shrink-0 w-10 h-14 flex items-center justify-center rounded-sm border border-sand/40 text-navy/55'>
+        <div className='relative overflow-hidden shrink-0 w-10 h-14 flex items-center justify-center rounded-sm border border-sand/40 text-navy/55'>
           <svg width='18' height='18' viewBox='0 0 18 18' fill='none' aria-hidden='true'>
             <rect x='2.5' y='3.5' width='13' height='12' rx='1' stroke='currentColor' strokeWidth='1.3' />
             <path d='M2.5 7.5h13M6 1.8v3.2M12 1.8v3.2' stroke='currentColor' strokeWidth='1.3' strokeLinecap='round' />
           </svg>
-          {/* Native picker sits invisibly over the icon so a tap opens the OS date sheet */}
+          {/* Native picker sits invisibly over the icon so a tap opens the OS date sheet.
+              iOS Safari gives date inputs a wide intrinsic min-width, so the box clips it
+              and appearance-none drops the native sizing; otherwise the page widens. */}
           <input
             type='date'
             aria-label='Pick another date'
@@ -67,7 +69,7 @@ export function MobileDayStrip({ date, setDate, bookedDates }: Props) {
               const [y, m, d] = e.target.value.split('-').map(Number)
               setDate(new Date(y, m - 1, d))
             }}
-            className='absolute inset-0 w-full h-full opacity-0 cursor-pointer'
+            className='absolute inset-0 w-full h-full min-w-0 appearance-none opacity-0 cursor-pointer'
           />
         </div>
       </div>
