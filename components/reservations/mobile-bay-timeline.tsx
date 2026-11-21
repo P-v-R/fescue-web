@@ -154,7 +154,7 @@ export function MobileBayTimeline({
             ))}
           </div>
 
-          {/* One grid per bay row set; bookings span rows */}
+          {/* One column per bay; bookings span multiple rows */}
           <div
             className='timeline-lines flex-1 min-w-0 grid bg-navy/10 border-r border-b border-sand/40'
             style={{
