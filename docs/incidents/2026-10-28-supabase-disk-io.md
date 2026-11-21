@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-28
 **Project:** `fescue-production` (`rtyqcmlvrqsxoylztjza`, us-east-2)
-**Status:** 🟡 mitigated — DB back up at 12:34pm PT after restart; compute still Nano (see fix list)
+**Status:** 🟢 resolved — compute upgraded Nano → Micro; app fixes (#110, #111) in production. Follow-ups: todos 047, 048, 053; watch Disk IO % for a few days
 
 ## Impact
 
@@ -24,6 +24,10 @@
 | ~12:20pm | Project restarted from dashboard; stays in `RESTARTING` for several minutes (restart slowed by throttled disk) |
 | ~12:30pm | Org upgraded Free → Pro ($25/mo). Note: plan upgrade does **not** change compute size |
 | 12:34pm | Postgres back up (`ACTIVE_HEALTHY`); queries instant, members signing in successfully |
+| Oct 28 eve | #111 (fail-fast login/kiosk) and #110 (blackout fixes) merged; production deploy of `337d50c` initially didn't go out from Railway — redeployed manually |
+| Oct 29 6:12am | Compute resized Nano → Micro (`shared_buffers` 224 → 256 MB); ~1 min of 5xx (2 errors), then clean |
+| Oct 29 6am | Diagnostic: 0 Supabase 5xx since 1pm Oct 28; Auth avg 268ms, bookings avg 357ms, 0 failures (12h); 0 errors on release `337d50c`; DB cache hit 100% |
+| Nov 20 | 3-week check: DB up 22.5 days (no restarts); Disk IO balance 99%, memory 41%, CPU 2%; 132,575 Supabase calls in 21 days at avg 0.19s with 13 non-OK (0.01%); no app query >1s; Railway changed the apex IP (69.46.46.35 → 153.52.255.81) and the ALIAS followed it automatically |
 
 ## Root cause
 
@@ -52,7 +56,7 @@ Legend: ✅ confirmed problem · 🔍 to verify · 💡 hardening
 
 ### Database / infrastructure
 
-- [ ] ✅ **Upgrade compute Nano → Micro** (Project Settings → Compute and Disk). The Pro plan upgrade does *not* do this automatically; Nano on a paid org is billed at the Micro price anyway, and the $10/mo compute credit covers Micro. ~2 min downtime — do it in a quiet window
+- [x] ✅ **Upgrade compute Nano → Micro** *(done 2026-10-29)* (Project Settings → Compute and Disk). The Pro plan upgrade does *not* do this automatically; Nano on a paid org is billed at the Micro price anyway, and the $10/mo compute credit covers Micro. ~2 min downtime — do it in a quiet window
 - [ ] 🔍 After a day on Micro, check Reports → Database → "Disk IO % consumed" stays near 0%; if not, consider Small
 - [ ] 🔍 **Find what's consuming disk IO** — `pg_stat_statements` top queries by `shared_blks_read`, table/index sizes, bloat
 - [ ] 💡 **No index on `bookings(start_time)`** — the kiosk queries bookings by `start_time` every 30s. Only the GiST exclusion constraint exists. *Downgraded from ✅:* the whole DB is 18 MB, so this was not the cause of the IO exhaustion; still cheap and worth adding as the table grows
