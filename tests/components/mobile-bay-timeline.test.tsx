@@ -152,6 +152,22 @@ describe('MobileBayTimeline', () => {
     expect(screen.queryByRole('button', { name: /^Book / })).not.toBeInTheDocument()
   })
 
+  it('hides the hour label the now tag would cover, and shows it otherwise', () => {
+    vi.setSystemTime(at(17, 5))
+    const { unmount } = render(
+      <MobileBayTimeline bays={bays} bookings={[]} date={TODAY} userId={ME} blackoutPeriods={[]} onSlotClick={vi.fn()} />,
+    )
+    expect(screen.getAllByTestId('hour-label')[0].textContent).toBe('')
+    expect(screen.getAllByTestId('hour-label')[1]).toHaveTextContent('6 pm')
+    unmount()
+
+    vi.setSystemTime(at(17, 40))
+    render(
+      <MobileBayTimeline bays={bays} bookings={[]} date={TODAY} userId={ME} blackoutPeriods={[]} onSlotClick={vi.fn()} />,
+    )
+    expect(screen.getAllByTestId('hour-label')[0]).toHaveTextContent('5 pm')
+  })
+
   it('updates the now row as time passes', () => {
     setup()
     act(() => {

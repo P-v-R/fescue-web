@@ -140,16 +140,22 @@ export function MobileBayTimeline({
         <div className='relative flex'>
           {/* Time column */}
           <div className='shrink-0 flex flex-col' style={{ width: TIME_COL }}>
-            {model.rows.map((row) => (
-              <span
-                key={row.getTime()}
-                data-testid={row.getMinutes() === 0 ? 'hour-label' : undefined}
-                className='pt-1 text-center font-mono text-[10px] text-navy/65'
-                style={{ height: ROW_PITCH }}
-              >
-                {row.getMinutes() === 0 ? hourLabel(row) : ''}
-              </span>
-            ))}
+            {model.rows.map((row, i) => {
+              const isHour = row.getMinutes() === 0
+              // The now tag already shows the time; hide an hour label it would sit on top of
+              const minutesFromNow = model.nowMinutes === null ? null : model.nowMinutes - i * 30
+              const coveredByNowTag = minutesFromNow !== null && minutesFromNow > -8 && minutesFromNow < 18
+              return (
+                <span
+                  key={row.getTime()}
+                  data-testid={isHour ? 'hour-label' : undefined}
+                  className='pt-1 text-center font-mono text-[10px] text-navy/65'
+                  style={{ height: ROW_PITCH }}
+                >
+                  {isHour && !coveredByNowTag ? hourLabel(row) : ''}
+                </span>
+              )
+            })}
           </div>
 
           {/* One column per bay; bookings span multiple rows */}
@@ -175,11 +181,12 @@ export function MobileBayTimeline({
             )}
           </div>
 
+          {/* Above empty slots, beneath bookings and blackouts so their labels stay readable */}
           {model.nowMinutes !== null && (
             <div
               ref={nowLineRef}
               aria-hidden='true'
-              className='absolute left-0 right-0 z-10 flex items-center pointer-events-none'
+              className='absolute left-0 right-0 z-[1] flex items-center pointer-events-none'
               style={{ top: (model.nowMinutes / 30) * ROW_PITCH }}
             >
               <span className='shrink-0 flex justify-center' style={{ width: TIME_COL }}>
@@ -265,7 +272,7 @@ function Block({
 
   if (block.kind === 'blackout') {
     return (
-      <div className='blackout-hatch px-1.5 py-1.5' style={style}>
+      <div className='blackout-hatch z-[2] px-1.5 py-1.5' style={style}>
         <span className='block font-mono text-[10px] leading-tight text-gold-dark blackout-text'>
           {block.reason ?? 'Unavailable'}
         </span>
@@ -288,7 +295,7 @@ function Block({
         type='button'
         aria-label={`Your booking, ${bay.name}, ${format(start, 'h:mm a')} to ${format(end, 'h:mm a')}`}
         onClick={() => onBookingClick?.(booking, bay.name)}
-        className='booking-mine bg-navy m-0.5 rounded-sm px-1.5 py-1 flex flex-col items-start gap-px text-left min-w-0 overflow-hidden'
+        className='booking-mine bg-navy z-[2] m-0.5 rounded-sm px-1.5 py-1 flex flex-col items-start gap-px text-left min-w-0 overflow-hidden'
         style={style}
       >
         <span className='font-serif text-sm leading-tight text-cream/90'>You</span>
@@ -299,7 +306,7 @@ function Block({
 
   return (
     <div
-      className='bg-navy/[0.22] m-0.5 rounded-sm px-1.5 py-1 flex flex-col gap-px min-w-0 overflow-hidden'
+      className='bg-navy/[0.22] z-[2] m-0.5 rounded-sm px-1.5 py-1 flex flex-col gap-px min-w-0 overflow-hidden'
       style={style}
     >
       <span className='text-xs leading-tight text-navy/80 truncate'>{block.shortName}</span>
