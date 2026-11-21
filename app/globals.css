@@ -281,6 +281,22 @@ html.dark-mode .booking-mine:hover               { background-color: #a07c2e; }
 html.dark-mode .booking-mine .text-cream\/90     { color: rgba(10, 30, 15, 0.95); }
 html.dark-mode .booking-mine .text-cream\/60     { color: rgba(10, 30, 15, 0.65); }
 
+/* Reservations — mobile all-bays timeline */
+.blackout-hatch {
+  background: repeating-linear-gradient(135deg, rgba(184, 150, 60, 0.26) 0 5px, rgba(184, 150, 60, 0.10) 5px 10px);
+}
+html.dark-mode .blackout-hatch {
+  background: repeating-linear-gradient(135deg, rgba(184, 150, 60, 0.22) 0 5px, rgba(184, 150, 60, 0.08) 5px 10px);
+}
+html.dark-mode .blackout-text,
+html.dark-mode .now-label          { color: var(--gold-light); }
+html.dark-mode .bay-band           { background-color: #172e1d; }
+html.dark-mode .timeline-lines     { background-color: rgba(245, 240, 232, 0.09); }
+html.dark-mode .past-slot          { background-color: #0f2016; }
+html.dark-mode .day-chip-selected  { background-color: #B8963C; color: #0c1b10; }
+html.dark-mode.high-contrast .timeline-lines { background-color: rgba(245, 240, 232, 0.22); }
+html.high-contrast .timeline-lines { background-color: rgba(0, 66, 37, 0.25); }
+
 /* Tournaments — active badge */
 html.dark-mode .bg-sage\/15 { background-color: rgba(122, 158, 104, 0.22); }
 

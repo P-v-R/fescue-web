@@ -96,7 +96,7 @@ describe('MobileBayTimeline', () => {
   it('shows who is on each bay right now', () => {
     setup()
     const nowRow = screen.getByTestId('now-row')
-    expect(within(nowRow).getByText('Marcus T. +1')).toBeInTheDocument()
+    expect(within(nowRow).getByText('Marcus T.')).toBeInTheDocument()
     expect(within(nowRow).getByText('til 6:30')).toBeInTheDocument()
     const openCells = within(nowRow).getAllByText('Open')
     expect(openCells.length).toBe(3)

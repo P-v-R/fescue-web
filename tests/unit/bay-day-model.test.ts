@@ -110,7 +110,6 @@ describe('buildBayDayModel — today during opening hours', () => {
     expect(column(model, 'bay-1').now).toEqual({
       kind: 'occupied',
       shortName: 'Marcus T.',
-      guestCount: 1,
       mine: false,
       until: at(18, 30),
     })

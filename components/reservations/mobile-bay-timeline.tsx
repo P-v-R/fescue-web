@@ -78,7 +78,7 @@ export function MobileBayTimeline({
       {/* Bay names stay pinned while the page scrolls */}
       <div
         data-testid='bay-header'
-        className='sticky top-0 z-20 grid bg-navy-dark rounded-t-sm'
+        className='bay-band sticky top-0 z-20 grid bg-navy-dark rounded-t-sm'
         style={{ gridTemplateColumns: columns }}
       >
         <span />
@@ -156,7 +156,7 @@ export function MobileBayTimeline({
 
           {/* One grid per bay row set; bookings span rows */}
           <div
-            className='flex-1 min-w-0 grid bg-navy/10 border-r border-b border-sand/40'
+            className='timeline-lines flex-1 min-w-0 grid bg-navy/10 border-r border-b border-sand/40'
             style={{
               gridTemplateColumns: `repeat(${bays.length}, minmax(0, 1fr))`,
               gridTemplateRows: `repeat(${model.rows.length}, ${ROW_PX}px)`,
@@ -211,9 +211,7 @@ function NowCell({ status }: { status: BayNowStatus | null }) {
   let secondary = ''
   let tone = 'text-navy'
   if (status?.kind === 'occupied') {
-    primary = status.mine
-      ? 'You'
-      : `${status.shortName}${status.guestCount > 0 ? ` +${status.guestCount}` : ''}`
+    primary = status.mine ? 'You' : status.shortName
     secondary = `til ${clock(status.until)}`
   } else if (status?.kind === 'open') {
     primary = 'Open'
@@ -227,7 +225,7 @@ function NowCell({ status }: { status: BayNowStatus | null }) {
   return (
     <div className='min-w-0 flex flex-col items-center gap-px py-2 px-1 border-l border-sand/40'>
       <span className={`max-w-full truncate text-[12.5px] ${tone}`}>{primary}</span>
-      {secondary && <span className='font-mono text-[10px] text-navy/65'>{secondary}</span>}
+      {secondary && <span className='font-mono text-[10px] text-navy/65 whitespace-nowrap'>{secondary}</span>}
     </div>
   )
 }

@@ -29,7 +29,7 @@ export type BayBlock =
   | { kind: 'past'; rowStart: number; span: 1; slotTime: Date }
 
 export type BayNowStatus =
-  | { kind: 'occupied'; shortName: string; guestCount: number; mine: boolean; until: Date }
+  | { kind: 'occupied'; shortName: string; mine: boolean; until: Date }
   | { kind: 'blackout'; reason: string | null }
   | { kind: 'open'; until: Date | null }
 
@@ -192,7 +192,6 @@ function nowStatus(
     return {
       kind: 'occupied',
       shortName: formatMemberName(current.members?.full_name),
-      guestCount: current.guests?.length ?? 0,
       mine: current.member_id === userId,
       until: endOf(current),
     }
