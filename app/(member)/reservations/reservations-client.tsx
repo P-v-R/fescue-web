@@ -74,7 +74,11 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
     fetchUpcomingBookings()
   }, [fetchUpcomingBookings])
 
+  // Quick taps across days can resolve out of order; only the latest request may write
+  const latestFetchRef = useRef(0)
+
   const fetchBookings = useCallback(async (d: Date) => {
+    const requestId = ++latestFetchRef.current
     setIsLoading(true)
     try {
       const supabase = supabaseRef.current
@@ -86,9 +90,9 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
         .is('cancelled_at', null)
         .order('start_time', { ascending: true })
 
-      setBookings((data as BookingWithMember[]) ?? [])
+      if (requestId === latestFetchRef.current) setBookings((data as BookingWithMember[]) ?? [])
     } finally {
-      setIsLoading(false)
+      if (requestId === latestFetchRef.current) setIsLoading(false)
     }
   }, [])
 
@@ -155,6 +159,7 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           />
           {fullDayBlackout && <BlackoutBanner reason={fullDayBlackout.reason} />}
           <MobileBayTimeline
+            key={selectedDateStr}
             bays={bays}
             bookings={bookings}
             date={date}

@@ -45,10 +45,8 @@ export function MobileBayTimeline({
   onBookingClick,
 }: Props) {
   const now = useMinuteClock()
-  const dateKey = format(date, 'yyyy-MM-dd')
-  // Expansion is remembered per date, so switching days folds earlier hours again
-  const [expandedFor, setExpandedFor] = useState<string | null>(null)
-  const showEarlier = expandedFor === dateKey
+  // Parent keys this component by date, so switching days folds earlier hours again
+  const [showEarlier, setShowEarlier] = useState(false)
   const nowLineRef = useRef<HTMLDivElement>(null)
 
   const model = useMemo(
@@ -110,7 +108,7 @@ export function MobileBayTimeline({
       {model.earlier && (
         <button
           type='button'
-          onClick={() => setExpandedFor(showEarlier ? null : dateKey)}
+          onClick={() => setShowEarlier((v) => !v)}
           aria-expanded={showEarlier}
           className='w-full h-10 flex items-center justify-between gap-3 px-3 bg-white border-x border-b border-sand/40 text-navy/65'
         >
