@@ -78,10 +78,6 @@ export function BayGrid({ bays, bookings, date, userId, onSlotClick, onBookingCl
 
   return (
     <div className='overflow-x-auto rounded-sm border border-sand/40'>
-      {/* Mobile scroll hint */}
-      <p className='sm:hidden px-3 py-1.5 bg-cream-mid/60 text-center font-mono text-label text-sand/70 uppercase tracking-[0.15em] border-b border-sand/30'>
-        ← Scroll to see all bays →
-      </p>
       <div ref={scrollContainerRef} className='max-h-[70vh] sm:max-h-[75vh] overflow-y-auto'>
         <table className='w-full border-collapse text-sm min-w-[600px]'>
           {/* Column headers */}

@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { format, addDays, startOfDay, endOfDay, isBefore } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { BayGrid } from '@/components/reservations/bay-grid'
-import { MobileBayList } from '@/components/reservations/mobile-bay-list'
+import { MobileBayTimeline } from '@/components/reservations/mobile-bay-timeline'
+import { MobileDayStrip } from '@/components/reservations/mobile-day-strip'
 import { BookingModal } from '@/components/reservations/booking-modal'
 import { BookingDetailModal } from '@/components/reservations/booking-detail-modal'
 import { UpcomingReservationsDesktop, UpcomingReservationsMobile } from '@/components/reservations/upcoming-reservations-panel'
@@ -140,21 +141,29 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
   const periodsForDate = blackoutPeriods.filter((p) => p.date === selectedDateStr)
   // Full-day all-bays blackout → show banner and disable grid entirely
   const fullDayBlackout = periodsForDate.find((p) => p.all_bays && !p.start_time)
+  const bookedDates = new Set(upcomingBookings.map((b) => format(new Date(b.start_time), 'yyyy-MM-dd')))
 
   return (
     <div>
       {/* ── Mobile layout ── */}
       <div className='sm:hidden'>
-        <MobileBayList
-          bays={bays}
-          bookings={bookings}
-          date={date}
-          setDate={(d) => setDate(startOfDay(d))}
-          userId={userId}
-          onSlotClick={setSelectedSlot}
-          onBookingClick={(booking, bayName) => setSelectedBooking({ booking, bayName })}
-          blackoutPeriods={periodsForDate}
-        />
+        <div className='flex flex-col gap-4'>
+          <MobileDayStrip
+            date={date}
+            setDate={(d) => setDate(startOfDay(d))}
+            bookedDates={bookedDates}
+          />
+          {fullDayBlackout && <BlackoutBanner reason={fullDayBlackout.reason} />}
+          <MobileBayTimeline
+            bays={bays}
+            bookings={bookings}
+            date={date}
+            userId={userId}
+            blackoutPeriods={periodsForDate}
+            onSlotClick={setSelectedSlot}
+            onBookingClick={(booking, bayName) => setSelectedBooking({ booking, bayName })}
+          />
+        </div>
         <UpcomingReservationsMobile
           bookings={upcomingBookings}
           onCancelled={handleUpcomingCancelled}
@@ -218,16 +227,8 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
 
         {/* Blackout banner */}
         {fullDayBlackout && (
-          <div className="mb-6 border border-sand/40 bg-cream-mid/40 px-5 py-4 flex items-start gap-4">
-            <div className="w-1 self-stretch bg-sand/60 shrink-0" />
-            <div>
-              <p className="font-mono text-label uppercase tracking-[0.22em] text-navy/60 mb-0.5">
-                Bays Unavailable
-              </p>
-              <p className="font-serif italic text-base text-navy/50">
-                {fullDayBlackout.reason ?? 'Bay Unavailable'}
-              </p>
-            </div>
+          <div className="mb-6">
+            <BlackoutBanner reason={fullDayBlackout.reason} />
           </div>
         )}
 
@@ -289,6 +290,22 @@ export function ReservationsClient({ bays, initialBookings, userId, blackoutPeri
           <span className="font-mono text-label uppercase tracking-[0.18em]">{toast}</span>
         </div>
       )}
+    </div>
+  )
+}
+
+function BlackoutBanner({ reason }: { reason: string | null }) {
+  return (
+    <div className="border border-sand/40 bg-cream-mid/40 px-5 py-4 flex items-start gap-4">
+      <div className="w-1 self-stretch bg-sand/60 shrink-0" />
+      <div>
+        <p className="font-mono text-label uppercase tracking-[0.22em] text-navy/60 mb-0.5">
+          Bays Unavailable
+        </p>
+        <p className="font-serif italic text-base text-navy/50">
+          {reason ?? 'Bay Unavailable'}
+        </p>
+      </div>
     </div>
   )
 }
